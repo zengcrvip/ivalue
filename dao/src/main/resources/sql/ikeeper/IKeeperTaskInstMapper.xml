@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperTaskInstMapper">
+
+    <resultMap id="userMaintainDetails"  type="com.axon.market.common.domain.ikeeper.UserMaintainDetailDomain">
+        <result property="userId" column="userId"></result>
+        <collection property="phoneSet" javaType="java.util.HashSet" ofType="java.lang.String">
+            <result property="phone" column="phone"></result>
+        </collection>
+        <collection property="userSet" javaType="java.util.HashSet" ofType="java.util.Map">
+            <result property="phone" column="phone"></result>
+            <result property="userName" column="userName"></result>
+        </collection>
+    </resultMap>
+
+    <resultMap id="taskCustPhones"  type="com.axon.market.common.domain.ikeeper.TaskCustPhoneDomain">
+        <result property="taskId" column="taskId"></result>
+        <collection property="phoneSet" javaType="java.util.HashSet" ofType="java.lang.String">
+            <result property="phone" column="phone"></result>
+        </collection>
+    </resultMap>
+
+    <resultMap id="taskUserIds" type="com.axon.market.common.domain.ikeeper.TaskUserIdsDomain">
+        <result property="taskId" column="taskId"></result>
+        <collection property="userSet" javaType="java.util.HashSet" ofType="java.lang.Integer">
+            <result property="userId" column="userId"></result>
+        </collection>
+    </resultMap>
+
+    <!--
+       新增掌柜任务实例:
+       1、按掌柜的维系任务维度生成 keeperType
+       2、任务实例中任务与末梢人员映射的条件：任务的业务归属包含末梢人员所属的业务归属；末梢人员的维系能力包含任务的任务策略类型
+       3、必须是审批通过且未到期的任务
+    -->
+    <insert id="insertTaskInstByType">
+        insert into keeper.keeper_task_inst (
+            exec_date,
+            exec_user_id,
+            task_id,
+            task_name,
+            type_id,
+            eff_date,
+            exp_date,
+            welfare_ids,
+            state
+            )
+        select
+            #{date},
+            u.user_id,
+            t.task_id,
+            t.task_name,
+            t.type_id,
+            t.eff_date,
+            t.exp_date,
+            (select group_concat(welfare_id) from keeper.keeper_task_welfare where	task_id = t.task_id) welfareids,
+            1
+        from
+            keeper.keeper_user u,
+            keeper.keeper_task t
+        where find_in_set(u.business_org_id,t.task_org_ids)
+        and   find_in_set(t.type_id, u.ability)
+        and   t.exp_date &lt;= date_format(curdate(), '%Y-%m-%d')
+        and   t.eff_date &gt;= date_format(curdate(), '%Y-%m-%d')
+        and   t.state = 1
+        and   t.type_id = #{keeperType}
+    </insert>
+
+    <insert id="insertTaskInst" parameterType="com.axon.market.common.domain.ikeeper.TaskInstDomain" useGeneratedKeys="true" keyProperty="taskInstId">
+          insert into keeper.keeper_task_inst (
+                exec_date,
+                exec_user_id,
+                task_id,
+                task_name,
+                type_id,
+                eff_date,
+                exp_date,
+                welfare_ids,
+                state
+          )
+          values(#{execDate},#{execUserId},#{taskId},#{taskName},#{typeId},#{effDate},#{expDate},#{welfareIds},#{state})
+    </insert>
+
+    <!--
+      查询有效任务 :
+       1、按掌柜的维系任务维度 keeperType
+       2、任务实例中任务与末梢人员映射的条件：任务的业务归属包含末梢人员所属的业务归属；末梢人员的维系能力包含任务的任务策略类型
+       3、必须是审批通过且未到期的任务
+    -->
+    <select id="queryValidTask" resultType="com.axon.market.common.domain.ikeeper.TaskInstDomain">
+         select
+            DISTINCT
+            u.user_id as execUserId,
+            t.task_id as taskId,
+            t.task_name as taskName,
+            t.type_id as typeId,
+            t.eff_date as effDate,
+            t.exp_date as expDate,
+            t.welfare_ids welfareids,
+            (select k.rule_id from  keeper.keeper_task_rule k join keeper.keeper_rule r
+             on k.rule_id = r.rule_id and r.type_id = #{keeperType} and r.rule_type = 1 where k.task_id = t.task_id) as ruleId,
+             (select group_concat(c.channel_type)  from keeper.keeper_task_channel c  where c.task_id = t.task_id) as channelTypes
+        from
+            keeper.keeper_user u,
+            keeper.keeper_task t
+        where find_in_set(u.business_org_id,t.task_org_ids)
+        and   find_in_set(t.type_id, u.ability)
+        and   t.eff_date &lt;= date_format(curdate(), '%Y-%m-%d')
+        and   t.exp_date &gt;= date_format(curdate(), '%Y-%m-%d')
+        and   t.state = 1
+        and   t.type_id = #{keeperType}
+    </select>
+
+    <!--
+       查询末梢人员对应的维系客户，返回的结构为 userId:[phone]
+    -->
+    <select id="queryUserMaintains" resultMap="userMaintainDetails">
+        select maintain_user_id as  userId,
+                user_phone       as phone,
+                user_name        as userName
+        from keeper.keeper_user_maintain
+        where status = 1
+    </select>
+
+    <!--
+       查询任务对应的白名单客户，返回的结构为 taskId:[phone]
+    -->
+    <select id="queryTaskCustPhones" resultMap="taskCustPhones">
+         select t.task_id as taskId,
+                 c.phone as phone
+         from keeper.keeper_task t join keeper.keeper_task_customer c on t.task_customer_file_id = c.file_id
+         where t.state = 1
+    </select>
+
+    <select id="queryTaskUsersBySceneCare" resultMap="taskUserIds">
+          select t.task_id as taskId,
+                  t.exec_user_id as userId
+          from keeper.keeper_task_inst t
+          where  t.type_id = #{keeperType}
+            and t.exec_date = #{date}
+    </select>
+
+    <!--
+       根据任务ID和执行用户ID查询当天该用户执行的该任务信息
+    -->
+    <select id="getTaskInstInfoByByTaskIdAndUserId" resultType="com.axon.market.common.domain.ikeeper.TaskInstDomain">
+           select  t.task_inst_id as taskInstId,
+                    t.exec_date as execDate,
+                    t.task_id as taskId,
+                    t.task_name as taskName,
+                   ifnull(c.trigger_limit,0) as phoneLimit,
+                   (select k.rule_id from  keeper.keeper_task_rule k join keeper.keeper_rule r
+                    on k.rule_id = r.rule_id and r.type_id = 3 and r.rule_type = 2 where k.task_id = t.task_id) as ruleId
+           from keeper.keeper_task_inst t
+           left join keeper.keeper_task_channel c on c.task_id = t.task_id and  c.channel_type = 2
+           where t.exec_user_id  = #{userId}
+           and t.task_id = #{taskId}
+           and t.exec_date =  date_format(curdate(), '%Y%m%d')
+    </select>
+</mapper>

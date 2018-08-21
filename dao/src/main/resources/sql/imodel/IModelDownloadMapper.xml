@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.imodel.IModelDownloadMapper">
+
+    <select id="queryModelDownloadSettingCounts" resultType="int">
+        select count(1)
+        from market_model_download_manager where status = 0 and create_user = #{createUser}
+    </select>
+
+    <select id="queryModelDownloadSettingByPage" resultType="com.axon.market.common.domain.imodel.ModelDownloadSettingDomain">
+        select
+            d.id                                                        as id,
+            d.model_id                                                  as modelId,
+            m.name                                                      as modelName,
+            d.meta_property_ids                                         as metaPropertyIds,
+            group_concat(p.name)										as metaPropertyNames,
+            d.create_time                                               as createTime,
+            d.update_time                                               as updateTime,
+            d.remarks                                                   as remarks
+        from market_model_download_manager as d
+        left join market_model as m on d.model_id = m.id
+        left join market_property p on find_in_set(p.id, d.meta_property_ids)
+        where d.status = 0 and d.create_user = #{createUser}
+        group by d.id
+        order by d.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryModelDownloadSettingById" resultType="java.util.Map">
+        select
+            d.id                                                        as id,
+            d.model_id                                                  as modelId,
+            d.meta_property_ids                                         as metaPropertyIds,
+            d.create_time                                               as createTime,
+            d.update_time                                               as updateTime,
+            d.remarks                                                   as remarks
+        from market_model_download_manager as d
+        where d.status = 0 and d.id = #{settingId}
+    </select>
+
+    <select id="queryMyModelDownloadSettingByModelId" resultType="com.axon.market.common.domain.imodel.ModelDownloadSettingDomain">
+        select
+            d.id                                                        as id,
+            d.model_id                                                  as modelId,
+            d.meta_property_ids                                         as metaPropertyIds,
+            d.create_time                                               as createTime,
+            d.update_time                                               as updateTime,
+            d.remarks                                                   as remarks
+        from market_model_download_manager as d
+        where d.status = 0 and d.create_user = #{userId} and d.model_id = #{modelId}
+    </select>
+
+    <insert id="insertModelDownloadSetting" parameterType="com.axon.market.common.domain.imodel.ModelDownloadSettingDomain">
+        insert into market_model_download_manager
+        (
+            model_id,
+            meta_property_ids,
+            create_user,
+            create_time,
+            remarks
+        )
+        values
+        (
+            #{info.modelId},
+            #{info.metaPropertyIds},
+            #{info.createUser},
+            sysdate(),
+            #{info.remarks}
+        )
+    </insert>
+
+    <insert id="copyModelDownloadSetting">
+        insert into market_model_download_manager
+        (
+            model_id,
+            meta_property_ids,
+            create_user,
+            create_time,
+            remarks
+        )
+        select
+            #{modelId},
+            meta_property_ids,
+            #{userId},
+            sysdate(),
+            remarks
+        from market_model_download_manager where id = #{copyItemId}
+    </insert>
+
+    <update id="updateModelDownloadSetting" parameterType="com.axon.market.common.domain.imodel.ModelDownloadSettingDomain">
+        update market_model_download_manager set
+        <if test = "info.modelId != null">
+            model_id = #{info.modelId},
+        </if>
+        <if test = "info.metaPropertyIds != null">
+            meta_property_ids = #{info.metaPropertyIds},
+        </if>
+        <if test = "info.remarks != null">
+            remarks = #{info.remarks},
+        </if>
+        update_time = sysdate(),
+        id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteModelDownloadSetting">
+        update market_model_download_manager set status = -1 where id = #{id}
+    </update>
+
+</mapper>

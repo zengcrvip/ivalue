@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.ISmsMapper">
+
+    <select id="queryTaskStatus" resultType="int">
+        select if_execute from pdr.p_task
+        where id = #{taskId}
+        <if test="spNum != null">
+           and sp_num = #{spNum}
+        </if>
+    </select>
+
+    <update id="updateTaskStatus">
+        update pdr.p_task set
+            if_execute = #{status}
+        where id = #{taskId}
+        and sp_num = #{spNum}
+        <if test="oldStatus != null">
+            and if_execute = #{oldStatus}
+        </if>
+    </update>
+
+</mapper>

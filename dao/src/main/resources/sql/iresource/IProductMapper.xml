@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iresource.IProductMapper">
+
+    <select id="queryAllProductCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_product
+        where status = 0
+        <if test="name != null and name !=''">
+            and name like concat('%','${name}','%')
+        </if>
+    </select>
+
+    <select id="queryProductsByPage" resultType="com.axon.market.common.domain.iresource.ProductDomain">
+        select
+            p.id as id,
+            p.name as name,
+            p.catalog_id as catalogId,
+            p.catalog_name as catalogName,
+            p.price as price,
+            p.code as code,
+            p.status as status,
+            p.fornet as fornet,
+            p.spid as spid,
+            p.order_code as orderCode,
+            p.product_features as productFeatures,
+            p.user_base_features as userBaseFeatures,
+            p.user_hobby_features as userHobbyFeatures,
+            p.introduce as introduce,
+            p.create_user as createUser,
+            p.create_time as createTime,
+            p.update_user as updateUser,
+            p.update_time as updateTime,
+            p.order_key as orderKey,
+            p.key_type as keyType,
+            p.success_msg as successMsg,
+            p.net_type as netType,
+            p.effect_mode as effectMode,
+            p.confirm_msg_fmt as confirmMsg,
+            p.order_success_msg as orderSucMsg,
+            p.order_fail_msg as orderFailMsg,
+            p.confirm_order as confirmOrder
+        from market_product as p
+        where status = 0
+        <if test="name != null and name !=''">
+            and p.name like concat('%','${name}','%')
+        </if>
+        order by p.id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <insert id="createProduct" parameterType="com.axon.market.common.domain.iresource.ProductDomain">
+        insert into market_product
+        (
+            name,
+            catalog_id,
+            catalog_name,
+            price,
+            code,
+            status,
+            fornet,
+            spid,
+            order_code,
+            product_features,
+            user_base_features,
+            user_hobby_features,
+            introduce,
+            create_user,
+            create_time,
+            order_key,
+            key_type,
+            success_msg,
+            net_type,
+            effect_mode,
+            confirm_msg_fmt,
+            order_success_msg,
+            order_fail_msg,
+            confirm_order
+        )
+        values
+        (
+            #{info.name},
+            #{info.catalogId},
+            #{info.catalogName},
+            #{info.price},
+            #{info.code},
+            #{info.status},
+            #{info.fornet},
+            #{info.spid},
+            #{info.orderCode},
+            #{info.productFeatures},
+            #{info.userBaseFeatures},
+            #{info.userHobbyFeatures},
+            #{info.introduce},
+            #{info.createUser},
+            #{info.createTime},
+            #{info.orderKey},
+            #{info.keyType},
+            #{info.successMsg},
+            #{info.netType},
+            #{info.effectMode},
+            #{info.confirmMsg},
+            #{info.orderSucMsg},
+            #{info.orderFailMsg},
+            #{info.confirmOrder}
+        )
+    </insert>
+
+    <update id="updateProduct" parameterType="com.axon.market.common.domain.iresource.ProductDomain">
+        update market_product set
+        <if test="info.name != null">
+            name = #{info.name},
+        </if>
+        <if test="info.catalogId != null">
+            catalog_id = #{info.catalogId},
+        </if>
+        <if test="info.catalogName != null">
+            catalog_name = #{info.catalogName},
+        </if>
+        <if test="info.price != null">
+            price = #{info.price},
+        </if>
+        <if test="info.code != null">
+            code = #{info.code},
+        </if>
+        <if test="info.fornet != null">
+            fornet = #{info.fornet},
+        </if>
+        <if test="info.spid != null">
+            spid = #{info.spid},
+        </if>
+        <if test="info.orderCode != null">
+            order_code = #{info.orderCode},
+        </if>
+        <if test="info.productFeatures != null">
+            product_features = #{info.productFeatures},
+        </if>
+        <if test="info.userBaseFeatures != null">
+            user_base_features = #{info.userBaseFeatures},
+        </if>
+        <if test="info.userHobbyFeatures != null">
+            user_hobby_features = #{info.userHobbyFeatures},
+        </if>
+        <if test="info.introduce != null">
+            introduce = #{info.introduce},
+        </if>
+        <if test="info.updateUser != null">
+            update_user = #{info.updateUser},
+        </if>
+        <if test="info.updateTime != null">
+            update_time = #{info.updateTime},
+        </if>
+        <if test="info.orderKey != null">
+            order_key = #{info.orderKey},
+        </if>
+        <if test="info.keyType != null">
+            key_type = #{info.keyType},
+        </if>
+        <if test="info.successMsg != null">
+            success_msg = #{info.successMsg},
+        </if>
+        <if test="info.netType != null">
+            net_type = #{info.netType},
+        </if>
+        <if test="info.effectMode != null">
+            effect_mode = #{info.effectMode},
+        </if>
+        <if test="info.confirmMsg != null">
+            confirm_msg_fmt = #{info.confirmMsg},
+        </if>
+        <if test="info.orderSucMsg != null">
+            order_success_msg = #{info.orderSucMsg},
+        </if>
+        <if test="info.orderFailMsg != null">
+            order_fail_msg = #{info.orderFailMsg},
+        </if>
+        <if test="info.confirmOrder != null">
+            confirm_order = #{info.confirmOrder},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteProduct">
+        update market_product set
+            update_user = #{userId},
+            update_time = #{time},
+            status = -1
+        where id = #{id}
+    </update>
+
+    <select id="queryProductsAll" resultType="com.axon.market.common.domain.iresource.ProductDomain">
+        select
+        p.id as id,
+        p.name as name,
+        p.catalog_id as catalogId
+        from market_product as p
+        where status = 0
+        order by p.id desc
+    </select>
+</mapper>

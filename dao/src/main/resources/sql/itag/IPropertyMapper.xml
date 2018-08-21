@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.itag.IPropertyMapper">
+
+    <!-- 查询所有元属性 -->
+    <select id="queryAllProperties" resultType="com.axon.market.common.domain.itag.PropertyDomain">
+        select
+            p.id as id,
+            p.name as name,
+            p.catalog_id as catalogId,
+            p.catalog_name as catalogName,
+            p.table_name as tableName,
+            p.column_name as columnName,
+            p.value_type as valueType,
+            p.dimension_id as dimensionId,
+            d.name as dimensionName,
+            p.create_user as createUser,
+            u.name as createUserName,
+            p.create_time as createTime,
+            p.last_update_user as lastUpdateUser,
+            p.last_update_time as lastUpdateTime,
+            p.remarks as remarks
+        from market_property as p
+        left join market_user as u on p.create_user = u.id
+        left join market_dimension d on p.dimension_id = d.id
+        where p.status = 0
+    </select>
+
+    <!-- 查询元属性个数 -->
+    <select id="queryAllPropertyCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_property as p
+        left join market_user as u on p.create_user = u.id
+        where p.status = 0
+        <if test="nameSearch != null and nameSearch != ''">
+            and p.name like concat('%',#{nameSearch},'%')
+        </if>
+        <if test="tableNameSearch != null and tableNameSearch != ''">
+            and p.table_name like concat('%',#{tableNameSearch},'%')
+        </if>
+        <if test="columnNameSearch != null and columnNameSearch != ''">
+            and p.column_name like concat('%',#{columnNameSearch},'%')
+        </if>
+        <if test="userNameSearch != null and userNameSearch != ''">
+            and u.name like concat('%',#{userNameSearch},'%')
+        </if>
+    </select>
+
+    <!-- 分页查询元属性 -->
+    <select id="queryPropertiesByPage" resultType="com.axon.market.common.domain.itag.PropertyDomain">
+        select
+            p.id as id,
+            p.name as name,
+            p.catalog_id as catalogId,
+            p.catalog_name as catalogName,
+            p.table_name as tableName,
+            p.column_name as columnName,
+            p.value_type as valueType,
+            p.dimension_id as dimensionId,
+            d.name as dimensionName,
+            p.create_user as createUser,
+            u.name as createUserName,
+            p.create_time as createTime,
+            p.last_update_user as lastUpdateUser,
+            p.last_update_time as lastUpdateTime,
+            p.remarks as remarks
+        from market_property as p
+        left join market_user as u on p.create_user = u.id
+        left join market_dimension d on p.dimension_id = d.id
+        where p.status = 0
+        <if test="nameSearch != null and nameSearch != ''">
+            and p.name like concat('%',#{nameSearch},'%')
+        </if>
+        <if test="tableNameSearch != null and tableNameSearch != ''">
+            and p.table_name like concat('%',#{tableNameSearch},'%')
+        </if>
+        <if test="columnNameSearch != null and columnNameSearch != ''">
+            and p.column_name like concat('%',#{columnNameSearch},'%')
+        </if>
+        <if test="userNameSearch != null and userNameSearch != ''">
+            and u.name like concat('%',#{userNameSearch},'%')
+        </if>
+        order by p.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryPropertyById" resultType="com.axon.market.common.domain.itag.PropertyDomain">
+        select
+            p.id as id,
+            p.name as name,
+            p.catalog_id as catalogId,
+            p.catalog_name as catalogName,
+            p.table_name as tableName,
+            p.column_name as columnName,
+            p.value_type as valueType,
+            p.dimension_id as dimensionId,
+            d.name as dimensionName,
+            p.create_user as createUser,
+            u.name as createUserName,
+            p.create_time as createTime,
+            p.last_update_user as lastUpdateUser,
+            p.last_update_time as lastUpdateTime,
+            p.remarks as remarks
+        from market_property as p
+        left join market_user as u on p.create_user = u.id
+        left join market_dimension d on p.dimension_id = d.id
+        where p.status = 0 and p.id = #{id}
+    </select>
+
+    <select id="queryMetaPropertiesByIds" resultType="java.util.Map">
+        select
+            p.id 										              as id,
+            p.name 									                  as name,
+            p.table_name 					      	                  as tableName,
+            p.column_name 					                          as columnName,
+            concat(t.db_schema, '.', t.table_name,'.',t.phone_column_name) as columnInfo,
+		    t.area_column_name as areaColumnName
+        from market_property as p
+        left join market_tag as t on concat(t.db_schema, '.', t.table_name) = p.table_name
+        where find_in_set(p.id, #{metaPropertyIds})
+        order by find_in_set(p.id, #{metaPropertyIds})
+    </select>
+
+    <!-- 插入元属性 -->
+    <insert id="createProperties" parameterType="com.axon.market.common.domain.itag.PropertyDomain">
+        insert into market_property
+        (
+            name,
+            catalog_id,
+            catalog_name,
+            table_name,
+            column_name,
+            value_type,
+            dimension_id,
+            create_user,
+            create_time,
+            remarks
+        )
+        values
+        <foreach collection="list" item="item" index="index" separator="," >
+        (
+            #{item.name},
+            #{item.catalogId},
+            #{item.catalogName},
+            #{item.tableName},
+            #{item.columnName},
+            #{item.valueType},
+            #{item.dimensionId},
+            #{item.createUser},
+            #{item.createTime},
+            #{item.remarks}
+        )
+        </foreach>
+    </insert>
+
+    <!-- 更新元属性 -->
+    <update id="updateProperty" parameterType="com.axon.market.common.domain.itag.PropertyDomain">
+        update market_property set
+            <if test="info.name != null">
+                name = #{info.name},
+            </if>
+            <if test="info.catalogId != null">
+                catalog_id = #{info.catalogId},
+            </if>
+            <if test="info.catalogName != null">
+                catalog_name = #{info.catalogName},
+            </if>
+            <if test="info.tableName != null">
+                table_name = #{info.tableName},
+            </if>
+            <if test="info.columnName != null">
+                column_name = #{info.columnName},
+            </if>
+            <if test="info.valueType != null">
+                value_type = #{info.valueType},
+            </if>
+            <if test="info.dimensionId != null">
+                dimension_id = #{info.dimensionId},
+            </if>
+            <if test="info.lastUpdateUser != null">
+                last_update_user = #{info.lastUpdateUser},
+            </if>
+            <if test="info.lastUpdateTime != null">
+                last_update_time = #{info.lastUpdateTime},
+            </if>
+            <if test="info.remarks != null">
+                remarks = #{info.remarks},
+            </if>
+                id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <!-- 删除元属性 -->
+    <update id="deleteProperty">
+        update market_property set
+            last_update_user = #{userId},
+            last_update_time = #{time},
+            status = -1
+        where id =  #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTaskKPIMapper">
+
+    <select id="queryShopTaskKPI" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+        a.code,
+        a.name,
+        IFNULL(b.num,0) as num,
+        IFNULL(b.executeNum,0) as executeNum,
+        case when b.num is null then 0.00 else ROUND(IFNULL(b.executeNum,0)/IFNULL(b.num,0)*100,2) end as ratio,
+        case when a.code = '99999' then (select count(1) from conf_baseinfo where location_type_id = 7 and status
+        = 1) else IFNULL(d.hphall,0) end as hphall,
+        case when a.code = '99999' then (select count(1) from conf_baseinfo where location_type_id = 1 and status
+        = 1) else IFNULL(d.zyhall,0) end as zyhall,
+        case when a.code = '99999' then (select count(1) from conf_baseinfo where location_type_id = 2 and status
+        = 1) else IFNULL(d.hzhall,0) end as hzhall
+        from market_area a
+        LEFT JOIN
+        (
+        select tab.base_area_id,
+        count(*) as num,
+        count(tab.executeBase) as executeNum
+        from
+        (
+        select t.date, t.id,t.task_name,t.task_type,
+        t.marketUser,t.base_area_id, b.base_id,
+        h.base_id as executeBase,h.base_area_id as areaCode
+        from shop_task_pool t
+        join shop_task_2_base b on t.id = b.task_id
+        left join shop_task_execute_history h on t.id = h.task_id and t.date = h.date and h.base_id = b.base_id
+        where t.date = DATE_FORMAT(#{date}, '%Y%m%d')
+        )
+        tab GROUP BY tab.base_area_id
+        ) b on a.code = b.base_area_id
+        left join
+        (
+        select c.city_code,sum(c.location_type_id = 7 ) hphall,sum(c.location_type_id = 1) zyhall,sum(c.location_type_id = 2) hzhall
+        from conf_baseinfo c
+        where  c.status = 1
+        GROUP BY c.city_code
+        ) d on a.code = d.city_code
+        where 1=1
+        <if test="areaCode != '99999'">
+            and a.code = #{areaCode}
+        </if>
+        order by a.code desc
+    </select>
+
+
+    <select id="queryBusinessHallKPI" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+        a.base_name as name,
+        tp.location_type as type,
+        IFNULL(b.num,0) as num,
+        IFNULL(b.executeNum,0) as executeNum,
+        case when b.num is null then 0.00 else ROUND(IFNULL(b.executeNum,0)/IFNULL(b.num,0)*100,2) end as ratio
+        FROM
+        conf_baseinfo a
+        LEFT JOIN conf_baseinfo_type tp
+        ON a.location_type_id =  tp.location_type_id
+        LEFT JOIN
+        (
+        SELECT
+        tab.base_id ,
+        count(*) as num,
+        count(tab.executeBase) as executeNum
+        from
+        (
+        select t.date, t.id,t.task_name,t.task_type,
+        t.marketUser,t.base_area_id, b.base_id,
+        h.base_id as executeBase,h.base_area_id as areaCode
+        from shop_task_pool t
+        join shop_task_2_base b on t.id = b.task_id
+        left join shop_task_execute_history h on t.id = h.task_id and t.date = h.date and h.base_id = b.base_id
+        where t.base_area_id != 99999
+        and t.date = DATE_FORMAT(#{date}, '%Y%m%d')
+        )
+        tab GROUP BY tab.base_id
+        ) b
+        ON b.base_id = a.base_id
+        WHERE
+        a.status = 1
+        AND
+        a.city_code = #{cityCode}
+        <if test="businessHallName != null">
+            AND  a.base_name LIKE concat('%',#{businessHallName},'%')
+        </if>
+        order by a.base_id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+
+    <select id="queryBusinessHallCount" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+        count(1) as counts,
+        sum(IFNULL(b.num,0)) as allNum,
+        sum(IFNULL(b.executeNum,0)) as allExecuteNum
+        FROM
+        conf_baseinfo a
+        LEFT JOIN conf_baseinfo_type tp
+        ON a.location_type_id =  tp.location_type_id
+        LEFT JOIN
+        (
+        SELECT
+        tab.base_id ,
+        count(*) as num,
+        count(tab.executeBase) as executeNum
+        from
+        (
+        select t.date, t.id,t.task_name,t.task_type,
+        t.marketUser,t.base_area_id, b.base_id,
+        h.base_id as executeBase,h.base_area_id as areaCode
+        from shop_task_pool t
+        join shop_task_2_base b on t.id = b.task_id
+        left join shop_task_execute_history h on t.id = h.task_id and t.date = h.date and h.base_id = b.base_id
+        where t.base_area_id != 99999
+        and t.date = DATE_FORMAT(#{date}, '%Y%m%d')
+        )
+        tab GROUP BY tab.base_id
+        ) b
+        ON b.base_id = a.base_id
+        WHERE
+        a.status = 1
+        AND
+        a.city_code = #{cityCode}
+        <if test="businessHallName != null">
+            AND  a.base_name LIKE concat('%',#{businessHallName},'%')
+        </if>
+    </select>
+</mapper>

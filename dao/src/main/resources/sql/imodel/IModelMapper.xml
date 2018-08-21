@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.imodel.IModelMapper">
+
+    <!-- 查询某区域标签个数 -->
+    <select id="queryAllModelCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_model m
+        left join market_user u on m.create_user = u.id
+        where find_in_set(m.status,#{status})
+        and ((m.status in (0,1)
+            and	(
+                m.create_user = #{loginUser.id}
+                or (
+                    (m.specified_role_id = '' or m.specified_role_id is null)
+                    and(#{loginUser.areaId} = 99999 or (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id))
+                )
+                or
+                exists(
+                    select r.id from market_role r
+                    where find_in_set(r.id,(select u0.role_ids from market_user u0 where u0.id = #{loginUser.id}))
+                    and find_in_set(r.id,m.specified_role_id)
+                )
+            )
+            )
+            or (m.status not in (0,1) and m.create_user = #{loginUser.id})
+        )
+        <if test="nameSearch != null and nameSearch != ''">
+            and m.name like concat('%',#{nameSearch},'%')
+        </if>
+        <if test="createTypeSearch != null and createTypeSearch != 'all'">
+            and m.create_type = #{createTypeSearch}
+        </if>
+        <if test="userNameSearch != null and userNameSearch != ''">
+            and u.name like concat('%',#{userNameSearch},'%')
+        </if>
+        <if test="catalogSearch != null and catalogSearch != ''">
+            and m.catalog_id in (${catalogSearch})
+        </if>
+        <if test="qryToday">
+            and substring(m.last_refresh_success_time, 1, 10) = date_format(now(), '%Y-%m-%d')
+        </if>
+    </select>
+
+    <select id="queryAllModels" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            u.name as createUserName,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where m.status = 0
+    </select>
+
+    <select id="queryAllRuleModelsBySystem" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+        m.id as id,
+        m.name as name,
+        m.catalog_id as catalogId,
+        m.catalog_name as catalogName,
+        m.create_type as createType,
+        m.rule as rule,
+        m.status as status,
+        m.specified_role_id as specifiedRoleIds,
+        m.is_need_send_notify_sms as isNeedSendNotifySms,
+        m.remote_server_id as remoteServerId,
+        m.remote_file as remoteFile,
+        m.execute_time as executeTime,
+        m.is_need_delete as isNeedDelete,
+        m.interval_time as intervalTime,
+        m.create_user as createUser,
+        u.name as createUserName,
+        m.create_time as createTime,
+        m.last_refresh_time as lastRefreshTime,
+        m.last_refresh_success_time as lastRefreshSuccessTime,
+        m.last_refresh_count as lastRefreshCount,
+        m.remarks as remarks
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where m.status = 0 and m.create_type = 'rule'
+    </select>
+
+    <!-- 分页查询某区域标签 -->
+    <select id="queryModelsByPage" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            u.name as createUserName,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where
+          find_in_set(m.status,#{status})
+          and
+            (
+                (
+                    m.status in (0,1)
+                    and
+                      (
+                        m.create_user = #{loginUser.id}
+                        or
+                        (
+                            (m.specified_role_id = '' or m.specified_role_id is null)
+                            and
+                              (
+                                #{loginUser.areaId} = 99999
+                                or
+                                (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id)
+                              )
+                        )
+                        or exists
+                        (
+                            select r.id from market_role r
+                            where find_in_set(r.id,(select u0.role_ids from market_user u0 where u0.id = #{loginUser.id}))
+                            and find_in_set(r.id,m.specified_role_id)
+                        )
+                      )
+                )
+                or
+                (
+                  m.status not in (0,1) and m.create_user = #{loginUser.id}
+                )
+            )
+        <if test="nameSearch != null and nameSearch != ''">
+            and m.name like concat('%',#{nameSearch},'%')
+        </if>
+        <if test="createTypeSearch != null and createTypeSearch != 'all'">
+            and m.create_type = #{createTypeSearch}
+        </if>
+        <if test="userNameSearch != null and userNameSearch != ''">
+            and u.name like concat('%',#{userNameSearch},'%')
+        </if>
+        <if test="catalogSearch != null and catalogSearch != ''">
+            and m.catalog_id in (${catalogSearch})
+        </if>
+        <if test="qryToday != null and qryToday != ''">
+            and substring(m.last_refresh_success_time, 1, 10) = date_format(now(), '%Y-%m-%d')
+        </if>
+        order by m.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryAllModelsByUser" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            u.name as createUserName,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where m.status = 0
+        and ((m.status in (0,1)
+            and	(
+                m.create_user = #{loginUser.id}
+                or (
+                    (m.specified_role_id = '' or m.specified_role_id is null)
+                    and(#{loginUser.areaId} = 99999 or (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id))
+                )
+                or
+                exists(
+                    select r.id from market_role r
+                    where find_in_set(r.id,(select u0.role_ids from market_user u0 where u0.id = #{loginUser.id}))
+                    and find_in_set(r.id,m.specified_role_id)
+                )
+            )
+            )
+            or (m.status not in (0,1) and m.create_user = #{loginUser.id})
+        )
+        <if test="isQueryImportModel">
+            and m.create_type = 'localImport'
+        </if>
+    </select>
+
+    <select id="queryModelsUnderMe" resultType="java.util.Map">
+        select
+            m.id                                  as id,
+            m.name                                as name,
+            u.name                                as userName
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where m.status in (0,1)
+        and	(
+            m.create_user = #{loginUser.id}
+            or (
+                (m.specified_role_id = '' or m.specified_role_id is null)
+                and(#{loginUser.areaId} = 99999 or (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id))
+            )
+            or
+            exists(
+                select r.id from market_role r
+                where find_in_set(r.id,(select u0.role_ids from market_user u0 where u0.id = #{loginUser.id}))
+                and find_in_set(r.id,m.specified_role_id)
+            )
+        )
+        and m.id not in (
+          select model_id from market_model_download_manager where status = 0 and create_user = #{loginUser.id} and (#{modelId} is null or model_id != #{modelId})
+        )
+    </select>
+
+    <select id="queryAllAuditModelsByUser" resultType="java.util.Map">
+          select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            u.name as createUserName,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks,
+            u.segment_audit_users as modelAuditUsers
+        from market_model as m
+        left join market_user as u on m.create_user = u.id
+        where m.status = 2
+        and u.segment_audit_users like '%,"auditUser":"${userId}",%'
+    </select>
+
+    <select id="queryModelAuditInfo" resultType="java.util.Map">
+        select
+            model_id as id,
+            count(1) as count
+        from market_model_audit_history
+        where model_id in ${modelIds} and audit_result = 'approve'
+        group by model_id
+    </select>
+
+    <select id="queryModelById" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        where m.status = 0 and m.id = #{modelId}
+    </select>
+
+    <select id="queryAuditingModelById" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        where m.status = 2 and m.id = #{modelId}
+    </select>
+
+    <select id="queryModelByName" resultType="com.axon.market.common.domain.imodel.ModelDomain">
+        select
+            m.id as id,
+            m.name as name,
+            m.catalog_id as catalogId,
+            m.catalog_name as catalogName,
+            m.create_type as createType,
+            m.rule as rule,
+            m.status as status,
+            m.specified_role_id as specifiedRoleIds,
+            m.is_need_send_notify_sms as isNeedSendNotifySms,
+            m.remote_server_id as remoteServerId,
+            m.remote_file as remoteFile,
+            m.execute_time as executeTime,
+            m.is_need_delete as isNeedDelete,
+            m.interval_time as intervalTime,
+            m.create_user as createUser,
+            m.create_time as createTime,
+            m.last_refresh_time as lastRefreshTime,
+            m.last_refresh_success_time as lastRefreshSuccessTime,
+            m.last_refresh_count as lastRefreshCount,
+            m.remarks as remarks
+        from market_model as m
+        where m.status != -1 and m.name = #{modelName}
+    </select>
+
+    <select id="queryUserPhoneOfCreateModelByModelId" resultType="java.lang.String">
+        select
+            u.telephone
+        from market_model as m
+        left join market_user u on m.create_user = u.id
+        where m.id = #{modelId}
+    </select>
+
+    <select id="calcModelsUserCount" resultType="int">
+        select ifnull(sum(s.last_refresh_count),0) from market_model s where find_in_set(s.id,#{modelIds})
+    </select>
+
+    <!-- 插入标签 -->
+    <insert id="createModel" parameterType="com.axon.market.common.domain.imodel.ModelDomain" useGeneratedKeys="true" keyProperty="info.id">
+        insert into market_model
+        (
+            name,
+            catalog_id,
+            catalog_name,
+            create_type,
+            rule,
+            status,
+            specified_role_id,
+            is_need_send_notify_sms,
+            remote_server_id,
+            remote_file,
+            execute_time,
+            is_need_delete,
+            interval_time,
+            create_user,
+            create_time,
+            remarks
+        )
+        values
+        (
+            #{info.name},
+            #{info.catalogId},
+            #{info.catalogName},
+            #{info.createType},
+            #{info.rule},
+            #{info.status},
+            #{info.specifiedRoleIds},
+            #{info.isNeedSendNotifySms},
+            #{info.remoteServerId},
+            #{info.remoteFile},
+            #{info.executeTime},
+            #{info.isNeedDelete},
+            #{info.intervalTime},
+            #{info.createUser},
+            #{info.createTime},
+            #{info.remarks}
+        )
+    </insert>
+
+    <!-- 更新标签 -->
+    <update id="updateModel" parameterType="com.axon.market.common.domain.imodel.ModelDomain">
+        update market_model set
+        <if test="info.name != null">
+            name = #{info.name},
+        </if>
+        <if test="info.catalogId != null">
+            catalog_id = #{info.catalogId},
+        </if>
+        <if test="info.catalogName != null">
+            catalog_name = #{info.catalogName},
+        </if>
+        <if test="info.createType != null">
+            create_type = #{info.createType},
+        </if>
+        <if test="info.rule != null">
+            rule = #{info.rule},
+        </if>
+        <if test="info.status != null">
+            status = #{info.status},
+        </if>
+        <if test="info.specifiedRoleIds != null">
+            specified_role_id = #{info.specifiedRoleIds},
+        </if>
+        <if test="info.isNeedSendNotifySms != null">
+            is_need_send_notify_sms = #{info.isNeedSendNotifySms},
+        </if>
+        <if test="info.createType == 'remoteImport' and info.remoteServerId != null">
+            remote_server_id = #{info.remoteServerId},
+        </if>
+        <if test="info.createType == 'remoteImport' and info.remoteFile != null">
+            remote_file = #{info.remoteFile},
+        </if>
+        <if test="info.createType == 'remoteImport' and info.executeTime != null">
+            execute_time = #{info.executeTime},
+        </if>
+        <if test="info.createType == 'remoteImport' and info.isNeedDelete != null">
+            is_need_delete = #{info.isNeedDelete},
+        </if>
+        <if test="info.createType == 'remoteImport' and info.intervalTime != null">
+            interval_time = #{info.intervalTime},
+        </if>
+        <if test="info.lastUpdateUser != null">
+            last_update_user = #{info.lastUpdateUser},
+        </if>
+        <if test="info.lastUpdateTime != null">
+            last_update_time = #{info.lastUpdateTime},
+        </if>
+        <if test="info.remarks != null">
+            remarks = #{info.remarks},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteModel">
+        update market_model set
+            last_update_user = #{userId},
+            last_update_time = #{time},
+            status = -1
+        where id =  #{id}
+    </update>
+
+    <update id="updateModelRefreshInfo">
+        update market_model set
+            last_refresh_time = #{refreshTime},
+            last_refresh_success_time = #{refreshTime},
+            last_refresh_count = #{count}
+        where id = #{modelId}
+    </update>
+
+    <select id="queryModelRefreshTimeByModelId" resultType="java.lang.String">
+        select
+            m.last_refresh_success_time
+        from market_model as m
+        where m.id = #{modelId}
+    </select>
+
+    <update id="setModelStatus">
+        update market_model set
+            status = #{status}
+        where id = #{id}
+    </update>
+
+</mapper>

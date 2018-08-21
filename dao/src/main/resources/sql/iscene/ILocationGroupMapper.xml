@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.ILocationGroupMapper">
+    <!--查询地区群组列表-->
+    <select id="getLocationGroupList" resultType="com.axon.market.common.domain.iscene.LocationGroupDomain">
+        SELECT
+          Id as id,
+          Name as name,
+          Count as count,
+          TableName as tableName,
+          isdelete as isDelete,
+          ProvinceId as provinceId,
+          CreateId as createId
+        FROM  locationgroup
+        WHERE isdelete = 0
+        <if test="groupName != null">
+            AND name LIKE concat('%',#{groupName},'%')
+        </if>
+        ORDER BY id DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+    <!--查询地区群组分页条数-->
+    <select id="getLocationGroupListCount" resultType="int">
+        SELECT
+          count(1)
+        FROM locationgroup
+        WHERE isdelete = 0
+        <if test="groupName != null">
+            AND name LIKE concat('%',#{groupName},'%') 
+        </if>
+    </select>
+    
+    <!--新增地区群组-->
+    <insert id="addLocationGroup" parameterType="com.axon.market.common.domain.iscene.LocationGroupDomain">
+        INSERT INTO
+          locationgroup(Name,Count,TableName,isdelete,ProvinceId,CreateId)
+        VALUES
+          (#{name},#{count},#{tableName},#{isDelete},#{provinceId},#{createId})
+    </insert>
+
+    <!--修改区域群组名-->
+    <update id="editLocationGroup">
+        UPDATE
+          locationgroup
+        SET
+          Name = #{name}
+        WHERE Id = #{id}
+    </update>
+
+    <!--创建地区表-->
+    <select id="createLocationTable">
+        CREATE TABLE IF NOT EXISTS ${tableName} (
+                          Id int(11) NOT NULL AUTO_INCREMENT,
+                          OID varchar(45) DEFAULT '',
+                          City varchar(45) DEFAULT '',
+                          TimeSpan varchar(45) DEFAULT '',
+                          No varchar(45) DEFAULT '',
+                          Class1 varchar(45) DEFAULT '',
+                          Class2 varchar(45) DEFAULT '',
+                          Class3 varchar(45) DEFAULT '',
+                          Class4 varchar(45) DEFAULT '',
+                          SceneId varchar(45) DEFAULT '',
+                          SceneName varchar(45) DEFAULT '',
+                          ParentScene varchar(45) DEFAULT '',
+                          SceneDescribe varchar(45) DEFAULT '',
+                          ScenePosition varchar(45) DEFAULT '',
+                          Scenelong varchar(45) DEFAULT '',
+                          Scenelat varchar(45) DEFAULT '',
+                          Coverage varchar(45) DEFAULT '',
+                          IsReport int(11) DEFAULT '0',
+                          Province varchar(45) DEFAULT '',
+                          AdminRegion varchar(45) DEFAULT '',
+                          GeoRegion varchar(45) DEFAULT '',
+                          RegionName varchar(45) DEFAULT '',
+                          NetWorkType varchar(45) DEFAULT '',
+                          Remarks varchar(45) DEFAULT '',
+                          LAC varchar(45) DEFAULT '',
+                          CI varchar(45) DEFAULT '',
+                          ULIType int(11) DEFAULT '1',
+                          PRIMARY KEY (Id)
+                          )  ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8
+    </select>
+
+    <!--分页查询地区数据-->
+    <select id="queryLocationList" resultType="com.axon.market.common.domain.iscene.LocationDomain">
+        SELECT
+          *
+        FROM ${tableName}
+        ORDER BY Id DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+    <!--查询地区分页条数-->
+    <select id="queryLocationListCount" resultType="int">
+        SELECT
+          count(1)
+        FROM ${tableName}
+    </select>
+
+    <!--删除地区数据-->
+    <delete id="delLocation">
+        DELETE  FROM
+          ${tableName}
+        WHERE  Id = #{id}
+    </delete>
+
+    <!--删除后更新数据-->
+    <update id="updateAfterDelete">
+        UPDATE
+          locationgroup
+        SET Count = Count - 1
+        WHERE TableName = #{tableName}
+    </update>
+
+    <!--批量插入location-->
+    <insert id="batchUploadLocation" parameterType="java.util.Map">
+      INSERT  INTO  ${tableName}
+      (
+        OID,City,TimeSpan,No,Class1,Class2,Class3,Class4,SceneId,SceneName,ParentScene,SceneDescribe,
+        ScenePosition,Scenelong,Scenelat,Coverage,IsReport,Province,AdminRegion,GeoRegion,RegionName,
+        NetWorkType,Remarks
+      )
+      VALUES
+      <foreach collection="list" item="i" separator=",">
+        (
+          #{i.OID},#{i.City},#{i.TimeSpan},#{i.No},#{i.Class1},#{i.Class2},#{i.Class3},#{i.Class4},
+          #{i.SceneId},#{i.SceneName},#{i.ParentScene},#{i.SceneDescribe},#{i.ScenePosition},#{i.Scenelong},
+          #{i.Scenelat},#{i.Coverage},#{i.IsReport},#{i.Province},#{i.AdminRegion},#{i.GeoRegion},
+          #{i.RegionName},#{i.NetWorkType},#{i.Remarks}
+        )
+      </foreach>
+    </insert>
+
+    <!--根据name查询locationGroup表-->
+    <select id="queryLocationGroupList" resultType="com.axon.market.common.domain.iscene.LocationGroupDomain">
+        SELECT
+          *
+        from
+          locationgroup
+        WHERE
+          Name = #{name}
+    </select>
+
+    <!--更新locationGroup表的tableName字段-->
+    <update id="updateTableName">
+        UPDATE
+          locationgroup
+        set
+          TableName = #{tableName}
+        WHERE
+          Id = #{id}
+    </update>
+
+    <!--删除废表-->
+    <delete id="deleteTable">
+        DELETE  FROM  ${table}
+    </delete>
+
+    <!--更新删除状态的用户群组表-->
+    <update id="updateLocationGroup">
+        UPDATE
+          locationgroup
+        SET
+          Count = #{local.count},
+          isdelete = #{local.isDelete},
+          ProvinceId = #{local.provinceId}
+        WHERE
+          Id = #{local.id}
+    </update>
+
+    <!--批量插入后更新count字段-->
+    <update id="updateCountAfterAdd">
+        UPDATE
+          locationgroup
+        SET
+          Count = (SELECT count(1) FROM ${table})
+        WHERE
+          TableName = #{table1}
+    </update>
+
+    <!--查询未删除的task中的地区群组id-->
+    <select id="queryTaskList" resultType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        SELECT
+          locationgroup_ids as locationGroupIds
+        FROM
+          market_scene_pilot
+        WHERE
+          IsDelete = 0
+    </select>
+
+    <!--逻辑删除locationGroup-->
+    <update id="delLocationGroup">
+        UPDATE
+          locationgroup
+        SET
+          isdelete = 1
+        WHERE
+          Id = #{id}
+    </update>
+
+</mapper>

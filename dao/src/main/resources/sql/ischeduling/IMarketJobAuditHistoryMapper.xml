@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ischeduling.IMarketJobAuditHistoryMapper">
+
+    <insert id="insertMarketJobAuditHistory">
+        insert into market_job_audit_history values
+        (
+            #{info.marketJobId},
+            #{info.auditUser},
+            #{info.auditResult},
+            sysdate(),
+            #{info.remarks}
+        )
+    </insert>
+
+    <select id="queryMarketJobAuditProgress" resultType="com.axon.market.common.domain.ischeduling.MarketJobAuditHistoryDomain">
+        select
+            h.audit_result                                                    as auditResult,
+            h.audit_time                                                      as auditTime,
+            h.remarks                                                         as remarks,
+            h.audit_user                                                      as auditUser,
+            u.name                                                            as auditUserName
+        from
+            market_job_audit_history h
+        left join market_user u on h.audit_user = u.id
+        where
+            h.marketjob_id = #{marketJobId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryMarketJobAuditHistoryDomain" resultType="com.axon.market.common.domain.ischeduling.MarketJobAuditHistoryDomain">
+        select
+            h.audit_user                                          as auditUser,
+            h.audit_result                                        as auditResult,
+            h.remarks                                             as remarks,
+            h.audit_time                                          as auditTime,
+            u.marketing_audit_users                                 as auditUsers,
+            u1.name                                               as auditUserName
+        from
+            market_job_audit_history h
+        left join market_jobs j on h.marketjob_id = j.id
+        left join market_user u on j.create_user = u.id
+        left join market_user u1 on h.audit_user = u1.id
+        where h.marketjob_id = #{marketJobId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryAllMarketJobAuditUser" resultType="java.util.Map">
+        select
+            u1.marketing_audit_users                          as marketingAuditUsers,
+            u2.id                                             as id,
+            u2.name                                           as name
+        from
+            ( select marketing_audit_users from market_user where id = #{userId} ) u1, market_user u2
+        where
+            u1.marketing_audit_users like replace ( '%,"auditUser":"@",%', '@', u2.id )
+    </select>
+
+    <delete id="deleteMarketJobAuditHistory">
+        delete from market_job_audit_history where marketjob_id =  #{marketJobId}
+    </delete>
+
+</mapper>

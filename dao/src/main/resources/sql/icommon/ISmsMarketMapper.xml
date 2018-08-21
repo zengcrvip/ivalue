@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.ISmsMarketMapper">
+
+    <insert id="createPTask" parameterType="com.axon.market.common.domain.icommon.market.PTaskDomain" useGeneratedKeys="true" keyProperty="info.id">
+        insert into pdc.p_task
+        (
+            task_title,
+            if_execute,
+            cid,
+            ctime,
+            exe_time,
+            sp_num,
+            push_type,
+            market_submitter,
+            market_user_target_numbers,
+            market_content
+        )
+        values
+        (
+            #{info.taskTitle},
+            #{info.ifExecute},
+            #{info.cId},
+            sysdate(),
+            #{info.exeTime},
+            #{info.spNum},
+            #{info.pushType},
+            #{info.marketSubmitter},
+            #{info.marketUserTargetNumbers},
+            #{info.marketContent}
+        )
+    </insert>
+
+    <update id="updatePTask">
+        update pdc.p_task set
+            market_user_target_numbers = #{count},
+            if_execute = 3,
+            priority = #{taskId}
+        where id = #{taskId}
+    </update>
+
+    <insert id="createPdr" parameterType="java.util.List">
+        insert into pdc.pdr
+        (
+            mob,
+            sms_url,
+            sms_message,
+            taskid,
+            send_time
+        )
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+        (
+            #{item.mob},
+            #{item.smsUrl},
+            #{item.smsContent},
+            #{item.taskId},
+            #{item.sendTime}
+        )
+        </foreach>
+    </insert>
+
+    <insert id="createJumpLink" parameterType="java.util.List">
+        insert into pdc.jump_link
+        (
+            uid,
+            longlink,
+            mob,
+            province,
+            taskid
+        )
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+        (
+            #{item.uId},
+            #{item.longLink},
+            #{item.mob},
+            #{item.province},
+            #{item.taskId}
+        )
+        </foreach>
+    </insert>
+
+</mapper>

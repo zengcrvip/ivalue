@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.IMonitorStatisticsMapper">
+
+    <select id="queryMonitorStatisticsCounts" resultType="java.lang.Integer">
+        select count(0) from monitorconfig_runnotify inner join monitor_syncinfo
+        on monitorconfig_runnotify.monitorConfig_id=monitor_syncinfo.id
+        where monitorconfig_runnotify.isDelete=0
+        <if test="serverIp != null and serverIp !=''">
+            and serverIp=#{serverIp}
+        </if>
+        <if test="status != -1 ">
+            and status=#{status}
+        </if>
+    </select>
+
+    <select id="queryMonitorStatistics" resultType="com.axon.market.common.domain.isystem.MonitorStatisticsDomain">
+        select monitorConfig_id as monitorConfigId,status,remark,serverIp,monitorconfig_runnotify.create_time as CreateTime from monitorconfig_runnotify inner join monitor_syncinfo
+        on monitorconfig_runnotify.monitorConfig_id=monitor_syncinfo.id
+        where monitorconfig_runnotify.isDelete=0
+        <if test="serverIp != null and serverIp !=''">
+            and serverIp=#{serverIp}
+        </if>
+        <if test="status != -1 ">
+            and status=#{status}
+        </if>
+        order by monitorconfig_runnotify.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+
+</mapper>

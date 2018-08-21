@@ -1,0 +1,1 @@
+package com.axon.market.common.constant.iresource;

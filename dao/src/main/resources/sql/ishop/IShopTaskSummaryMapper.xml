@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTaskSummaryMapper">
+
+    <select id="queryPositionSummaryByDay" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+                c.name,
+                d.zy_business_hall_nums as zyhall,
+                d.hz_business_hall_nums as hzhall,
+                d.conf_business_hall_nums as confhall,
+                d.seep_rate*100 as seep,
+                d.task_nums as taskNum,
+                d.sms_send_nums as smsSendNum,
+                d.sms_arrive_nums as smsArriveNum,
+                d.sms_arrive_rate*100 as smsArriveRate
+        from
+        analysisdb.d_daily_location_task_summary d
+        join market_area c   on    d.city_code = c.code
+        where d.cdate = #{executeTime}
+        <if test="businessCodes != ''">
+            and   d.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and   d.city_code in(#{areaCode},99999)
+        </if>
+    </select>
+
+    <select id="queryPositionSummaryByMonth" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+                c.name,
+                d.zy_business_hall_nums             as  zyhall,
+                d.hz_business_hall_nums             as  hzhall,
+                d.conf_business_hall_nums           as  confhall,
+                d.seep_rate*100                     as  seep,
+                d.task_nums                         as  taskNum,
+                d.sms_send_nums                     as  smsSendNum,
+                d.sms_arrive_nums                   as  smsArriveNum,
+                d.sms_arrive_rate*100               as  smsArriveRate
+        from
+        analysisdb.m_daily_location_task_summary d
+        join market_area c    on    d.city_code = c.code
+        where d.cdate = #{executeTime}
+        <if test="businessCodes != ''">
+            and   d.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and   d.city_code in(#{areaCode},99999)
+        </if>
+    </select>
+</mapper>

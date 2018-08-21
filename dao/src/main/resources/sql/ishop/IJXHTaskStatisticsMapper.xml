@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IJXHTaskStatisticsMapper">
+    <select id="queryJXHTaskStatistics" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            cdate as date,
+            task_name as taskName,
+            market_type as marketType,
+            business_type as businessType,
+            market_segment_names as targetUser,
+            market_content as marketContent,
+            send_succ_user as smsSend,
+            recv_succ_user as smsRecv,
+        case when send_succ_user != 0 THEN CONCAT(round((recv_succ_user / send_succ_user)*100,2),'%')
+        ELSE CONCAT(0.00,'%')
+        END as smsRate
+        FROM analysisdb.rpt_task_marketing_results_day
+        WHERE cdate BETWEEN #{startTime} and #{endTime}
+        <if test="taskName != '' and taskName != null">
+            and task_name LIKE  concat('%',#{taskName},'%')
+        </if>
+        <if test="marketType != 'all' and marketType != null">
+            and market_type = #{marketType}
+        </if>
+        <if test="businessType != -1 and businessType != null">
+            and business_type = #{businessType}
+        </if>
+        ORDER BY cdate DESC
+        <if test="length != null and start != null">
+            limit ${length} offset ${start}
+        </if>
+    </select>
+
+
+    <select id="queryJXHTaskCount" parameterType="java.util.Map" resultType="int">
+        SELECT
+          count(*)
+        FROM analysisdb.rpt_task_marketing_results_day
+        WHERE cdate BETWEEN #{startTime} and #{endTime}
+        <if test="taskName != '' and taskName != null">
+            and task_name LIKE  concat('%',#{taskName},'%')
+        </if>
+        <if test="marketType != 'all' and marketType != null">
+            and market_type = #{marketType}
+        </if>
+        <if test="businessType != -1 and businessType != null">
+            and business_type = #{businessType}
+        </if>
+    </select>
+</mapper>

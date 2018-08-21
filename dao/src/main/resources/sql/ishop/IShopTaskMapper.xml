@@ -1,0 +1,1428 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTaskMapper">
+
+    <!-- 炒店任务总数 -->
+    <select id="queryShopTaskTotal" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        (
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        t.marketUser as marketUser,
+        t.task_type as taskType,
+        '' as baseId,
+        '' as baseName,
+        t.status as status,
+        s.type as businessId,
+        s.name as businessName
+        from shop_task t
+        join shop_task_2_base b on b.task_id = t.id
+        join shop_task_2_business s on s.type = t.business_type
+        left join conf_baseinfo c on c.base_id = b.base_id
+        where 1=1 and t.status != -1
+        and t.marketUser in (1,2,3,4)
+        <if test="shopTaskId != ''">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskStatus != ''">
+            and t.status = #{taskStatus}
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="shopTaskBaseName != ''">
+            and t.task_type = 3
+            and c.base_name like concat('%',#{shopTaskBaseName},'%')
+        </if>
+        <if test="dateTime != ''">
+            and date_format(t.create_time,'%Y-%m-%d') = #{dateTime}
+        </if>
+        <if test="businessCodes != ''">
+            and b.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        ) tab
+    </select>
+
+    <!-- 分页查询炒店任务 -->
+    <select id="queryShopTaskByPage" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain"
+            parameterType="java.util.Map">
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        t.marketUser as marketUser,
+        t.task_type as taskType,
+        '' as baseId,
+        '' as baseName,
+        t.status as status,
+        s.type as businessId,
+        s.name as businessName,
+        date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        t.task_classify as taskClassifyId,
+        t.market_segment_ids as marketSegmentIds,
+        t.market_segment_names  as marketSegmentNames
+        from shop_task t
+        join shop_task_2_base b on b.task_id = t.id
+        join shop_task_2_business s on s.type = t.business_type
+        left join conf_baseinfo c on c.base_id = b.base_id
+        where 1=1 and t.status != -1
+        and t.marketUser in (1,2,3,4)
+        <if test="shopTaskId != ''">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskStatus != ''">
+            and t.status = #{taskStatus}
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="shopTaskBaseName != ''">
+            and t.task_type = 3
+            and c.base_name like concat('%',#{shopTaskBaseName},'%')
+        </if>
+        <if test="dateTime != ''">
+            and date_format(t.create_time,'%Y-%m-%d') = #{dateTime}
+        </if>
+        <if test="businessCodes != ''">
+            and b.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        order by t.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryRecommendationShopTaskByName" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select t.id as id,t.task_name as taskName,t.start_time as startTime ,
+        t.stop_time as stopTime,t.market_user_num as marketUserMum,t.create_user as createUser,t.marketUser as marketUser,t.task_type as taskType,'' as baseId,'' as baseName,
+        t.status as status
+        from shop_task t
+        where t.status != -1
+        and t.marketUser = 4
+        and t.task_name = #{name} and t.aim_sub_id = #{segment} and t.depart_typecode = #{departTypeCode} and t.sale_boid_id = #{boidId}
+    </select>
+
+    <select id="queryShopTaskBySaleIdAndBoid" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+          select t.id as id,t.task_name as taskName,t.start_time as startTime ,
+                  t.stop_time as stopTime,t.market_user_num as marketUserMum,t.create_user as createUser,t.marketUser as marketUser,t.task_type as taskType,'' as baseId,'' as baseName,
+                  t.status as status
+            from shop_task t
+            where t.status != -1
+              and t.marketUser = 4
+              and t.sale_id = #{saleId}
+              and t.sale_boid_id != #{boidId}
+    </select>
+
+    <!-- 炒店待执行任务总数 -->
+    <select id="queryShopTaskExecuteAll" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        (
+        select DISTINCT t.id as id,t.task_name as taskName,t.start_time as startTime ,
+        t.stop_time as stopTime,t.market_user_num as marketUserMum,t.task_type as taskType,
+        t.create_user as createUser,t.status as status,t.marketUser as marketUser,s.type as businessId,s.name as
+        businessName,'' as baseId,'' as baseName
+        from shop_task_pool t join shop_task_2_base b on b.task_id = t.id
+        join shop_task_2_business s on s.type = t.business_type
+        left join conf_baseinfo c on c.base_id = b.base_id
+        where 1=1 and t.date = DATE_FORMAT(now(),'%Y%m%d') and t.task_classify = 1
+        <if test="shopTaskId != ''">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskType != '' and taskType != '0'">
+            and t.task_type = #{taskType}
+        </if>
+        <if test="businessId != ''">
+            and s.type = #{businessId}
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="businessCodes != ''">
+            and b.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        ) tab
+    </select>
+
+    <!-- 炒店待执行任务数 -->
+    <select id="queryShopTaskExecute" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain"
+            parameterType="java.util.Map">
+        select DISTINCT t.id as id,t.task_name as taskName,t.start_time as startTime ,
+        t.stop_time as stopTime,t.market_user_num as marketUserMum,t.task_type as
+        taskType,date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        t.create_user as createUser,t.status as status,t.marketUser as marketUser,s.type as businessId,s.name as
+        businessName,'' as baseId,'' as baseName,
+        t.market_segment_ids as marketSegmentIds,
+        t.market_segment_names  as marketSegmentNames
+        from shop_task_pool t join shop_task_2_base b on b.task_id = t.id
+        join shop_task_2_business s on s.type = t.business_type
+        left join conf_baseinfo c on c.base_id = b.base_id
+        where 1=1 and t.date = DATE_FORMAT(now(),'%Y%m%d') and t.task_classify = 1
+        <if test="shopTaskId != ''">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskType != '' and taskType != '0'">
+            and t.task_type = #{taskType}
+        </if>
+        <if test="businessId != ''">
+            and s.type = #{businessId}
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="businessCodes != ''">
+            and b.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        order by t.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!-- 炒店待执行任务总数 -->
+    <select id="queryShopTaskExecuteAllForClerk" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        (
+        select DISTINCT t.id as id,t.task_name as taskName,t.start_time as startTime ,
+        t.stop_time as stopTime,t.market_user_num as marketUserMum,t.task_type as
+        taskType,date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        t.create_user as createUser, IFNULL(e.status,t.status) as status, t.marketUser as marketUser,
+        f.base_id as baseId,f.base_name as baseName,
+        s.type as businessId,s.name as businessName
+        from shop_task_pool t join shop_task_2_base b on b.task_id = t.id
+        join conf_baseinfo f on f.base_id = b.base_id
+        join shop_task_2_business s on s.type = t.business_type
+        left join shop_task_execute_history e on e.task_id = t.id and e.base_id = b.base_id and e.date =
+        DATE_FORMAT(now(),'%Y%m%d')
+        where 1=1 and t.date = DATE_FORMAT(now(),'%Y%m%d') and t.task_classify = 1
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and f.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="taskType != '' and taskType != '0'">
+            and t.task_type = #{taskType}
+        </if>
+        <if test="businessId != ''">
+            and s.type = #{businessId}
+        </if>
+        and b.base_id in (${businessCodes})
+        and FIND_IN_SET(b.base_id,(select m.business_hall_Ids from market_user m where m.id = #{userId}))
+        ) tab
+    </select>
+
+    <!-- 炒店待执行任务 -->
+    <select id="queryShopTaskExecuteForClerk" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain"
+            parameterType="java.util.Map">
+        select DISTINCT t.id as id,t.task_name as taskName,t.start_time as startTime ,
+        t.stop_time as stopTime,t.market_user_num as marketUserMum,t.task_type as
+        taskType,date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        t.create_user as createUser, IFNULL(e.status,t.status) as status, t.marketUser as marketUser,
+        f.base_id as baseId,f.base_name as baseName,
+        s.type as businessId,s.name as businessName,
+        t.market_segment_ids as marketSegmentIds,
+        t.market_segment_names  as marketSegmentNames
+        from shop_task_pool t join shop_task_2_base b on b.task_id = t.id
+        join conf_baseinfo f on f.base_id = b.base_id
+        join shop_task_2_business s on s.type = t.business_type
+        left join shop_task_execute_history e on e.task_id = t.id and e.base_id = b.base_id and e.date =
+        DATE_FORMAT(now(),'%Y%m%d')
+        where 1=1 and t.date = DATE_FORMAT(now(),'%Y%m%d') and t.task_classify = 1
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and f.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="taskType != '' and taskType != '0'">
+            and t.task_type = #{taskType}
+        </if>
+        <if test="businessId != ''">
+            and s.type = #{businessId}
+        </if>
+        and b.base_id in (${businessCodes})
+        and FIND_IN_SET(b.base_id,(select m.business_hall_Ids from market_user m where m.id = #{userId}))
+        order by t.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!-- 插入营销任务 -->
+    <insert id="insertShopTask" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into shop_task (
+            task_name,
+            task_desc,
+            task_type,
+            business_type,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            marketUser,
+            market_user_num,
+            appoint_users,
+            appoint_users_desc,
+            black_users,
+            black_users_desc,
+            access_number,
+            market_content,
+            market_url,
+            send_interval,
+            scence_type,
+            scene_type_name,
+            monitor_area,
+            monitor_interval,
+            channel_id,
+            monitor_type,
+            trigger_channel_id,
+            base_area_id,
+            base_area_type,
+            base_ids,
+            task_weight,
+            is_send_report,
+            report_phone,
+            market_limit,
+            status,
+            create_user,
+            create_time,
+            update_time,
+            aim_sub_id,
+            depart_typecode,
+            sale_id,
+            sale_boid_id,
+            aim_sub_name,
+            task_file_name,
+            market_segment_ids,
+            market_segment_names,
+            market_content_id,
+            market_content_extend
+        )
+        values
+        (
+            #{taskName},
+            #{taskDesc},
+            #{taskType},
+            #{businessId},
+            #{startTime},
+            #{stopTime},
+            #{beginTime},
+            #{endTime},
+            #{marketUser},
+            #{marketUserMum},
+            #{appointUsers},
+            #{appointUserDesc},
+            #{blackUsers},
+            #{blackUserDesc},
+            #{accessNumber},
+            #{marketContentText},
+            #{marketUrl},
+            #{sendInterval},
+            #{sceneType},
+            #{sceneTypeName},
+            #{monitorArea},
+            #{monitorInterval},
+            #{channelId},
+            #{monitorType},
+            #{triggerChannelId},
+            #{baseAreaId},
+            #{baseAreaTypes},
+            #{baseIds},
+            #{taskWeight},
+            #{isSendReport},
+            #{reportPhone},
+            #{marketLimit},
+            #{status},
+            #{createUser},
+            sysdate(),
+            sysdate(),
+            #{aimSubId},
+            #{departTypeCode},
+            #{saleId},
+            #{saleBoidId},
+            #{aimSubName},
+            #{taskFileName},
+            #{marketSegmentIds},
+            #{marketSegmentNames},
+            #{marketContentId},
+            #{marketContentExtend}
+        )
+    </insert>
+
+    <!-- 插入营销任务对应的炒店,根据炒店ID查询 -->
+    <insert id="insertShopTaskToBaseByIds" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        INSERT into shop_task_2_base(task_id,base_id)
+        select #{id},b.base_id from conf_baseinfo b
+        where b.status = 1
+        <if test="baseIds != '' and baseIds != null">
+            and base_id in (${baseIds})
+        </if>
+    </insert>
+
+    <!-- 插入营销任务对应的炒店,根据地域查询 -->
+    <insert id="insertShopTaskToBaseByArea" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        INSERT into shop_task_2_base(task_id,base_id)
+        select #{id},b.base_id from conf_baseinfo b
+        where b.status = 1
+        <if test="baseAreaTypes != '' and baseAreaTypes != null">
+            and FIND_IN_SET(b.location_type_id,#{baseAreaTypes})
+        </if>
+        <if test="baseAreaId != '99999' and baseAreaId != ''">
+            and b.city_code = #{baseAreaId}
+        </if>
+    </insert>
+
+    <delete id="deleteShopTaskToBase" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        delete from shop_task_2_base where task_id = #{id}
+    </delete>
+
+    <delete id="deleteShopTaskAuditHistory" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        delete from shop_task_audit_history where task_id = #{id}
+    </delete>
+
+    <insert id="insertShopTaskPool" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+              INSERT into shop_task_pool(
+                                date,
+                                id,
+                                task_name,
+                                task_type,
+                                business_type,
+                                task_desc,
+                                start_time,
+                                stop_time,
+                                begin_time,
+                                end_time,
+                                marketUser,
+                                market_user_num,
+                                appoint_users,
+                                black_users,
+                                access_number,
+                                market_content,
+                                market_url,
+                                send_interval,
+                                base_area_id,
+                                base_area_type,
+                                status,
+                                create_user,
+                                create_time,
+                                update_time,
+                                aim_sub_id,
+                                depart_typecode,
+                                sale_id,
+                                sale_boid_id,
+                                task_classify,
+                                market_segment_ids,
+                                market_segment_names
+                                )
+                select DATE_FORMAT(now(),'%Y%m%d'),t.id,t.task_name,t.task_type,t.business_type,t.task_desc,t.start_time,t.stop_time,
+                t.begin_time,t.end_time,t.marketUser,t.market_user_num,t.appoint_users,t.black_users,t.access_number,t.market_content,
+                t.market_url,t.send_interval,t.base_area_id,t.base_area_type,t.status,t.create_user,t.create_time,t.update_time,
+                t.aim_sub_id,t.depart_typecode,t.sale_id,t.sale_boid_id, t.task_classify,t.market_segment_ids,t.market_segment_names
+                 from shop_task t where t.id = #{id}
+    </insert>
+
+    <select id="queryShopTaskById" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select t.id as id,t.task_name as taskName,t.task_desc as taskDesc,t.start_time as startTime,t.stop_time as stopTime,t.begin_time as beginTime,t.end_time as endTime,
+        t.marketUser as marketUser,t.appoint_users as appointUsers,t.appoint_users_desc as appointUserDesc, t.black_users as blackUsers,t.black_users_desc as blackUserDesc,t.access_number as accessNumber,t.market_content as marketContentText,
+        t.market_content_extend as marketContentExtend,t.market_url as marketUrl,t.send_interval as sendInterval,t.scence_type as sceneType,t.scene_type_name as sceneTypeName,t.monitor_area as monitorArea,t.monitor_interval as monitorInterval,
+        t.channel_id as channelId,t.monitor_type as monitorType,t.trigger_channel_id as triggerChannelId,t.base_area_id as baseAreaId,a.name as baseAreaName,
+        t.base_area_type as baseAreaTypes,
+        GROUP_CONCAT(p.location_type) as baseAreaTypeNames,
+        tab.baseIds as baseIds,tab.baseNames as baseNames,tab.baseCodes,t.task_Weight as taskWeight,t.is_send_report as isSendReport,t.report_phone as reportPhone,t.market_limit as marketLimit,
+        t.create_user as createUser,t.status as status,t.business_type as businessId,t.task_classify taskClassifyId, i.name as businessName,tab.messageAutograph as messageAutograph,
+        t.market_segment_ids as marketSegmentIds,t.market_segment_names  as marketSegmentNames
+        from shop_task t join market_area a on t.base_area_id = a.code
+        join conf_baseinfo_type p on FIND_IN_SET(p.location_type_id,(t.base_area_type))
+        left join shop_task_2_business i on i.type = t.business_type
+        left join
+        (
+        select b.task_id, GROUP_CONCAT(b.base_id) as baseIds,GROUP_CONCAT(a.base_name) as baseNames,GROUP_CONCAT(a.business_hall_coding) as baseCodes,a.messageAutograph
+        from shop_task_2_base b
+        join conf_baseinfo a on b.base_id = a.base_id
+        join shop_task s on s.id = b.task_id
+        where task_id = #{taskId}
+        and s.base_ids != ''
+        ) tab
+        on t.id = tab.task_id
+        where  t.status != -1 and t.id = #{taskId}
+    </select>
+
+    <select id="queryShopTaskPoolById" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select t.id as id,t.task_name as taskName,t.task_desc as taskDesc,t.start_time as startTime,
+        t.stop_time as stopTime,t.begin_time as beginTime,t.end_time as endTime,
+        t.marketUser as marketUser,t.appoint_users as appointUsers,
+        t.black_users as blackUsers,t.access_number as accessNumber,t.market_content as marketContentText,
+        t.market_url as marketUrl,
+        t.create_user as createUser,t.status as status,t.business_type as businessId, t.task_classify as taskClassifyId,
+        t.market_segment_ids as marketSegmentIds,t.market_segment_names  as marketSegmentNames
+        from shop_task_pool t
+        where  t.id = #{taskId} and t.date = DATE_FORMAT(now(),'%Y%m%d') and t.task_classify = 1
+    </select>
+
+    <select id="queryShopTaskExecuteById" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select t.id as id,t.task_name as taskName,t.task_desc as taskDesc,t.start_time as startTime,t.stop_time as stopTime,t.begin_time as beginTime,t.end_time as endTime,
+        t.marketUser as marketUser,t.appoint_users as appointUsers,t.black_users as blackUsers,t.access_number as accessNumber,t.market_content as marketContentText,
+        t.market_url as marketUrl,t.send_interval as sendInterval,t.scence_type as sceneType,t.scene_type_name as sceneTypeName,t.monitor_area as monitorArea,t.monitor_interval as monitorInterval,
+        t.channel_id as channelId,t.monitor_type as monitorType,t.trigger_channel_id as triggerChannelId,t.base_area_id as baseAreaId,t.base_area_type as baseAreaTypes,
+        t.base_id as baseId,t.base_name as baseName,t.task_Weight as taskWeight,t.is_send_report as isSendReport,t.report_phone as reportPhone,t.market_limit as marketLimit,
+        t.create_user as createUser,t.status as status,t.business_type as businessId,t.market_segment_ids as marketSegmentIds,t.market_segment_names  as marketSegmentNames
+        from shop_task_pool t
+        where t.status != -1 and t.id = #{taskId} and t.task_classify = 1
+    </select>
+
+    <update id="updateShopTask" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        update shop_task set
+        task_desc = #{taskDesc},
+        business_type = #{businessId},
+        start_time = #{startTime},
+        stop_time = #{stopTime},
+        begin_time = #{beginTime},
+        end_time = #{endTime},
+        marketUser = #{marketUser},
+        market_user_num = #{marketUserMum},
+        appoint_users = #{appointUsers},
+        black_users = #{blackUsers},
+        access_number = #{accessNumber},
+        market_content = #{marketContentText},
+        market_url = #{marketUrl},
+        send_interval = #{sendInterval},
+        scence_type = #{sceneType},
+        scene_type_name = #{sceneTypeName},
+        monitor_area = #{monitorArea},
+        monitor_interval = #{monitorInterval},
+        channel_id = #{channelId},
+        monitor_type = #{monitorType},
+        trigger_channel_id = #{triggerChannelId},
+        base_area_id = #{baseAreaId},
+        base_area_type = #{baseAreaTypes},
+        task_weight = #{taskWeight},
+        is_send_report = #{isSendReport},
+        report_phone = #{reportPhone},
+        market_limit = #{marketLimit},
+        status = #{status},
+        <if test="marketSegmentIds != null and marketSegmentIds != ''">
+            market_segment_ids = #{marketSegmentIds},
+        </if>
+        <if test="marketSegmentNames != null and marketSegmentNames != ''">
+            market_segment_names = #{marketSegmentNames},
+        </if>
+        <if test="marketContentId != null and marketContentId != ''">
+            market_content_id = #{marketContentId},
+        </if>
+        market_content_extend = #{marketContentExtend},
+        update_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <update id="updateShopTaskPool" parameterType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        update shop_task_pool set
+        task_desc = #{taskDesc},
+        marketUser = #{marketUser},
+        appoint_users = #{appointUsers},
+        black_users = #{blackUsers},
+        access_number = #{accessNumber},
+        market_content = #{marketContentText},
+        market_url = #{marketUrl},
+        send_interval = #{sendInterval},
+        base_area_id = #{baseAreaId},
+        base_area_type = #{baseAreaTypes},
+        market_limit = #{marketLimit},
+        status = #{status},
+        <if test="marketSegmentIds != null and marketSegmentIds != ''">
+            market_segment_ids = #{marketSegmentIds},
+        </if>
+        <if test="marketSegmentNames != null and marketSegmentNames != ''">
+            market_segment_names = #{marketSegmentNames},
+        </if>
+        update_time = sysdate()
+        where id = #{id} and date = DATE_FORMAT(now(),'%Y%m%d')
+    </update>
+
+    <update id="updateShopTaskById">
+        update shop_task set
+        status = #{status},
+        update_time = sysdate()
+        where id = #{taskId}
+    </update>
+
+    <update id="updateShopTaskExecuteById" parameterType="java.util.Map">
+        update shop_task_execute_history set
+        status = if(1=${flag},status+1, if(2=${flag},status-1,if(3=${flag},status+3,status-3))),
+        execute_times = execute_times + 1,
+        <if test="pTaskId != '' and pTaskId != null">
+            p_task_id = #{pTaskId},
+        </if>
+        <if test="smsTaskId != null and smsTaskId != 0">
+            is_sms_execute = 1,
+        </if>
+        update_time = sysdate()
+        where task_id = #{taskId} and base_id = #{baseId} and date = DATE_FORMAT(now(),'%Y%m%d')
+    </update>
+
+    <update id="updateShopTaskPoolBySystemId">
+        update shop_task_pool set
+        status = #{status},
+        update_time = sysdate()
+        where id = #{taskId}  and date = DATE_FORMAT(now(),'%Y%m%d')
+    </update>
+
+    <select id="queryAllShopTaskAuditByUser" resultType="java.util.Map">
+        select
+        DISTINCT
+        u.marketing_audit_users as marketingAuditUsers,
+        j.id as id,
+        j.task_name as taskName,
+        j.task_type as taskType,
+        s.name as businessName,
+        j.start_time as startTime,
+        j.stop_time as stopTime,
+        j.marketUser as marketUser,
+        j.market_user_num as marketUserMum,
+        j.status as status,
+        j.task_classify as taskClassifyId,
+        u.name as createUser,
+        date_format(j.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        j.market_segment_ids as marketSegmentIds,
+        j.market_segment_names  as marketSegmentNames
+        from shop_task as j
+        left join shop_task_2_business s on j.business_type = s.type
+        join shop_task_2_base b on b.task_id = j.id
+        left join conf_baseinfo c on c.base_id = b.base_id
+        left join market_user as u on j.create_user = u.id
+        where u.marketing_audit_users like '%,"auditUser":"${userId}",%'
+        and j.status = 1
+        <if test="shopTaskName != ''">
+            and j.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and j.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="shopTaskBaseName != ''">
+            and j.task_type = 3
+            and c.base_name like concat('%',#{shopTaskBaseName},'%')
+        </if>
+        <if test="dateTime != ''">
+            and date_format(j.create_time,'%Y-%m-%d') = #{dateTime}
+        </if>
+        <if test="taskClassifyId != ''">
+            and j.task_classify = #{taskClassifyId}
+        </if>
+        order by j.create_time desc
+    </select>
+
+    <select id="queryShopTaskAuditInfo" resultType="java.util.Map">
+        select
+        task_id         as id,
+        count(1)       as count
+        from shop_task_audit_history
+        where task_id in ${shopTaskIds} and audit_result = 'approve'
+        group by task_id
+    </select>
+
+    <insert id="insertShopTaskAuditHistory"
+            parameterType="com.axon.market.common.domain.ishop.ShopTaskAuditHistoryDomain">
+        insert into shop_task_audit_history(task_id,audit_user,audit_result,audit_time,remarks) values
+        (
+        #{taskId},
+        #{auditUser},
+        #{auditResult},
+        sysdate(),
+        #{remarks}
+        )
+    </insert>
+
+    <select id="queryShopTaskAuditHistoryDomain"
+            resultType="com.axon.market.common.domain.ishop.ShopTaskAuditHistoryDomain">
+        select
+        h.audit_user as auditUser,
+        h.audit_result as auditResult,
+        h.remarks as remarks,
+        h.audit_time as auditTime,
+        u.marketing_audit_users as auditUsers,
+        u1.name as auditUserName
+        from
+        shop_task_audit_history h
+        left join shop_task j on h.task_id = j.id
+        left join market_user u on j.create_user = u.id
+        left join market_user u1 on h.audit_user = u1.id
+        where h.task_id = #{taskId}
+        <if test="reminder != null">
+            and h.audit_result = 'approve'
+        </if>
+        order by h.audit_time
+    </select>
+
+    <!--查询炒店任务审核失败的最新一条数据-->
+    <select id="queryShopTaskAuditReject" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+        remarks as reason
+        from shop_task_audit_history
+        where task_id = #{taskId}
+        and audit_result='against'
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="queryUserPhoneOfCreateShopTask" resultType="java.lang.String">
+        select
+        u.telephone
+        from shop_task as j
+        left join market_user as u on j.create_user = u.id
+        where j.id = #{taskId}
+    </select>
+
+    <insert id="insertMarketHistory" parameterType="com.axon.market.common.domain.ishop.ShopTaskHistoryDomain">
+        insert into shop_task_history(id,task_name,execute_user,market_user,start_time,stop_time,market_status,market_user_counts)
+        VALUES(#{id},#{taskName},#{executeUser},#{marketUser},#{startTime},#{stopTime},#{marketStatus},#{marketUserCounts})
+    </insert>
+
+    <insert id="insertRow" parameterType="java.util.Map">
+        insert into market_import_data(
+        file_id
+        ,row_no
+        ,row_data
+        ,operate_status
+        ,operate_result
+        )
+        values (#{fileId},#{rowNo},#{rowData},#{status},#{result})
+    </insert>
+
+    <insert id="insertFile" parameterType="java.util.Map">
+        insert into market_import_file(
+        file_id
+        ,file_name
+        ,file_size
+        ,task_type
+        ,create_user
+        ,create_date
+        ,target_table
+        ,status
+        ,result
+        )
+        values(#{fileId},#{fileName},#{fileSize},#{taskType},#{createUser},now(),#{targetTable},#{status},#{result})
+    </insert>
+
+    <select id="queryShopTaskPhoneImportTotal" resultType="int">
+        select count(1) as count from
+        (
+        select row_data as data ,operate_status as status,operate_result as result from market_import_data where  file_id = #{fileId} and operate_status = 'success'
+        ORDER BY row_no
+        ) tab
+    </select>
+
+    <select id="queryShopTaskPhoneImport" resultType="java.util.Map">
+        select row_data as data ,operate_status as status,operate_result as result from market_import_data where  file_id = #{fileId}  and operate_status = 'success'
+        ORDER BY row_no
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryShopTaskPhoneByFileId" resultType="java.util.Map">
+        select row_data as phone from market_import_data where  file_id = #{fileId}  and operate_status = 'success'
+        ORDER BY row_no
+    </select>
+
+    <insert id="saveAppointUsersImport">
+        insert into pdc_temp.shop_task_appoint_phone
+        select m.file_id,m.row_data from market_import_data m
+        where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+    <insert id="saveBlackUsersImport">
+        insert into pdc_temp.shop_task_black_phone
+        select m.file_id,m.row_data from market_import_data m
+        where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+    <select id="queryAppointPhoneList" resultType="java.util.Map">
+        select t.phone as phone
+        from pdc_temp.shop_task_appoint_phone t
+        where t.file_id = #{fileId}
+    </select>
+
+    <select id="queryAppointPhoneListByFileId" resultType="java.lang.String">
+        select
+        t.phone as phone
+        from pdc_temp.shop_task_appoint_phone t
+        where t.file_id = #{fileId}
+    </select>
+
+    <select id="queryBlackPhoneList" resultType="java.util.Map">
+        select t.phone as phone
+        from pdc_temp.shop_task_black_phone t
+        where t.file_id = #{fileId}
+    </select>
+
+    <select id="getExecuteBaseByTaskId" resultType="java.util.Map">
+        select s.base_id as baseId,b.base_name as baseName from
+        shop_task_2_base  s join conf_baseinfo b on s.base_id = b.base_id
+        where s.task_id = #{taskId}
+        and FIND_IN_SET(s.base_id,(select m.business_hall_Ids  from market_user m where m.id = #{userId}))
+        and s.base_id not in (
+        select e.base_id from shop_task_execute_history e
+        where e.date =  DATE_FORMAT(now(),'%Y%m%d') and  e.task_id = #{taskId}
+        )
+        and b.status  = 1
+    </select>
+
+    <insert id="insertShopTaskForExecute" parameterType="java.util.Map">
+        insert into shop_task_execute_history(
+        date,
+        task_id,
+        marketUser,
+        base_area_id,
+        base_area_type,
+        base_id,
+        execute_user,
+        status,
+        create_time,
+        update_time,
+        task_classify
+        )
+        select s.date,s.id,s.marketUser,b.city_code,b.location_type_id,b.base_id,#{userId},30,sysdate(),sysdate(),s.task_classify
+        from shop_task_pool s , conf_baseinfo b
+        where s.id = #{id}
+        and FIND_IN_SET(b.base_id,(#{baseIds}))
+        and s.date = DATE_FORMAT(now(),'%Y%m%d')
+    </insert>
+
+    <select id="queryShopTaskForExecute" resultType="int" parameterType="java.util.Map">
+        select count(*) from shop_task_execute_history where date = DATE_FORMAT(now(),'%Y%m%d') and task_id = #{id} and base_id = #{baseIds}
+    </select>
+
+    <select id="querFixedAccessNum" parameterType="java.util.Map" resultType="java.util.Map">
+        select distinct a.access_number as id,a.access_number as name from market_config_send_sms a
+        where 1=1
+        <if test="type == 'create'">
+            and a.area_code = #{areaCode}
+        </if>
+    </select>
+
+    <select id="queryShopBusinessType" resultType="java.util.Map">
+        select s.type as id,s.name as name from shop_task_2_business s where s.status = 0
+    </select>
+
+    <insert id="generateShopTaskPool">
+        INSERT into shop_task_pool(
+        date,
+        id,
+        task_name,
+        task_type,
+        business_type,
+        task_desc,
+        start_time,
+        stop_time,
+        begin_time,
+        end_time,
+        marketUser,
+        market_user_num,
+        appoint_users,
+        black_users,
+        access_number,
+        market_content,
+        market_url,
+        send_interval,
+        base_area_id,
+        base_area_type,
+        status,
+        create_user,
+        create_time,
+        update_time,
+        sale_id,
+        sale_boid_id,
+        aim_sub_id,
+        depart_typecode,
+        task_classify,
+        market_segment_ids,
+        market_segment_names)
+        select DATE_FORMAT(now(),'%Y%m%d'),t.id,t.task_name,t.task_type,t.business_type,t.task_desc,t.start_time,t.stop_time,
+        t.begin_time,t.end_time,t.marketUser,t.market_user_num,t.appoint_users,t.black_users,t.access_number,t.market_content,
+        t.market_url,t.send_interval,t.base_area_id,t.base_area_type,t.status,t.create_user,t.create_time,t.update_time,t.sale_id,
+        t.sale_boid_id,t.aim_sub_id,t.depart_typecode,t.task_classify,t.market_segment_ids, t.market_segment_names
+        from shop_task t where t.status = 2 and t.stop_time >= DATE_FORMAT(curdate(), '%Y-%m-%d') and t.next_time = DATE_FORMAT(curdate(), '%Y-%m-%d')
+    </insert>
+
+    <insert id="generateShopTaskExecuteHis">
+        insert into shop_task_execute_history(
+        date,
+        task_id,
+        marketUser,
+        base_area_id,
+        base_area_type,
+        base_id,
+        execute_user,
+        status,
+        create_time,
+        update_time,
+        task_classify
+        )
+        select s.date,s.id,s.marketUser,s.base_area_id,s.base_area_type,t.base_ids,s.create_user,30,sysdate(),sysdate(),s.task_classify
+        from shop_task_pool as s join shop_task t on s.id = t.id
+        where s.date = DATE_FORMAT(now(),'%Y%m%d') and s.status = 2 and s.task_classify in (2,3,4)
+        and t.status = 2 and t.stop_time >= DATE_FORMAT(curdate(), '%Y-%m-%d') and t.next_time = DATE_FORMAT(curdate(), '%Y-%m-%d')
+    </insert>
+
+    <select id="queryAllWaitingExecuteShopTask" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select h.task_id as id,t.task_name as taskName,t.start_time as startTime,t.stop_time as stopTime,
+        t.begin_time as beginTime,t.end_time as endTime,t.marketUser as marketUser,
+        t.appoint_users as appointUsers,t.black_users as blackUsers,t.access_number as accessNumber,
+        t.market_content as marketContentText,
+        t.market_url as marketUrl,t.send_interval as sendInterval,t.scence_type as sceneType,t.scene_type_name as sceneTypeName,
+        t.monitor_area as monitorArea,t.monitor_interval as monitorInterval,
+        t.channel_id as channelId,t.monitor_type as monitorType,t.trigger_channel_id as triggerChannelId,
+        t.base_area_type as baseAreaTypes,h.base_area_type as baseAreaType,
+        t.task_Weight as taskWeight,t.is_send_report as isSendReport,t.report_phone as reportPhone,t.market_limit as marketLimit,
+        t.task_type as taskType,
+        t.create_user as createUser,h.status as status,
+        h.base_area_id as baseAreaId,h.base_id as baseId,b.base_name as baseName,
+        h.p_task_id as pTaskId,h.sms_task_id as smsTaskId,
+        t.aim_sub_id as aimSubId,t.sale_id as saleId,t.sale_boid_id as saleBoidId,t.aim_sub_name as aimSubName
+        ,b.messageAutograph as messageAutograph, t.task_classify as taskClassifyId,
+        t.market_segment_ids as marketSegmentIds,
+        t.market_segment_names  as marketSegmentNames,
+        t.manru_range  as manruRange,
+        c.extend_id as marketContentId,
+        t.market_content_extend as marketContentExtend
+        from shop_task_execute_history h
+        LEFT JOIN shop_task t on h.task_id = t.id
+        LEFT JOIN conf_baseinfo b on b.base_id = h.base_id
+        LEFT JOIN market_content c on c.id = t.market_content_id
+        where h.date = #{date} and h.status in (30,16,17,18,19,22) and h.execute_times &lt; 6
+    </select>
+
+    <select id="queryExtralExecuteShopTask" resultType="com.axon.market.common.domain.ishop.ShopTaskDomain">
+        select h.task_id as id,t.task_name as taskName,t.start_time as startTime,t.stop_time as stopTime,
+        t.begin_time as beginTime,t.end_time as endTime,t.marketUser as marketUser,
+        t.appoint_users as appointUsers,t.black_users as blackUsers,t.access_number as accessNumber,
+        t.market_content as marketContentText,
+        t.market_url as marketUrl,t.send_interval as sendInterval,t.scence_type as sceneType,t.scene_type_name as sceneTypeName,
+        t.monitor_area as monitorArea,t.monitor_interval as monitorInterval,
+        t.channel_id as channelId,t.monitor_type as monitorType,t.trigger_channel_id as triggerChannelId,
+        t.base_area_type as baseAreaTypes,
+        t.task_Weight as taskWeight,t.is_send_report as isSendReport,t.report_phone as reportPhone,t.market_limit as marketLimit,
+        t.task_type as taskType,
+        t.create_user as createUser,h.status as status,
+        h.base_area_id as baseAreaId,h.base_id as baseId,b.base_name as baseName,
+        h.p_task_id as pTaskId,h.sms_task_id as smsTaskId,
+        t.aim_sub_id as aimSubId,
+        b.messageAutograph as messageAutograph,
+        t.task_classify as taskClassifyId,
+        t.market_segment_ids as marketSegmentIds,
+        t.market_segment_names  as marketSegmentNames
+        from shop_task_execute_history h
+        LEFT JOIN shop_task t on h.task_id = t.id
+        LEFT JOIN conf_baseinfo b on b.base_id = h.base_id
+        where h.date = #{date}
+        and t.marketUser in (1,3)
+        and h.is_sms_execute = 1
+    </select>
+
+    <update id="updateShopTaskStatus">
+        update shop_task_execute_history set
+        status = #{status},
+        update_time = sysdate()
+        where task_id = #{taskId} and base_id = #{baseId}
+    </update>
+
+    <update id="updateShopTaskExecuteBySystemId">
+        update shop_task_execute_history set
+        status = #{status},
+        update_time = sysdate()
+        where task_id = #{taskId}
+        <if test="baseId != null">
+            and base_id = #{baseId}
+        </if>
+        and date = DATE_FORMAT(now(),'%Y%m%d')
+    </update>
+
+    <select id="queryUpdateShops" resultType="com.axon.market.common.domain.iscene.PositionBaseDomain">
+        select  a.base_id as baseId,a.base_name as baseName,a.location_type as locationType,a.city_name as cityName,
+        a.lng as lng,a.lat as lat,a.radius as radius,a.address as address,a.update_date as addDate,
+        a.city_code as cityCode,
+        a.location_type_id as locationTypeId,a.status as status,a.business_hall_coding as businessHallCode
+        from conf_baseinfo a where a.status = 1 and a.update_date > #{dateTime}
+    </select>
+
+    <select id="getPTaskIdByTaskIdAndBaseId" resultType="java.util.Map">
+        select DISTINCT a.p_task_id as lastTaskId
+        from shop_task_execute_history a
+        where a.task_id = #{taskId}
+        and a.base_id = #{baseId}
+        and date &lt; DATE_FORMAT(now(),'%Y%m%d')
+        and a.p_task_id is not null
+    </select>
+
+    <select id="getPTaskIdByTaskId" resultType="java.util.Map">
+        select DISTINCT a.p_task_id as lastTaskId
+        from shop_task_execute_history a
+        where a.task_id = #{taskId}
+        and date = DATE_FORMAT(now(),'%Y%m%d')
+        and a.p_task_id is not null
+    </select>
+
+    <update id="updateShopTaskNextTime">
+        update shop_task t
+        set t.next_time =
+        if(date_add(curdate(), interval t.send_interval day) &lt;= t.stop_time,date_add(curdate(), interval
+        t.send_interval day),'')
+        where 1 =1
+        <if test="shopTaskId != null">
+            and t.id = #{shopTaskId}
+        </if>
+        and t.status = 2 and t.stop_time >= DATE_FORMAT(curdate(), '%Y-%m-%d')
+    </update>
+
+    <update id="updateShopTaskNextTimeSysTem">
+        update shop_task t
+        set t.next_time =
+        if(date_add(curdate(), interval t.send_interval day) &lt;= t.stop_time,date_add(curdate(), interval
+        t.send_interval day),'')
+        where 1 =1
+        <if test="shopTaskId != null">
+            and t.id = #{shopTaskId}
+        </if>
+        and t.status = 2 and t.stop_time >= DATE_FORMAT(curdate(), '%Y-%m-%d') and t.next_time = DATE_FORMAT(curdate(),
+        '%Y-%m-%d')
+    </update>
+
+    <update id="updateShopTaskNextTimeAsStart">
+        update shop_task t
+        set t.next_time = t.start_time
+        where t.id = #{shopTaskId}
+    </update>
+
+    <select id="queryShopTaskNumByName" resultType="int" parameterType="java.util.Map">
+        select count(*)
+        from shop_task t where t.task_name = #{taskName}
+        and t.create_user = #{userId}
+    </select>
+
+    <select id="queryShopPhone" resultType="java.lang.String">
+        select
+        DISTINCT a.fixed_telephone
+        from conf_baseinfo a
+        where a.fixed_telephone != '10017'
+        <if test="baseId != null">
+            and a.base_id = #{baseId}
+        </if>
+        <if test="baseName != null">
+            and a.base_name = #{baseName}
+        </if>
+    </select>
+
+    <select id="queryShopMsgDesc" resultType="java.lang.String">
+        select
+        DISTINCT a.messageAutograph
+        from conf_baseinfo a
+        where 1=1
+        <if test="baseId != null">
+            and a.base_id = #{baseId}
+        </if>
+    </select>
+
+    <select id="queryHistoryFileById" resultType="java.util.Map">
+        select f.file_id as fileId, f.file_name as fileName,f.create_date as createDate from market_import_file f
+        where f.status = 'YBC'
+        and f.target_table = #{fileType}
+        and f.create_user = #{userId}
+        order by f.create_date desc
+    </select>
+
+    <update id="updateRecommendationTaskStatus">
+        update shop_task_execute_history as h
+        left join shop_task as t on h.task_id = t.id
+        set
+        h.status = 24
+        where t.marketUser = 4 and h.date = #{time}
+    </update>
+
+    <select id="getPerTaskExecuteNumById" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        shop_task_execute_history h join shop_task t on h.task_id = t.id
+        where h.date = DATE_FORMAT(now(),'%Y%m%d')
+        and h.base_id = #{baseId}
+        and t.marketUser in (1,3)
+        and h.is_sms_execute = 1
+    </select>
+
+    <insert id="addShopAddEffectiveTask">
+        insert into shop_task_2_base(task_id,base_id)
+        select t.id,#{baseId} from shop_task t,conf_baseinfo c
+        where t.status = 2
+        and t.task_type in (1,2)
+        and t.stop_time >= DATE_FORMAT(curdate(), '%Y-%m-%d')
+        and t.base_area_id in (${areaCode},99999)
+        and c.base_id = #{baseId}
+        and FIND_IN_SET(c.location_type_id,(t.base_area_type))
+        and not EXISTS (select 1 from shop_task_2_base where base_id = #{baseId})
+    </insert>
+
+    <select id="queryShopTaskExecuteRecord" resultType="java.util.Map">
+        select
+        count(*)
+        from shop_task_execute_history h
+        left join shop_task t on h.task_id = t.id
+        where h.date = #{time}
+    </select>
+
+    <select id="queryConfSegment" resultType="java.util.Map">
+        select title_code as code,segment from conf_segment where parentid = 1
+    </select>
+
+    <select id="queryShopTaskSaleIdsBySaleFileName" resultType="java.lang.String">
+        select
+        sale_id
+        from shop_task t
+        where t.task_file_name like concat('%',#{fileName},'%')
+        and t.marketUser = 4
+        group by t.sale_id
+    </select>
+
+    <!-- 导出炒店任务 -->
+    <select id="exportShopTask" parameterType="java.util.Map" resultType="java.util.Map">
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        case
+        WHEN t.marketUser=1
+        then '常驻'
+        WHEN t.marketUser=2
+        then '流动拜访'
+        WHEN t.marketUser=3
+        then '常驻+流动拜访'
+        WHEN t.marketUser=4
+        then '个性化推荐'
+        END as marketUser,
+        case
+        WHEN t.task_type=1
+        then '省级'
+        WHEN t.task_type=2
+        then '地市级'
+        WHEN t.task_type=3
+        then '营业厅级'
+        END as taskType,
+        '' as baseId,
+        '' as baseName,
+        case
+        WHEN t.status=0
+        then '草稿'
+        WHEN t.status=1
+        then '待审核'
+        WHEN t.status=2
+        then '审核成功'
+        WHEN t.status=3
+        then '审核拒绝'
+        WHEN t.status=4
+        then '已暂停'
+        WHEN t.status=5
+        then '已失效'
+        WHEN t.status=6
+        then '已终止'
+        WHEN t.status=20 or t.status=30
+        then '营销处理中'
+        WHEN t.status=23 or t.status=21 or t.status=24
+        then '营销成功'
+        WHEN t.status=16 or t.status=17 or t.status=18 or t.status=19 or t.status=22
+        then '营销失败'
+        END as status,
+        s.type as businessId,
+        s.name as businessName,
+        date_format(t.create_time,'%Y-%m-%d %H:%i:%s') as createTimeStr,
+        IF(t.task_type = 3,GROUP_CONCAT(c.business_hall_coding),'') as baseCode,
+        IF(t.task_type = 3,GROUP_CONCAT(c.base_name),'') as shopBaseName,
+        t.market_content as smsContent
+        from shop_task t
+        join shop_task_2_base b on b.task_id = t.id
+        join shop_task_2_business s on s.type = t.business_type
+        left join conf_baseinfo c on c.base_id = b.base_id
+        where 1=1
+        and t.status != -1
+        and t.marketUser in (1,2,3,4)
+        <if test="shopTaskId != ''">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != ''">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskStatus != ''">
+            and t.status = #{taskStatus}
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and t.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="shopTaskBaseName != ''">
+            and t.task_type = 3
+            and c.base_name like concat('%',#{shopTaskBaseName},'%')
+        </if>
+        <if test="dateTime != ''">
+            and date_format(t.create_time,'%Y-%m-%d') = #{dateTime}
+        </if>
+        <if test="businessCodes != ''">
+            and b.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        group by t.id
+        order by t.create_time desc
+    </select>
+
+
+    <select id="exportAuditShopTask" resultType="java.util.Map">
+        select DISTINCT
+        u.marketing_audit_users as marketingAuditUsers,
+        j.id as id,
+        j.task_name as taskName,
+        case
+        WHEN j.marketUser=1
+        then '常驻'
+        WHEN j.marketUser=2
+        then '流动拜访'
+        WHEN j.marketUser=3
+        then '常驻+流动拜访'
+        WHEN j.marketUser=4
+        then '个性化推荐'
+        END as marketUser,
+        case
+        WHEN j.task_type=1
+        then '省级'
+        WHEN j.task_type=2
+        then '地市级'
+        WHEN j.task_type=3
+        then '营业厅级'
+        END as taskType,
+        '' as baseId,
+        '' as baseName,
+        case
+        WHEN j.status=0
+        then '草稿'
+        WHEN j.status=1
+        then '待审核'
+        WHEN j.status=2
+        then '审核成功'
+        WHEN j.status=3
+        then '审核拒绝'
+        WHEN j.status=4
+        then '已暂停'
+        WHEN j.status=5
+        then '已失效'
+        WHEN j.status=6
+        then '已终止'
+        WHEN j.status=20 or j.status=30
+        then '营销处理中'
+        WHEN j.status=23 or j.status=21 or j.status=24
+        then '营销成功'
+        WHEN j.status=16 or j.status=17 or j.status=18 or j.status=19 or j.status=22
+        then '营销失败'
+        END as status,
+        s.name as businessName,
+        j.start_time as startTime,
+        j.stop_time as stopTime,
+        j.market_user_num as marketUserMum,
+        u.name as createUser,
+        date_format(j.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        IF(j.task_type = 3,GROUP_CONCAT(c.business_hall_coding),'') as baseCode,
+        IF(j.task_type = 3,GROUP_CONCAT(c.base_name),'') as shopBaseName,
+        j.market_content as smsContent
+        from shop_task as j
+        join shop_task_2_business s on j.business_type = s.type
+        join shop_task_2_base b on b.task_id = j.id
+        left join conf_baseinfo c on c.base_id = b.base_id
+        left join market_user as u on j.create_user = u.id
+        where u.marketing_audit_users like '%,"auditUser":"${userId}",%'
+        and j.status = 1
+        <if test="shopTaskName != ''">
+            and j.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="shopTaskBaseCode != ''">
+            and j.task_type = 3
+            and c.business_hall_coding like concat('%',#{shopTaskBaseCode},'%')
+        </if>
+        <if test="shopTaskBaseName != ''">
+            and j.task_type = 3
+            and c.base_name like concat('%',#{shopTaskBaseName},'%')
+        </if>
+        <if test="dateTime != ''">
+            and date_format(j.create_time,'%Y-%m-%d') = #{dateTime}
+        </if>
+        group by j.id
+        order by j.create_time desc
+    </select>
+
+    <update id="deletePositionBaseTaskById">
+        DELETE FROM shop_task_2_base WHERE base_id = #{baseId}
+    </update>
+
+
+    <select id="queryBaseIdByTaskId" resultType="java.lang.String">
+        select
+        j.base_ids
+        from shop_task as j
+        where j.id = #{taskId}
+    </select>
+
+    <insert id="insertShopTaskChannel">
+        insert into shop_task_channel(sale_id,sale_boid_id,aim_sub_id,depart_id,file_name)
+        VALUES
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (
+            #{item.saleId},
+            #{item.saleBoidId},
+            #{item.aimSubId},
+            #{item.departId},
+            #{item.fileName}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryShopTaskChannel" resultType="com.axon.market.common.domain.ishop.ShopTaskChannelDomain">
+        select
+        sale_id as saleId,
+        sale_boid_id as saleBoidId,
+        aim_sub_id as aimSubId ,
+        depart_id as departId
+        from shop_task_channel
+        where status = 0
+        and depart_id != ''
+        and sale_id != ''
+        and sale_boid_id != ''
+        and aim_sub_id != ''
+        and depart_id is not null
+    </select>
+
+    <insert id="pushChannelToshopBase">
+        insert into shop_task_2_base(task_id,base_id,add_time)
+        select t.id,b.base_id,now() from
+        shop_task t,conf_baseinfo b
+        where 1=1
+        and t.sale_id = #{saleId}
+        and t.sale_boid_id = #{saleBoidId}
+        and t.aim_sub_id = #{aimSubId}
+        and b.business_hall_coding = #{departId}
+    </insert>
+
+    <update id="updateShopTaskChannelStatus">
+        update shop_task_channel  set status = 1 ,update_time = now()
+        where 1=1
+        and sale_id = #{saleId}
+        and sale_boid_id = #{saleBoidId}
+        and aim_sub_id = #{aimSubId}
+        and depart_id = #{departId}
+    </update>
+
+    <select id="queryShopTasksByDate" resultType="com.axon.market.common.domain.iservice.ShopTaskApiDomain">
+        select s.sms_task_id as taskId,
+        c.city_code   as cityCode,
+        a.name        as cityName,
+        c.district_code as districtCode,
+        f.name          as districtName,
+        s.base_area_type as locationTypeId,
+        p.location_type  as locationTypeName,
+        c.base_name      as storeName
+        from shop_task_execute_history s
+        join conf_baseinfo c on c.base_id = s.base_id
+        join market_area a on c.city_code = a.code
+        join conf_baseinfo_type p on p.location_type_id = s.base_area_type
+        left join conf_area f on f.id = c.district_code
+        where date = #{date}
+        union all
+        select  s.p_task_id as taskId,
+        c.city_code   as cityCode,
+        a.name        as cityName,
+        c.district_code as districtCode,
+        f.name          as districtName,
+        s.base_area_type as locationTypeId,
+        p.location_type  as locationTypeName,
+        c.base_name      as storeName
+        from shop_task_execute_history s
+        join conf_baseinfo c on c.base_id = s.base_id
+        join market_area a on c.city_code = a.code
+        join conf_baseinfo_type p on p.location_type_id = s.base_area_type
+        left join conf_area f on f.id = c.district_code
+        where date = #{date}
+        and s.p_task_id is not null
+    </select>
+
+    <select id="queryShopTasksByDateAndId" resultType="com.axon.market.common.domain.iservice.ShopTaskApiDomain">
+        select  #{taskId} as taskId,
+               c.city_code   as cityCode,
+               a.name        as cityName,
+               c.district_code as districtCode,
+               f.name          as districtName,
+               s.base_area_type as locationTypeId,
+               p.location_type  as locationTypeName,
+               c.base_name      as storeName
+        from shop_task_execute_history s
+        join conf_baseinfo c on c.base_id = s.base_id
+        join market_area a on c.city_code = a.code
+        join conf_baseinfo_type p on p.location_type_id = s.base_area_type
+        left join conf_area f on f.id = c.district_code
+        where date = #{date}
+        and (s.sms_task_id = #{taskId}  or s.p_task_id =  #{taskId})
+    </select>
+
+    <select id="queryExecuteShopTask" resultType="java.util.Map">
+        SELECT b1.base_id AS baseId,a1.telephone as telephone,a1.name AS name FROM market_user a1,
+        (
+        (select c.base_id from conf_baseinfo c
+        where c.status = 1 and c.location_type_id in (1,7)
+        and date_format(c.update_date,'%Y%m%d') &lt; #{startTime}
+        and not EXISTS
+        (select 1 from shop_task_execute_history h
+        where h.base_id = c.base_id
+        and h.date between #{startTime} and #{endTime}
+        )
+        ) as b1
+        )
+        WHERE a1.business_hall_Ids=CAST(b1.base_id AS CHAR)
+        and a1.status = 0
+    </select>
+
+    <update id="updateUserStatus">
+        update market_user set status=1 where business_hall_Ids=CAST(#{baseId} AS char)
+    </update>
+
+    <update id="updateShopStatus">
+        update conf_baseinfo set status=0,invalidate_desc='该营业厅七天未有操作，已失效' where base_id=#{baseId}
+    </update>
+</mapper>

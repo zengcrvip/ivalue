@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.ICategoryMapper">
+
+    <select id="queryAllCategoryCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_category
+        where type = #{type} and status = 0
+        <if test="pId != null">
+            and pid = #{pId}
+        </if>
+        <if test="level != null and level !=''">
+            and level = #{level}
+        </if>
+        <if test="name != null and name !=''">
+            and name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <select id="queryAllCategoriesByPage" resultType="com.axon.market.common.domain.icommon.CategoryDomain">
+        select
+            c.id as id,
+            c.name as name,
+            c.pid as pId,
+            c.pid_name as pIdName,
+            c.type as type,
+            c.level as level,
+            c.create_user as createUser,
+            u.name as createUserName,
+            c.create_time as createTime,
+            c.update_user as updateUser,
+            c.update_time as updateTime,
+            c.remarks as remarks
+        from market_category as c
+        left join market_user as u on u.id = c.create_user
+        where c.type = #{type} and c.status = 0
+        <if test="pId != null">
+            and c.pid = #{pId}
+        </if>
+        <if test="level != null and level !=''">
+            and c.level = #{level}
+        </if>
+        <if test="name != null and name !=''">
+            and c.name like concat('%',#{name},'%')
+        </if>
+        order by c.id desc
+        limit ${length} offset ${start}
+    </select>
+
+    <select id="queryAllCategory"  resultType="com.axon.market.common.domain.icommon.CategoryDomain">
+        select
+            c.id          as id,
+            c.name        as name,
+            if(c.pid = 0 and c.type = 2,-1,c.pid)         as pId
+        from market_category as c
+        where c.type = #{type}
+    </select>
+
+    <select id="queryCategoryByCondition" resultType="com.axon.market.common.domain.icommon.CategoryDomain">
+         select
+            c.id                      as id,
+            c.name                    as name,
+            c.pid                     as pId,
+            c.pid_name                as pIdName,
+            c.type                    as type,
+            c.level                   as level,
+            c.remarks                 as remarks
+        from market_category as c
+        where c.status = 0
+          and c.type = #{type}
+          and c.level = #{level}
+          and c.name = #{name}
+          and c.pid = #{pId}
+    </select>
+
+    <insert id="createCategory" parameterType="com.axon.market.common.domain.icommon.CategoryDomain">
+        insert into market_category
+        (
+            name,
+            pid,
+            pid_name,
+            type,
+            level,
+            create_user,
+            create_time,
+            remarks
+        )
+        values
+        (
+            #{info.name},
+            #{info.pId},
+            #{info.pIdName},
+            #{info.type},
+            #{info.level},
+            #{info.createUser},
+            #{info.createTime},
+            #{info.remarks}
+        )
+    </insert>
+
+    <update id="updateCategory" parameterType="com.axon.market.common.domain.icommon.CategoryDomain">
+        update market_category set
+        <if test="info.name != null and info.name !=''">
+            name = #{info.name},
+        </if>
+        <if test="info.pId != null and info.pId !=''">
+            pid = #{info.pId},
+        </if>
+        <if test="info.pIdName != null">
+            pid_name = #{info.pIdName},
+        </if>
+        <if test="info.type != null and info.type !=''">
+            type = #{info.type},
+        </if>
+        <if test="info.level != null and info.level !=''">
+            level = #{info.level},
+        </if>
+        <if test="info.updateUser != null and info.updateUser !=''">
+            update_user = #{info.updateUser},
+        </if>
+        <if test="info.updateTime != null and info.updateTime !=''">
+            update_time = #{info.updateTime},
+        </if>
+        <if test="info.remarks != null and info.remarks !=''">
+            remarks = #{info.remarks},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteCategory">
+        update market_category set
+            update_user = #{userId},
+            update_time = #{time},
+            status = -1
+        where id = #{id}
+    </update>
+
+    <select id="getParentLevel" resultType="com.axon.market.common.domain.icommon.CategoryDomain">
+        select
+        id,name,pid_name as pIdName
+        from market_category
+        where level=#{level}
+        <if test="type != null and type !=''">
+            and type = #{type}
+        </if>
+
+    </select>
+</mapper>

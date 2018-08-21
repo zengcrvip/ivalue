@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iflow.IOldCustomerMapper">
+
+    <insert id="insertRow" parameterType="java.util.Map">
+        insert into market_import_data(
+        file_id
+        ,row_no
+        ,row_data
+        ,operate_status
+        ,operate_result
+        )
+        values (#{fileId},#{rowNo},#{rowData},#{status},#{result})
+    </insert>
+
+
+    <insert id="batchImportRowData" parameterType="java.util.List">
+        INSERT  INTO market_import_data(
+        file_id
+        ,row_no
+        ,row_data
+        ,operate_status
+        ,operate_result
+        )
+        VALUES
+        <foreach collection="list" item="map" separator=",">
+        (
+          #{map.fileId},#{map.rowNo},#{map.rowData},#{map.status},#{map.result}
+        )
+        </foreach>
+    </insert>
+
+    <insert id="insertFile" parameterType="java.util.Map">
+        insert into market_import_file(
+        file_id
+        ,file_name
+        ,file_size
+        ,task_type
+        ,create_user
+        ,create_date
+        ,target_table
+        ,status
+        ,result
+        )
+        values(#{fileId},#{fileName},#{fileSize},#{taskType},#{createUser},now(),#{targetTable},#{status},#{result})
+    </insert>
+
+    <insert id="saveAppointUsersImport">
+        insert into pdc_temp.old_customer_appoint_phone
+        select m.file_id,m.row_data from market_import_data m
+        where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+    <insert id="saveBlackUsersImport">
+        insert into pdc_temp.old_customer_black_phone
+        select m.file_id,m.row_data from market_import_data m
+        where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+    <insert id="saveBaseInfoImport">
+      INSERT  INTO pdc_temp.old_customer_baseinfo
+      select m.file_id,m.row_data from market_import_data m
+      where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+
+    <insert id="insertOlderCustomer" useGeneratedKeys="true" keyProperty="oldCustomerDomain.taskId">
+        INSERT INTO market.preferential_task
+        (
+          name,                 -- 优惠任务名称
+          market_name,          -- 营销名称
+          task_source,          -- 任务来源：sms:自建任务 jxhsms:精细化群发任务
+          market_content,       -- 营销内容
+          market_content_link,  -- 营销办理链接
+          start_time,           -- 活动开始时间
+          stop_time,            -- 活动结束时间
+          market_area_code,     -- 营销地区编码
+          appoint_users,        -- 指定用户
+          appoint_users_desc,   -- 指定用户描述
+          black_users,          -- 免打扰用户
+          black_users_desc,     -- 免打扰用户描述
+          base_type,            -- 营业厅类型
+          create_user,          -- 创建人
+          create_time,          -- 创建时间
+          status,                -- 状态
+          appoint_business_hall,  -- 指定线下营业厅
+          appoint_business_hall_desc,  -- 指定线下营业厅描述
+          task_type,                     -- 任务类型
+          remarks,                     -- 任务描述
+          area_desc                    -- 营销地区描述
+        )
+        VALUES
+        (
+          #{oldCustomerDomain.taskName},
+          #{oldCustomerDomain.marketName},
+          #{oldCustomerDomain.taskSource},
+          #{oldCustomerDomain.marketContent},
+          #{oldCustomerDomain.marketContentLink},
+          #{oldCustomerDomain.startTime},
+          #{oldCustomerDomain.endTime},
+          #{oldCustomerDomain.marketAreaCode},
+          #{oldCustomerDomain.appointUsers},
+          #{oldCustomerDomain.appointUsersDesc},
+          #{oldCustomerDomain.blackUsers},
+          #{oldCustomerDomain.blackUsersDesc},
+          #{oldCustomerDomain.baseType},
+          #{oldCustomerDomain.createUserId},
+          sysdate(),
+          #{oldCustomerDomain.status},
+          #{oldCustomerDomain.appointBusinessHall},
+          #{oldCustomerDomain.appointBusinessHallDesc},
+          #{oldCustomerDomain.taskType},
+          #{oldCustomerDomain.remarks},
+          #{oldCustomerDomain.areaDesc}
+        )
+    </insert>
+
+
+    <insert id="insertTaskToBase">
+        INSERT  INTO  market.preferential_task_2_base
+        (
+          task_id,
+          base_id,
+          add_time
+        )
+        select
+          #{taskId},
+	      a.base_id,
+	      sysdate()
+        FROM
+	      market.conf_baseinfo a
+        join pdc_temp.old_customer_baseinfo b on a.business_hall_coding = b.business_hall_coding and b.file_id = #{fileId}
+        where 1=1
+        <if test=" baseType != '' and baseType != null ">
+          and FIND_IN_SET(a.location_type_id,#{baseType}) = 0
+        </if>
+        <if test=" marketAreaCode != '' and marketAreaCode != null and marketAreaCode != '99999'">
+            and  FIND_IN_SET(a.city_code,#{marketAreaCode})
+        </if>
+    </insert>
+
+    <delete id="deleteOldCustomerBaseInfo">
+        DELETE  FROM  market.preferential_task_2_base WHERE  task_id = #{taskId}
+    </delete>
+
+    <select id="queryLocationType" resultType="java.util.Map">
+        SELECT
+          location_type_id as locationTypeId,
+          location_type as locationTypeName
+        FROM
+          market.conf_baseinfo_type
+    </select>
+
+    <select id="queryOldCustomerByPage" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+          a.id                              as id,
+	      a.name                            as taskName,
+	      a.create_time                     as createTime,
+	      a.task_source                     as taskSource,
+	      a.start_time                      as startTime,
+	      a.stop_time                       as endTime,
+	      a.status                          as status,
+  	      a.create_user                     as createUser,
+          a.base_type                       as baseType,
+          a.black_users                     as blackUsers,
+          a.black_users_desc                as blackUsersDesc,
+          a.appoint_users                   as appointUsers,
+          a.appoint_users_desc              as appointUsersDesc,
+          a.market_area_code                as marketAreaCode,
+          a.market_content_link             as marketContentLink,
+          a.market_content                  as marketContent,
+          a.market_name                     as marketName,
+          a.appoint_business_hall           as appointBusinessHall,
+          a.appoint_business_hall_desc      as appointBusinessHallDesc,
+          a.remarks                         as remarks,
+          a.area_desc                       as areaDesc,
+          a.task_type                       as taskType
+        from market.preferential_task a
+        where a.status not in(-1,7)
+        <if test="taskName != '' and taskName != null">
+            and a.name like concat('%',#{taskName},'%')
+        </if>
+        <if test="taskSource != '' and taskSource != null">
+            and a.task_source = #{taskSource}
+        </if>
+        <if test='taskType == "0" and areaCode == "99999" '>
+            and a.task_type = 0
+        </if>
+        <if test='taskType == "1" and areaCode != "" and areaCode != null and areaCode != "99999" '>
+            and FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test="status != '' and status != null">
+            and a.status = #{status}
+        </if>
+        order by a.create_time DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+
+    <select id="oldCustomerCheckOut" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+            a.id                              as id,
+            a.name                            as taskName,
+            a.create_time                     as createTime,
+            a.task_source                     as taskSource,
+            a.start_time                      as startTime,
+            a.stop_time                       as endTime,
+            a.status                          as status,
+            a.create_user                     as createUser,
+            a.base_type                       as baseType,
+            a.black_users                     as blackUsers,
+            a.black_users_desc                as blackUsersDesc,
+            a.appoint_users                   as appointUsers,
+            a.appoint_users_desc              as appointUsersDesc,
+            a.market_area_code                as marketAreaCode,
+            a.market_content_link             as marketContentLink,
+            a.market_content                  as marketContent,
+            a.market_name                     as marketName,
+            a.appoint_business_hall           as appointBusinessHall,
+            a.appoint_business_hall_desc      as appointBusinessHallDesc,
+            a.remarks                         as remarks,
+            a.area_desc                       as areaDesc,
+            a.task_type                       as taskType
+        from market.preferential_task a
+        where  a.status != -1
+        <if test="taskName != '' and taskName != null">
+            and a.name like concat('%',#{taskName},'%')
+        </if>
+        <if test="taskSource != '' and taskSource != null">
+            and a.task_source = #{taskSource}
+        </if>
+        <if test='taskType == "0" and areaCode == "99999"'>
+            and a.task_type = 0
+        </if>
+        <if test='taskType == "0" and areaCode != "99999"'>
+            and FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test='taskType == "1" and areaCode != "" and areaCode != null and areaCode != "99999" '>
+            and  FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test="status != '' and status != null">
+            and a.status = #{status}
+        </if>
+        order by a.create_time DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+
+    <select id="queryOldCustomerByCount" parameterType="java.util.Map" resultType="int">
+        select
+            count(*)
+        from market.preferential_task a
+        where a.status not in(-1,7)
+        <if test="taskName != '' and taskName != null">
+            and a.name like concat('%',#{taskName},'%')
+        </if>
+        <if test="taskSource != '' and taskSource != null">
+            and a.task_source = #{taskSource}
+        </if>
+        <if test='taskType == "0" and areaCode == "99999" '>
+            and a.task_type = 0
+        </if>
+        <if test='taskType == "1" and areaCode != "" and areaCode != null and areaCode != "99999" '>
+            and FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test="status != '' and status != null">
+            and a.status = #{status}
+        </if>
+    </select>
+
+    <select id="oldCustomerCheckOutCounts" parameterType="java.util.Map" resultType="int">
+        select
+            count(*)
+        from market.preferential_task a
+        where  a.status != -1
+        <if test="taskName != '' and taskName != null">
+            and a.name like concat('%',#{taskName},'%')
+        </if>
+        <if test="taskSource != '' and taskSource != null">
+            and a.task_source = #{taskSource}
+        </if>
+        <if test='taskType == "0" and areaCode == "99999"'>
+            and a.task_type = 0
+        </if>
+        <if test='taskType == "0" and areaCode != "99999"'>
+            and FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test='taskType == "1" and areaCode != "" and areaCode != null and areaCode != "99999" '>
+            and  FIND_IN_SET(#{areaCode},a.market_area_code)
+        </if>
+        <if test="status != '' and status != null">
+            and a.status = #{status}
+        </if>
+    </select>
+
+    <select id="previewOldCustomer" resultType="com.axon.market.common.domain.iflow.OldCustomerDomain">
+        SELECT
+          id                            as taskId,
+          name                          as taskName,                          -- 优惠任务名称
+          market_name                   as marketName,                        -- 营销名称
+          task_source                   as taskSource,                        -- 任务来源：sms:自建任务 jxhsms:精细化群
+          market_content                as marketContent,                     -- 营销内容
+          market_content_link           as marketContentLink,                 -- 营销办理链接
+          start_time                    as startTime,                         -- 活动开始时间
+          stop_time                     as endTime,                           -- 活动结束时间
+          market_area_code              as marketAreaCode,                    -- 营销地区编码
+          appoint_users                 as appointUsers,                      -- 指定用户
+          appoint_users_desc            as appointUsersDesc,                  -- 指定用户描述
+          black_users                   as blackUsers,                        -- 免打扰用户
+          black_users_desc              as blackUsersDesc,                    -- 免打扰用户描述
+          base_type                     as baseType,                          -- 营业厅类型
+          create_user                   as createUserId,                      -- 创建人
+          create_time                   as createTime,                        -- 创建时间
+          status                        as status,                            -- 状态
+          appoint_business_hall         as appointBusinessHall,               -- 指定导入线下营业厅
+          appoint_business_hall_desc    as appointBusinessHallDesc,           -- 指定导入线下营业厅描述
+          remarks,                                                             -- 任务描述
+          area_desc                     as areaDesc                           -- 地区描述
+        FROM
+          market.preferential_task
+        WHERE
+          id = #{taskId}
+          AND status != -1
+    </select>
+
+    <select id="queryAppointBaseInfoById" resultType="int">
+        SELECT  count(base_id) FROM  market.preferential_task_2_base WHERE task_id = #{taskId}
+    </select>
+
+    <select id="queryMarketAreaDesc" resultType="java.lang.String">
+        SELECT m.name  FROM  market.market_area m WHERE  FIND_IN_SET(m.code,#{areaCodes})
+    </select>
+
+    <update id="updateOldCustomer">
+        UPDATE  market.preferential_task
+          SET
+          name                          = #{oldCustomerDomain.taskName},
+          market_name                   = #{oldCustomerDomain.marketName},
+          task_source                   = #{oldCustomerDomain.taskSource},
+          market_content                = #{oldCustomerDomain.marketContent},
+          market_content_link           = #{oldCustomerDomain.marketContentLink},
+          start_time                    = #{oldCustomerDomain.startTime},
+          stop_time                     = #{oldCustomerDomain.endTime},
+          market_area_code              = #{oldCustomerDomain.marketAreaCode},
+          appoint_users                 = #{oldCustomerDomain.appointUsers},
+          appoint_users_desc            = #{oldCustomerDomain.appointUsersDesc},
+          black_users                   = #{oldCustomerDomain.blackUsers},
+          black_users_desc              = #{oldCustomerDomain.blackUsersDesc},
+          base_type                     = #{oldCustomerDomain.baseType},
+          status                        = #{oldCustomerDomain.status},
+          appoint_business_hall         = #{oldCustomerDomain.appointBusinessHall},
+          appoint_business_hall_desc    = #{oldCustomerDomain.appointBusinessHallDesc},
+          area_desc                     = #{oldCustomerDomain.areaDesc},
+          last_update_user              = #{userId},
+          last_update_time              = sysdate()
+        WHERE
+          id = #{oldCustomerDomain.taskId}
+    </update>
+
+
+    <select id="queryOldCustomerBaseType" resultType="java.lang.String">
+        select base_type as baseType from market.preferential_task where id = #{taskId}
+    </select>
+
+
+    <select id="queryAllNeedAuditTask" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+          a.id                              as id,
+	      a.name                            as taskName,
+	      a.create_time                     as createTime,
+	      a.task_source                     as taskSource,
+	      a.start_time                      as startTime,
+	      a.stop_time                       as endTime,
+	      a.status                          as status,
+	      o.old_customer_audit_users        as oldCustomerAuditUsers
+	    FROM
+	      market.preferential_task a  JOIN market.market_user b on a.create_user = b.id
+          JOIN market.old_customer_user o  on b.id = o.user_id
+	    WHERE
+          a.status = 1
+        <if test=" taskName != null and taskName != '' ">
+            and a.name LIKE concat('%',#{taskName},'%')
+        </if>
+    </select>
+
+    <select id="queryAuditHistoryInfo" resultType="java.util.Map">
+        SELECT
+          task_id          as taskId,
+          COUNT(1)        as countNum
+        FROM market.old_customer_audit_history
+        where
+          FIND_IN_SET(task_id,#{taskIds})
+        and
+          audit_result = 'approve'
+        GROUP BY  task_id
+    </select>
+
+    <insert id="insertIntoAuditHistory" parameterType="java.util.Map">
+        INSERT  INTO  market.old_customer_audit_history
+        (
+          task_id,
+          audit_user,
+          audit_result,
+          audit_time,
+          remarks
+        )
+        VALUES
+        (
+          #{taskId},
+          #{auditUserId},
+          #{auditResult},
+          sysdate(),
+          #{remarks}
+        )
+    </insert>
+
+
+
+    <update id="updateOldCustomerById">
+        update market.preferential_task
+        set
+        status = #{status},
+        last_update_time = sysdate()
+        where id = #{taskId}
+    </update>
+
+
+    <select id="queryOldCustomerAuditHistory" resultType="java.util.Map">
+        select
+        h.audit_user as auditUser,
+        h.audit_result as auditResult,
+        h.remarks as remarks,
+        h.audit_time as auditTime,
+        o.old_customer_audit_users as auditUsers,
+        u1.name as auditUserName
+        from
+        old_customer_audit_history h
+        left join market.preferential_task j on h.task_id = j.id
+        left join market.market_user u on j.create_user = u.id
+        LEFT JOIN market.old_customer_user o on u.id = o.user_id
+        left join market.market_user u1 on h.audit_user = u1.id
+        where h.task_id = #{taskId} and h.audit_result = 'approve'
+        order by h.audit_time
+    </select>
+
+    <update id="handleOldCustomer">
+        UPDATE  market.preferential_task
+        SET
+          status = #{status},
+          last_update_user = #{updateUser},
+          last_update_time = sysdate()
+        where id = #{taskId}
+    </update>
+
+
+    <select id="getOldCustomerTaskAuditReason" resultType="java.lang.String">
+        select
+          a.remarks
+        from market.old_customer_audit_history a
+        where a.audit_result = 'against' and a.task_id = #{taskId}
+        order by audit_time DESC
+    </select>
+
+
+    <select id="queryAllOnlineTask" resultType="com.axon.market.common.domain.iflow.OldCustomerDomain">
+        SELECT
+          id as taskId,
+          name as taskName,
+          market_name as marketName,
+          market_area_code as marketAreaCode,
+          market_content_link as marketContentLink,
+          appoint_users as appointUsers,
+          black_users  as blackUser,
+          base_type as baseType,
+          appoint_business_hall as appointBusinessHall
+        FROM  market.preferential_task
+        where
+          status = 20
+    </select>
+
+
+    <select id="checkBlackUsers" resultType="int">
+        SELECT  count(1) FROM pdc_temp.old_customer_black_phone WHERE  file_id = #{fileId} and phone = #{userPhone}
+    </select>
+
+
+    <select id="queryAllAreaCode" resultType="int">
+        SELECT  code from market.market_area
+    </select>
+
+    <select id="queryOldCustomerResult" resultType="java.util.Map">
+        SELECT
+        market_name as marketName,
+        market_content as marketContent,
+        market_content_link as onlineLink,
+        appoint_business_hall as appointBusinessHall
+        FROM
+        market.preferential_task
+        where
+        id = #{taskId}
+    </select>
+
+    <update id="terminateOldCustomerTask">
+        update market.preferential_task
+        set
+        status = #{status},
+        last_update_time = sysdate(),
+        last_update_user = #{userId}
+        where id = #{taskId}
+    </update>
+
+    <update id="expireOldCustomer">
+        UPDATE  market.preferential_task a set a.status = 7
+        where   #{date} > a.stop_time and a.status = 20
+    </update>
+
+
+    <select id="queryBaseInfoCodeList" resultType="java.lang.String">
+        SELECT business_hall_coding FROM market.conf_baseinfo WHERE status = 1;
+    </select>
+
+
+    <select id="checkAppointUsers" resultType="int">
+        SELECT count(1) FROM pdc_temp.old_customer_appoint_phone WHERE file_id = #{fileId} and phone = #{userPhone}
+    </select>
+
+    <delete id="delAuditHistory" parameterType="int">
+        DELETE FROM  market.old_customer_audit_history where task_id = #{taskId}
+    </delete>
+
+    <select id="queryAuditStr" resultType="java.util.Map">
+        select
+          o.user_id  as userId,
+          o.old_customer_audit_users as oldCustomerAuditUsers
+        from market.market_user m
+        JOIN market.old_customer_user o on m.id = o.user_id where m.id = #{userId}
+    </select>
+
+    <select id="queryTaskIsDel" resultType="int">
+        SELECT status FROM market.preferential_task where id = #{taskId}
+    </select>
+</mapper>

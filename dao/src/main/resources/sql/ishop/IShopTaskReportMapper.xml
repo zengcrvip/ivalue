@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTaskReportMapper">
+
+    <select id="queryPositionReportTotal" resultType="int" parameterType="java.util.Map">
+        select count(1) as count from
+        (
+              select  d.cdate                   as  cdate,
+                      d.taskid                  as  taskId,
+                      p.task_Name               as  taskName,
+                      c.name                    as  areaName,
+                      IFNULL(d.county,'')       as  county,
+                      t.location_type           as  locationType,
+                      d.send_succ_num           as  sendNum,
+                      d.receive_succ_num        as  receiveNum,
+                      IFNULL(b.name,p.task_classify)	as  businessType,
+                      cb.business_hall_coding   as  baseCode,
+                      cb.base_name			    as  baseName,
+                      IFNULL(p.report_phone,'') as  reportPhone,
+                      IFNULL(concat(round(d.receive_succ_num*100/d.send_succ_num,2),'%'),'0.00%') as flag
+        from  analysisdb.d_scene_location_day_analyse d
+        left join  shop_task p            on  d.taskid = p.id
+        left join  market_area c          on  d.city_code = c.code
+        left  join shop_task_2_business b on  p.business_type = b.type
+        left join  conf_baseinfo cb       on  d.base_id = cb.base_id
+        left join  conf_baseinfo_type t   on  t.location_type_id = cb.location_type_id
+        where 1=1
+        <if test="taskName != '' and taskName != null"  >
+            and   p.task_Name like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseName != '' and baseName != null"  >
+            and   cb.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseCode != '' and baseCode != null"  >
+            and   cb.business_hall_coding like concat('%',#{baseCode},'%')
+        </if>
+        <if test="locationType != '' and locationType != null" >
+            and   t.location_type_id = #{locationType}
+        </if>
+        <if test="baseArea != '' and baseArea != null and baseArea != 0 and baseArea != 99999" >
+            and   d.city_code = #{baseArea}
+        </if>
+        <if test="dateTime != '' and dateTime != null" >
+            and   d.cdate = DATE_FORMAT(#{dateTime},'%Y-%c-%d')
+        </if>
+        <if test="businessCodes != '' and  businessCodes != null">
+            and   d.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and   d.city_code in(${areaCode},99999)
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryPositionReortByPage" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+              d.cdate                           as  cdate,
+              d.taskid                          as  taskId,
+              p.task_Name                       as  taskName,
+              c.name                            as  areaName,
+              IFNULL(d.county,'')               as  county,
+              t.location_type                   as  locationType,
+              d.send_succ_num                   as  sendNum,
+              d.receive_succ_num                as  receiveNum,
+              IFNULL(b.name,p.task_classify)	as  businessType,
+              cb.business_hall_coding           as  baseCode,
+              cb.base_name					    as  baseName,
+              IFNULL(p.report_phone,'')         as  reportPhone,
+              IFNULL(concat(round(d.receive_succ_num*100/d.send_succ_num,2),'%'),'0.00%') as flag
+        from  analysisdb.d_scene_location_day_analyse d
+        left join  shop_task p            on  d.taskid = p.id
+        left join  market_area c          on  d.city_code = c.code
+        left  join shop_task_2_business b on  p.business_type = b.type
+        left join  conf_baseinfo cb       on  d.base_id = cb.base_id
+        left join  conf_baseinfo_type t   on  t.location_type_id = cb.location_type_id
+        where 1=1
+
+        <if test="taskName != '' and taskName != null"  >
+            and   p.task_Name like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseName != '' and baseName != null"  >
+            and   cb.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseCode != '' and baseCode != null"  >
+            and   cb.business_hall_coding like concat('%',#{baseCode},'%')
+        </if>
+        <if test="locationType != '' and locationType != null" >
+            and   t.location_type_id = #{locationType}
+        </if>
+        <if test="baseArea != '' and baseArea != null and baseArea != 0 and baseArea != 99999" >
+            and   d.city_code = #{baseArea}
+        </if>
+        <if test="dateTime != '' and dateTime != null"  >
+            and   d.cdate = DATE_FORMAT(#{dateTime},'%Y-%c-%d')
+        </if>
+        <if test="businessCodes != '' and  businessCodes != null" >
+            and   d.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and   d.city_code in (${areaCode},99999)
+        </if>
+        order by d.cdate desc, d.taskid asc
+        <if test="limit != -1 and offset != -1">
+        limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <select id="queryPositionReport" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+              d.cdate                       as  cdate,
+              d.taskid                      as  taskId,
+              p.task_Name                   as  taskName,
+              c.name                        as  areaName,
+              IFNULL(d.county,'')           as  county,
+              t.location_type               as  locationType,
+              d.send_succ_num               as  sendNum,
+              d.receive_succ_num            as  receiveNum,
+              IFNULL(b.name,p.task_classify)	as  businessType,
+              cb.base_name					as  baseName,
+              IFNULL(concat(round(d.receive_succ_num*100/d.send_succ_num,2),'%'),'0.00%') as flag
+        from  analysisdb.d_scene_location_day_analyse d
+        left join  shop_task p            on  d.taskid = p.id
+        left join  market_area c          on  d.city_code = c.code
+        left join shop_task_2_business b on  p.business_type = b.type
+        left join  conf_baseinfo cb       on  d.base_id = cb.base_id
+        left join  conf_baseinfo_type t   on  t.location_type_id = cb.location_type_id
+        where 1=1
+        <if test="taskName != '' and taskName != null" >
+            and   p.task_Name like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseName != '' and baseName != null" >
+            and   cb.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseCode != '' and baseCode != null"  >
+            and   cb.business_hall_coding like concat('%',#{baseCode},'%')
+        </if>
+        <if test="locationType != '' and locationType != null" >
+            and   t.location_type_id = #{locationType}
+        </if>
+        <if test="baseArea != '' and baseArea != null and baseArea != 0 and baseArea != 99999" >
+            and   d.city_code = #{baseArea}
+        </if>
+        <if test="dateTime != '' and dateTime != null"  >
+            and   d.cdate = DATE_FORMAT(#{dateTime},'%Y-%c-%d')
+        </if>
+        <if test="businessCodes != '' and  businessCodes != null" >
+            and   d.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and   d.city_code in (${areaCode},99999)
+        </if>
+        order by d.cdate desc, d.taskid asc
+    </select>
+</mapper>

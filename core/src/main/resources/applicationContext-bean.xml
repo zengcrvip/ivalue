@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--<bean id="iCloudSmsService" class="com.axon.icloud.scene.sms.client.SmsService"/>-->
+
+    <!--<bean id="httpClientTemplate" class="com.axon.icloud.common.httpclient.HttpClientTemplate"/>-->
+
+    <!--忽略系统schema 值小写-->
+    <bean id="ignoreSchemas" class="java.util.ArrayList">
+        <constructor-arg>
+            <list>
+                <value>gp_toolkit</value>
+                <value>information_schema</value>
+                <value>pg_aoseg</value>
+                <value>pg_bitmapindex</value>
+                <value>pg_catalog</value>
+                <value>pg_toast</value>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="valueTypeMap" class="java.util.HashMap">
+        <constructor-arg>
+            <map>
+                <entry key="2" value="num"/>
+                <entry key="4" value="num"/>
+                <entry key="5" value="num"/>
+                <entry key="-5" value="num"/>
+                <entry key="7" value="num"/>
+                <entry key="8" value="num"/>
+                <entry key="-1" value="string"/>
+                <entry key="1" value="string"/>
+                <entry key="12" value="string"/>
+                <entry key="91" value="date"/>
+                <entry key="92" value="date"/>
+                <entry key="93" value="date"/>
+            </map>
+        </constructor-arg>
+    </bean>
+
+    <bean id="greenPlumMetaDataService" class="com.axon.market.core.service.greenplum.GreenPlumMetaDataService">
+        <property name="dimensionService" ref="dimensionService"/>
+        <property name="ignoreSchemas" ref="ignoreSchemas"/>
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+        <property name="valueTypeMap" ref="valueTypeMap"/>
+    </bean>
+
+    <bean id="springUtil" class="com.axon.market.common.util.SpringUtil"/>
+
+    <bean id="axonEncrypt" class="com.axon.market.common.util.AxonEncryptUtil"/>
+
+    <!-- redis 缓存 -->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!--最大连接数-->
+        <property name="maxTotal" value="${redis.pool.maxTotal}"/>
+        <!--最大空闲连接数-->
+        <property name="maxIdle" value="${redis.pool.maxIdle}"/>
+        <!--初始化连接数-->
+        <property name="minIdle" value="${redis.pool.minIdle}"/>
+        <!--最大等待时间-->
+        <property name="maxWaitMillis" value="${redis.pool.maxWaitMillis}"/>
+        <!--对拿到的connection进行validateObject校验-->
+        <property name="testOnBorrow" value="${redis.pool.testOnBorrow}"/>
+        <!--在进行returnObject对返回的connection进行validateObject校验-->
+        <property name="testOnReturn" value="${redis.pool.testOnReturn}"/>
+    </bean>
+
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg name="poolConfig" ref="jedisPoolConfig"/>
+        <constructor-arg name="host" value="${redis.host}" type="java.lang.String"/>
+        <constructor-arg name="port" value="${redis.port}" type="int"/>
+        <constructor-arg name="timeout" value="${redis.timeout}" type="int"/>
+        <constructor-arg name="password">
+            <null/>
+        </constructor-arg>
+        <constructor-arg name="database" value="${redis.database}" type="int"/>
+    </bean>
+
+    <bean id="interfaceBean" class="com.axon.market.common.bean.InterfaceBean">
+        <property name="urlBlacklistUrl" value="${iscene.url.black.list.url}"/>
+        <property name="scencesUrl" value="${iscene.url.black.list.scencesUrl}"/>
+        <property name="monitorConfigUrl" value="${isystem.url.black.list.monitorConfigUrl}"/>
+        <property name="userBlacklistUrl" value="${iscene.user.black.list.url}"/>
+        <property name="commandUrl" value="${iscene.command.url}"/>
+        <property name="globalSettingUrl" value="${iscene.global.setting.url}"/>
+        <property name="getTestNumberUrl" value="${iscene.get.test.number.url}"/>
+        <property name="addTestNumberUrl" value="${iscene.add.test.number.url}"/>
+        <property name="delTestNumberUrl" value="${iscene.del.test.number.url}"/>
+        <property name="scenePilotUrl" value="${iscene.handle.task.url}"/>
+        <property name="sceneOrderUrl" value="${iscene.orderproduct.task.url}"/>
+    </bean>
+
+    <!--系统配置-->
+    <bean id="systemConfigBean" class="com.axon.market.common.bean.SystemConfigBean">
+        <property name="monitorPath" value="${system.monitor.path}"/>
+        <property name="localFilePath" value="${system.local.file.path}"/>
+        <property name="dmcFilePath" value="${system.dmc.file.path}"/>
+        <property name="channelFileLocalPath" value="${system.channel.file.local.path}"/>
+        <property name="dixiaoFileLocalPath" value="${system.dixiao.file.local.path}"/>
+        <property name="dixiaoBackDay" value="${system.dixiao.backup.day}"/>
+        <property name="isForceRefreshRuleModel" value="${system.is.force.refresh.rule.model}"/>
+        <property name="forceRefreshModelTime" value="${system.force.refresh.model.time}"/>
+        <property name="sendSmsUrl" value="${system.send.sms.url}"/>
+        <property name="sendSmsPwd" value="${system.send.sms.pwd}"/>
+        <property name="jumpLinkUrl" value="${system.jump.link.url}"/>
+        <property name="shortLinkPrefix" value="${system.short.link.prefix}"/>
+        <property name="positionTaskUrl" value="${system.position.task.url}"/>
+        <property name="sendSmsWebServiceURL" value="${system.sms.webservice.url}"/>
+        <property name="sendSmsWebServicePWD" value="${system.sms.webservice.pwd}"/>
+        <property name="yunSmsServiceURL" value="${system.sms.yun.url}"/>
+        <property name="province" value="${system.province}"/>
+        <property name="baseSmsLimit" value="${system.baseSmsLimit}"/>
+        <property name="kafkaServers" value="${kafka.servers}"/>
+        <property name="kafkaGroupId" value="${kafka.group.id}"/>
+        <property name="kafkaLogGroupId" value="${kafka.log.group.id}"/>
+        <property name="kafkaFineTopic" value="${kafka.fine.topic}"/>
+    </bean>
+
+    <bean id="greenPlumServerBean" class="com.axon.market.common.bean.GreenPlumServerBean">
+        <property name="gpServer" value="${gp.host}"/>
+        <property name="gpServerUser" value="${gp.user}"/>
+        <property name="gpServerPassword" value="${gp.password}"/>
+        <property name="gpServerPort" value="${gp.port}"/>
+        <property name="gpDataFilePath" value="${gp.data.file.path}"/>
+        <property name="gpDelimiterChar" value="${gp.data.file.field.delimiter}"/>
+        <property name="gpCurrentSchemaName" value="${gp.current.schema.name}"/>
+        <property name="gpBatchCopyCount" value="${gp.batch.copy.count}"/>
+        <property name="gpShopFullTableName" value="${gp.shop.full.table.name}"/>
+    </bean>
+
+    <bean id="smsConfigBean" class="com.axon.market.common.bean.SmsConfigBean">
+        <property name="maxOperateNumber" value="${sms.config.max.operate.number}"/>
+        <property name="spNumUrl" value="${sms.config.sp.num.url}"/>
+        <property name="taskUrl" value="${sms.config.task.url}"/>
+        <property name="segmentModifyNoticeSmsContent" value="${sms.segment.modify.notice.content}"/>
+        <property name="thirdPartyChannelMarketSmsContent" value="${sms.third.party.channel.market.content}"/>
+        <property name="verificationCodeSmsContent" value="${sms.verification.code.content}"/>
+        <property name="auditNoticeSmsContent" value="${sms.audit.notice.content}"/>
+        <property name="reminderNoticeSmsContent" value="${sms.reminder.notice.content}"/>
+        <property name="dixiaoRemindertoCitySmsContent" value="${sms.dixiao.reminder.city.content}"/>
+        <property name="dixiaoRemindertoCityContact" value="${sms.dixiao.reminder.city.contact}"/>
+        <property name="dixiaoRemindertoProvinceSmsContent" value="${sms.dixiao.reminder.province.content}"/>
+        <property name="dixiaoRemindertoProvinceContact" value="${sms.reminder.province.contact}"/>
+        <property name="reminderDisableSmsContent" value="${sms.reminder.disable.contact}"/>
+        <property name="dixiaoRemindertoOnlineProvinceContact" value="${sms.reminder.online.province.contact}"/>
+        <property name="dixiaoRemindertoOnlineProvinceSmsContent" value="${sms.dixiao.reminder.online.province.content}"/>
+    </bean>
+
+    <bean id="sqlBean" class="com.axon.market.common.bean.SqlBean">
+        <property name="truncateShopUserSql" value="${truncate.shop.user.sql}"/>
+        <property name="truncateShopBaseSql" value="${truncate.shop.base.sql}"/>
+        <property name="insertShopBaseSql" value="${insert.shop.base.sql}"/>
+        <property name="truncateShopTargetSql" value="${truncate.shop.target.sql}"/>
+        <property name="backUpShopRecommendationExecuteSql" value="${back.up.shop.recommendation.execute.sql}"/>
+        <property name="truncateShopRecommendationExecuteSql" value="${truncate.shop.recommendation.execute.sql}"/>
+    </bean>
+
+
+    <bean id="filePreProcessImpl" class="com.axon.market.core.monitor.area.GuangXiFilePreProcess">
+        <property name="greenPlumServerBean" ref="greenPlumServerBean"/>
+    </bean>
+
+    <bean id="filePreProcess" class="com.axon.market.core.monitor.FilePreProcessImpl">
+        <property name="filePreProcess" ref="filePreProcessImpl"/>
+    </bean>
+
+    <bean id="baseTableBean" class="com.axon.market.common.bean.BaseTableBean">
+        <property name="tableName" value="${base.table.name}"/>
+        <property name="phoneColumn" value="${base.table.phone.column}"/>
+        <property name="areaColumn" value="${base.table.area.column}"/>
+        <property name="userTypeColumn" value="${base.table.user.type.column}"/>
+    </bean>
+
+    <!--话+对接配置-->
+    <bean id="phonePlusConfigBean" class="com.axon.market.common.bean.PhonePlusConfigBean">
+        <property name="agentId" value="${phoneplus.agentId}"/>
+        <property name="initialcallUrl" value="${phoneplus.initialcallUrl}"/>
+        <property name="submitResultUrl" value="${phoneplus.submitResultUrl}"/>
+        <property name="getCallRecordUrl" value="${phoneplus.getCallRecordUrl}"/>
+        <property name="getCallHistoryUrl" value="${phoneplus.getCallHistoryUrl}"/>
+    </bean>
+
+    <bean id="systemPersonConfig" class="com.axon.market.common.bean.SystemPersonConfig">
+        <property name="keeperSwitch" value="${keeper.switch}"/>
+    </bean>
+
+    <bean id="verificationCodeBean" class="com.axon.market.common.bean.VerificationCodeBean">
+        <property name="code" value="${verificationCode.code}"/>
+        <property name="openUniversal" value="${verificationCode.openUniversal}"/>
+    </bean>
+</beans>

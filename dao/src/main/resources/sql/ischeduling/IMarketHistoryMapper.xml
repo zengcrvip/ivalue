@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ischeduling.IMarketHistoryMapper">
+
+    <!-- 查询某任务所有营销历史 -->
+    <select id="queryMarketHistoryByJobId" parameterType="int" resultType="com.axon.market.common.domain.ischeduling.MarketHistoryDomain">
+        select
+            market_job_id                                   as marketJobId,
+            market_job_name                                 as marketJobName,
+            market_user                                     as marketUser,
+            market_type                                     as marketType,
+            market_start_time                               as marketStartTime,
+            market_end_time                                 as marketEndTime,
+            market_status                                   as marketStatus,
+            market_segments                                 as marketSegments,
+            market_user_counts                              as marketUserCounts
+        from MARKET_HISTORY
+        <where>
+            <if test = "jobId != null">
+                market_job_id = #{jobId}
+            </if>
+        </where>
+        order by market_end_time desc
+    </select>
+
+    <!-- 查询某任务所有营销历史个数 -->
+    <select id="queryMarketHistoryCountsByJobId" parameterType="int" resultType="int">
+        select
+          count(1)
+        from MARKET_HISTORY
+        <where>
+            <if test = "jobId != null">
+                market_job_id = #{jobId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询某任务所有营销历史 -->
+    <select id="queryMarketHistoryByPage" parameterType="int" resultType="com.axon.market.common.domain.ischeduling.MarketHistoryDomain">
+        select
+            market_job_id                                   as marketJobId,
+            market_job_name                                 as marketJobName,
+            market_user                                     as marketUser,
+            market_type                                     as marketType,
+            market_start_time                               as marketStartTime,
+            market_end_time                                 as marketEndTime,
+            market_status                                   as marketStatus,
+            market_segments                                 as marketSegments,
+            market_user_counts                              as marketUserCounts
+        from MARKET_HISTORY
+        <where>
+            <if test = "jobId != null">
+                market_job_id = #{jobId}
+            </if>
+        </where>
+        order by market_end_time desc
+        limit #{maxRecord} offset #{offset}
+    </select>
+
+    <!-- 插入营销任务历史 -->
+    <insert id="insertMarketHistory" parameterType="com.axon.market.common.domain.ischeduling.MarketHistoryDomain">
+        insert into MARKET_HISTORY(
+            market_job_id,
+            market_job_name,
+            market_user,
+            market_type,
+            market_start_time,
+            market_end_time,
+            market_status,
+            market_models,
+            market_user_counts
+        )VALUES(
+            #{marketJobId},
+            #{marketJobName},
+            #{marketUser},
+            #{marketType},
+            #{marketStartTime},
+            #{marketEndTime},
+            #{marketStatus},
+            #{marketSegments},
+            #{marketUserCounts}
+        )
+    </insert>
+
+</mapper>

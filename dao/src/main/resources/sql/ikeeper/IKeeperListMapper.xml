@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperListMapper">
+
+    <insert id="fetchActivityInfo">
+        insert into SHOP_KEEPER.SHOP_KEEPER_ACTIVITY_LIST(
+        ID
+        ,ACTIVITY_ID
+        ,CHANNEL_CODE
+        ,PHONE
+        ,order_time
+        )
+        VALUES
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            '${item.id}','${item.activityId}','${item.channelCode}','${item.phone}','${item.orderTime}'
+            )
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ibaseinfoType.IBaseinfoTypeMapper">
+
+    <select id="selectBaseinfoTypeAll" resultType="com.axon.market.common.domain.ibaseInfoType.baseinfoTypeDomain">
+        select location_type_id as locationTypeId,location_type as locationType from conf_baseinfo_type ;
+    </select>
+
+    <select id="queryAllShops" resultType="java.lang.Integer">
+        select
+            base_id
+        from conf_baseinfo
+        where status = 1
+    </select>
+
+</mapper>

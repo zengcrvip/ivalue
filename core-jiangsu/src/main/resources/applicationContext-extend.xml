@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+       <bean id="recommendationConfigBean" class="com.axon.market.common.bean.RecommendationConfigBean">
+              <property name="serverHost" value="${recommendation.server.host}"/>
+              <property name="serverUser" value="${recommendation.server.user}"/>
+              <property name="serverPassword" value="${recommendation.server.password}"/>
+              <property name="serverPort" value="${recommendation.server.port}"/>
+              <property name="serverConnectType" value="${recommendation.server.connect.type}"/>
+              <property name="iCloudServerHost" value="${recommendation.icloud.server.host}"/>
+              <property name="iCloudServerUser" value="${recommendation.icloud.server.user}"/>
+              <property name="iCloudServerPassword" value="${recommendation.icloud.server.password}"/>
+              <property name="iCloudServerPort" value="${recommendation.icloud.server.port}"/>
+              <property name="iCloudServerConnectType" value="${recommendation.icloud.server.connect.type}"/>
+              <property name="fengleiServerHost" value="${fenglei.server.host}"/>
+              <property name="fengleiServerUser" value="${fenglei.server.user}"/>
+              <property name="fengleiServerPassword" value="${fenglei.server.password}"/>
+              <property name="fengleiServerPort" value="${fenglei.server.port}"/>
+              <property name="fengleiServerConnectType" value="${fenglei.server.connect.type}"/>
+              <property name="voiceplusServerHost" value="${voiceplus.server.host}"/>
+              <property name="voiceplusServerUser" value="${voiceplus.server.user}"/>
+              <property name="voiceplusServerPassword" value="${voiceplus.server.password}"/>
+              <property name="voiceplusServerPort" value="${voiceplus.server.port}"/>
+              <property name="voiceplusServerConnectType" value="${voiceplus.server.connect.type}"/>
+
+       </bean>
+
+</beans>

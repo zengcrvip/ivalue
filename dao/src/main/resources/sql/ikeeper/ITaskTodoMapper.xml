@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.ITaskTodoMapper">
+    <insert id="insertTodoTask" parameterType="com.axon.market.common.domain.ikeeper.TaskTodoDomain"
+            useGeneratedKeys="true" keyProperty="taskid">
+        insert into keeper.keeper_todo_task(
+        user_id,
+        user_name,
+        create_date,
+        task_content,
+        status
+        )
+        values (
+        #{userid},
+        #{username},
+        DATE_FORMAT(#{createdate},'%Y-%m-%d %H:%i'),
+        #{taskcontent},
+        0
+        )
+    </insert>
+
+
+    <select id="queryTodoTaskCount" resultType="Map">
+        select
+        DATE_FORMAT(t.create_date,'%Y-%m-%d') as createdate,
+        sum(1) as count
+        from keeper.keeper_todo_task t
+        where t.user_id = #{userid}
+        group by DATE_FORMAT(t.create_date,'%Y-%m-%d')
+    </select>
+
+    <select id="queryTodoTaskList" resultType="com.axon.market.common.domain.ikeeper.TaskTodoDomain">
+        select
+        t.task_id as taskid,
+        DATE_FORMAT(t.create_date, '%Y-%m-%d %H:%i') as createdate,
+        t.user_name as username,
+        t.task_content as taskcontent,
+        t.status as status
+        from keeper.keeper_todo_task t
+        where DATE_FORMAT(t.create_date, '%Y-%m-%d') = #{createdate} and t.user_id = #{userid}
+    </select>
+
+    <delete id="deleteTodoTask" >
+        delete from keeper.keeper_todo_task where task_id = #{taskid}
+    </delete>
+
+    <update id="updateTaskStatus" parameterType="Map">
+        update keeper.keeper_todo_task set status = 1
+        where task_id = #{taskid}
+    </update>
+
+    <select id="queryUnreadTaskCount" resultType="Integer">
+        select count(1) from keeper.keeper_todo_task
+        where user_id = #{userid} and status = 0
+    </select>
+</mapper>

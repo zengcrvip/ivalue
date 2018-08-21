@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.ISceneManageMapper">
+
+    <select id="getSceneList" resultType="com.axon.market.common.domain.iscene.ScenesDomain">
+        select
+        s.id,client,backUrl,imgUrl,picTitle,taskId,Name as taskName,multiPicture,typeName,modelId
+        from scenes as s left join market_scene_pilot as t on s.taskId=t.id
+        inner JOIN templetype as e on s.modelId=e.id
+        WHERE s.isDelete=0
+        <if test="client != null &amp;&amp; client != ''">
+            and client like concat('%','${client}','%')
+        </if>
+        order by s.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="getSceneListCount" resultType="int">
+        select count(0) from scenes as s
+        inner JOIN templetype as e on s.modelId=e.id
+        where s.isDelete=0
+        <if test="client != null &amp;&amp; client != ''">
+            and client like concat('%','${client}','%')
+        </if>
+    </select>
+
+    <select id="getSelectTempleType" resultType="com.axon.market.common.domain.iscene.TempleTypeDomain">
+        SELECT id,typeName,multiPicture from templetype where isDelete=0
+    </select>
+
+    <insert id="addScene" parameterType="com.axon.market.common.domain.iscene.ScenesDomain">
+        insert into scenes
+        (
+        client,
+        modelId,
+        backUrl,
+        imgUrl,
+        picTitle,
+        editUserId,
+        editUserName,
+        editTime,
+        provinceId,
+        createId,
+        showTrackUrl,
+        clickTrackUrl
+        )
+        VALUES
+        (
+        #{info.client},
+        #{info.modelId},
+        #{info.backUrl},
+        #{info.imgUrl},
+        #{info.picTitle},
+        #{info.editUserId},
+        #{info.editUserName},
+        sysdate(),
+        #{info.provinceId},
+        #{info.createId},
+        #{info.showTrackUrl},
+        #{info.clickTrackUrl}
+        )
+    </insert>
+
+    <update id="editScene">
+        update scenes SET
+        <if test="info.client != null">
+            client= #{info.client},
+        </if>
+        <if test="info.modelId != null">
+            modelId= #{info.modelId},
+        </if>
+        <if test="info.backUrl != null">
+            backUrl= #{info.backUrl},
+        </if>
+        <if test="info.imgUrl != null">
+            imgUrl= #{info.imgUrl},
+        </if>
+        <if test="info.picTitle != null">
+            picTitle= #{info.picTitle},
+        </if>
+        <if test="info.taskId != null">
+            taskId= #{info.taskId},
+        </if>
+        <if test="info.editUserId != null">
+            editUserId= #{info.editUserId},
+        </if>
+        <if test="info.editUserName != null">
+            editUserName= #{info.editUserName},
+        </if>
+        editTime=sysdate(),
+        <if test="info.isUsed != null">
+            isUsed= #{info.isUsed},
+        </if>
+        <if test="info.isDelete != null">
+            isDelete= #{info.isDelete},
+        </if>
+        <if test="info.showTrackUrl != null">
+            showTrackUrl= #{info.showTrackUrl},
+        </if>
+        <if test="info.clickTrackUrl != null">
+            clickTrackUrl= #{info.clickTrackUrl},
+        </if>
+        provinceId= #{info.provinceId}
+        WHERE id=#{info.id}
+    </update>
+
+    <update id="deleteScene">
+        update scenes set
+        isDelete = '-1'
+        where id = #{id}
+    </update>
+
+    <select id="getSceneContent" resultType="com.axon.market.common.domain.iscene.ScenesDomain">
+        select
+        s.id,client,backUrl,imgUrl,picTitle,taskId,Name as taskName,multiPicture,typeName,modelId
+        from scenes as s left join market_scene_pilot as t on s.taskId=t.id
+        inner JOIN templetype as e on s.modelId=e.id
+        <if test="sceneId != 0">
+            where s.id = #{sceneId}
+        </if>
+    </select>
+
+    <select id="getPictureUrl" resultType="com.axon.market.common.domain.iscene.PicturesDomain">
+        select
+        id,url,title,tempId,pictureByte,thumbnail from pictures
+        where isDelete=0
+        <if test="tempId != 0">
+            and tempId = #{tempId}
+        </if>
+    </select>
+</mapper>

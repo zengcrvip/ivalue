@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iconsumption.IDixiaoResultMapper">
+
+    <!-- 查询低销分配结果 -->
+    <select id="queryDixiaoResult" resultType="com.axon.market.common.domain.iconsumption.DixiaoResultDomain"
+            parameterType="java.util.Map">
+        select
+        t.id as id,
+        t.taskid as taskid,
+        t.monthcode as monthcode,
+        t.rankid as rankId,
+        t.ranktype as ranktype,
+        t.area as area,
+        t.matchno as matchno,
+        t.isonline as isonline,
+        t.partnercode as partnercode,
+        t.method as method,
+        t.status as status,
+        t.isnewest as isnewest,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.ftpflag as ftpflag
+        from market.dixiao_result t
+        where 1=1 and isnewest = 1
+        <if test="taskid != null">
+            and t.taskid = #{taskid}
+        </if>
+        <if test="monthcode != null and monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankid != null and rankid != ''">
+            and t.rankid = #{rankid}
+        </if>
+        <if test="ranktype != null and ranktype != ''">
+            and t.ranktype = #{ranktype}
+        </if>
+        <if test="partnercode != null and partnercode != ''">
+            and t.partnercode = #{partnercode}
+        </if>
+        <if test="isonline != null">
+            and t.isonline = #{isonline}
+        </if>
+        <if test="status != null">
+            and t.status = #{status}
+        </if>
+        <if test="method != null">
+            and t.method = #{method}
+        </if>
+        <if test="ftpflag != null">
+            and t.ftpflag = #{ftpflag}
+        </if>
+        <if test="area != null and area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        order by cast(t.rankid as decimal) asc,area
+    </select>
+
+    <!-- 分页查询话+渠道编码 -->
+    <select id="queryBusinessCodeByPage" resultType="com.axon.market.common.domain.iconsumption.DixiaoCodeDomain"
+            parameterType="java.util.Map">
+        select
+        t.business_hall_code as code,
+        t.business_name as name,
+        t.createtime as createtime
+        from market.business_code_from_voiceplus t
+        where 1=1
+        <if test="code != null and code != ''">
+            and t.business_hall_code = #{code}
+        </if>
+        <if test="name != null and name != ''">
+            and t.business_name like concat('%',#{name},'%')
+        </if>
+        order by t.business_hall_code
+        <if test="limit != null and start != null">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <!-- 查询话+渠道编码记录条数 -->
+    <select id="queryBusinessCodeTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.business_code_from_voiceplus t
+        where 1=1
+        <if test="code != null and code != ''">
+            and t.business_hall_code = #{code}
+        </if>
+        <if test="name != null and name != ''">
+            and t.business_name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <!-- 分页查询合作伙伴渠道编码 -->
+    <select id="queryPartnerCodeByPage" resultType="com.axon.market.common.domain.iconsumption.DixiaoCodeDomain"
+            parameterType="java.util.Map">
+        select
+        t.partner_code as code,
+        t.partner_name as name,
+        t.createtime as createtime,
+        CASE WHEN isnull(a.partner_code) THEN
+        0
+        ELSE
+        1
+        END as isallocate
+        from market.partner_from_voiceplus t left join market.partner_allocate a on t.partner_code = a.partner_code
+        where 1=1
+        <if test="code != null and code != ''">
+            and t.partner_code = #{code}
+        </if>
+        <if test="name != null and name != ''">
+            and t.partner_name like concat('%',#{name},'%')
+        </if>
+        order by isallocate desc,name
+        <if test="limit != null and offset != null">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <!-- 查询合作伙伴渠道编码记录条数 -->
+    <select id="queryPartnerCodeTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.partner_from_voiceplus t
+        where 1=1
+        <if test="code != null and code != ''">
+            and t.partner_code = #{code}
+        </if>
+        <if test="name != null and name != ''">
+            and t.partner_name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <!-- 根据活动编码和目标客户查询低消任务 -->
+    <select id="queryDixiaoTaskBySaleIDTotal"
+            resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from dixiao_task_pool t
+        where 1=1 and t.status != 10
+        <if test="saleid != null and saleid != ''">
+            and t.sale_id =#{saleid}
+        </if>
+    </select>
+
+    <!-- 分页查询低消任务 -->
+    <select id="queryDixiaoTaskByPage" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain"
+            parameterType="java.util.Map">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where 1=1
+        <if test="taskid != null">
+            and t.taskid = #{taskid}
+        </if>
+        <if test="salename != null and salename != ''">
+            and t.sale_name like concat('%',#{salename},'%')
+        </if>
+        <if test="monthcode != null and monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="limit != null and offset != null ">
+           limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <!-- 查询低消任务(仅一条记录) -->
+    <select id="queryOneDixiaoTask" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain">
+    select
+    t.taskid as taskid,
+    t.sale_id as saleid,
+    t.sale_name as salename,
+    t.sale_boid_id as boid,
+    t.aim_sub_id as aim_sub_id,
+    t.aim_sub_name as aim_sub_name,
+    t.status as status,
+    t.createtime as createtime,
+    t.updatetime as updatetime,
+    t.START_DATE as start_date,
+    t.END_DATE as end_date,
+    t.SALE_EPARCHY_CODE as sale_eparchy_code,
+    t.config_file_name as config_file_name,
+    t.user_file_name as user_file_name,
+    t.notify_ftp as notify_ftp,
+    t.ranktype as ranktype
+    from market.dixiao_task_pool t
+    where 1=1 and t.taskid = #{taskid}
+    </select>
+
+    <!-- 查询低消任务总数 -->
+    <select id="queryDixiaoTaskTotal" resultType="int" parameterType="java.util.Map">
+        select count(*)
+        from market.dixiao_task_pool t
+        where 1=1
+        <if test="salename != null and salename != ''">
+            and t.sale_name like concat('%',#{salename},'%')
+        </if>
+        <if test="monthcode != null and monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+    </select>
+
+    <!-- 分配档位 -->
+    <update id="updateToAllocated" parameterType="java.util.Map">
+        update dixiao_result set
+        status = 1,
+        <if test="partnercode != null and partnercode != ''">
+            partnercode = #{partnercode},
+        </if>
+        updatetime = sysdate()
+        where 1=1 and FIND_IN_SET(id, (#{addedlist})) and taskid = #{taskid}
+        <if test="isonline != null and isonline != ''">
+            and isonline = #{isonline}
+        </if>
+    </update>
+
+    <!-- 分配档位 -->
+    <update id="updateTaskMethod" parameterType="java.util.Map">
+        update dixiao_result set
+        method = #{method},
+        updatetime = sysdate()
+        where isonline = 0 and taskid = #{taskid} and FIND_IN_SET(area, #{area})
+    </update>
+
+
+    <!-- 取消档位分配 -->
+    <update id="updateToUnallocated" parameterType="java.util.Map">
+        update dixiao_result set
+        status = 0,
+        partnercode = null,
+        updatetime = sysdate()
+        where 1=1 and FIND_IN_SET(id, (#{deletedlist})) and taskid = #{taskid}
+        <if test="isonline != null and isonline != ''">
+            and isonline = #{isonline}
+        </if>
+    </update>
+
+    <!-- 修改低消任务状态 -->
+    <update id="modifyTaskStatus" parameterType="java.util.Map">
+        update dixiao_task_pool  set
+        status = #{status},
+        updatetime = sysdate()
+        where taskid = #{taskid}
+    </update>
+
+    <!-- 修改低消任务状态 -->
+    <update id="modifyNotifyFtp" parameterType="java.util.Map">
+        update dixiao_task_pool  set
+        notify_ftp = #{notify_ftp}
+        where taskid = #{taskid}
+    </update>
+
+    <!-- 线上团队数据分配 -->
+    <insert id="insertPartnerAllocate">
+        insert into partner_allocate(partner_code,createtime) values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (#{item.code},sysdate())
+        </foreach>
+    </insert>
+
+    <!-- 线上团队数据去分配 -->
+    <delete id="deletePartner">
+        delete from partner_allocate where FIND_IN_SET(partner_code, (#{deletedlist}))
+    </delete>
+
+    <!-- 对应团队分配的一条记录 -->
+    <select id="queryResultByPartner" resultType="com.axon.market.common.domain.iconsumption.DixiaoResultDomain">
+        select
+        t.id as id,
+        t.taskid as taskid,
+        t.monthcode as monthcode,
+        t.rankid as rankId,
+        t.ranktype as ranktype,
+        t.area as area,
+        t.matchno as matchno,
+        t.isonline as isonline,
+        t.partnercode as partnercode,
+        t.method as method,
+        t.status as status,
+        t.isnewest as isnewest,
+        t.createtime as createtime,
+        t.updatetime as updatetime
+        from dixiao_result t where t.isnewest = 1 and status = 1 and isonline = 1 and FIND_IN_SET(partnercode, (#{deletedlist})) limit 1
+    </select>
+
+    <!-- 根据低消配置文件查询低消任务 -->
+    <select id="queryDixiaoTaskByConfig" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain"
+            parameterType="java.util.Map">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.config_file_name as config_file_name,
+        t.user_file_name as user_file_name,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where 1=1
+        <if test="saleid != null and saleid != ''">
+            and t.sale_id = #{saleid}
+        </if>
+        <if test="boid != null and boid != ''">
+            and t.sale_boid_id = #{boid}
+        </if>
+        <if test="status != null">
+            and t.status = #{status}
+        </if>
+    </select>
+
+    <!-- 根据boid修改低消任务状态 -->
+    <update id="setTaskInvalidBySaleID">
+        update dixiao_task_pool set
+        status = 10,
+        updatetime = sysdate()
+        where sale_id = #{saleid}
+    </update>
+
+    <!-- 插入低消任务 -->
+    <insert id="insertDixiaoTask" parameterType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into dixiao_task_pool (
+        monthcode,
+        sale_id,
+        sale_name,
+        sale_desc,
+        sale_eparchy_code,
+        sale_boid_id,
+        aim_sub_id,
+        aim_sub_name,
+        start_date,
+        end_date,
+        status,
+        createtime,
+        updatetime,
+        config_file_name,
+        notify_ftp
+        )
+        values
+        (
+        #{monthcode},
+        #{saleid},
+        #{salename},
+        #{saledesc},
+        #{sale_eparchy_code},
+        #{boid},
+        #{aim_sub_id},
+        #{aim_sub_name},
+        #{start_date},
+        #{end_date},
+        #{status},
+        sysdate(),
+        sysdate(),
+        #{config_file_name},
+        0
+        )
+    </insert>
+
+    <!-- 插入低消分配结果 -->
+    <insert id="insertDixiaoResult" >
+        insert into dixiao_result(taskid,monthcode,rankid,ranktype,area,matchno,isonline,status,isnewest, createtime,updatetime)
+        values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (#{item.taskid},#{item.monthcode},#{item.rankid},#{item.ranktype},#{item.area},#{item.matchno},#{item.isonline},#{item.status},#{item.isnewest},sysdate(), sysdate())
+        </foreach>
+    </insert>
+
+    <!-- 渠道编码数据清除 -->
+    <delete id="deleteBusinessCode">
+        delete from business_code_from_voiceplus where 1=1
+    </delete>
+
+    <!-- 合作伙伴编码数据清除 -->
+    <delete id="deletePartnerCode">
+        delete from partner_from_voiceplus where 1=1
+    </delete>
+
+    <!-- 清除失效的已分配的合作伙伴编码 -->
+    <delete id="deleteInvalidPartner">
+        delete from market.partner_allocate where PARTNER_CODE not in (select partner_code from market.partner_from_voiceplus)
+    </delete>
+
+    <!-- 插入渠道编码数据 -->
+    <insert id="insertBusinessCode">
+        insert into business_code_from_voiceplus(business_hall_code,business_name,createtime) values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (#{item.code},#{item.name},sysdate())
+        </foreach>
+    </insert>
+
+    <!-- 插入合作伙伴编码数据 -->
+    <insert id="insertPartnerCode">
+        insert into partner_from_voiceplus(partner_code,partner_name,createtime) values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (#{item.code},#{item.name},sysdate())
+        </foreach>
+    </insert>
+
+    <!-- 更新任务的用户文件名 -->
+    <update id="updateTaskFilename">
+        update dixiao_task_pool  set
+        user_file_name = #{user_file_name}
+        where taskid = #{taskid}
+    </update>
+
+    <!-- 根据saleid/boid查询task记录 -->
+    <select id="queryDixiaoTaskID" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where t.sale_id = #{saleid}
+            and t.sale_boid_id = #{boid}
+            and t.status != 10
+    </select>
+
+    <!-- 根据saleid查询任务 -->
+    <select id="queryDixiaoTaskBySaleID" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where t.sale_id = #{saleid} and t.status != 10
+    </select>
+
+    <!-- 根据saleid和boid查询任务 -->
+    <select id="queryDixiaoTaskBySaleBoID" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where t.sale_id = #{saleid} and t.sale_boid_id = #{boid} and t.status != 10
+    </select>
+
+    <!-- 更新matchno -->
+    <update id="updateResultMatchno" parameterType="java.util.Map">
+        update dixiao_result set
+        matchno = #{matchno},
+        updatetime = sysdate()
+        where id = #{id}
+    </update>
+
+    <!-- 插入低消分配结果(一条记录) -->
+    <insert id="insertOneDixiaoResult" parameterType="com.axon.market.common.domain.iconsumption.DixiaoResultDomain"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into dixiao_result(taskid,monthcode,rankid,ranktype,area,matchno,isonline,status,isnewest, createtime,updatetime)
+        values (#{taskid},#{monthcode},#{rankid},#{ranktype},#{area},#{matchno},#{isonline},#{status},#{isnewest},sysdate(), sysdate())
+    </insert>
+
+    <!-- 将线下统计结果更新为线上-->
+    <update id="updateResultToOnline">
+        update dixiao_result set
+        isonline = 1,
+        updatetime = sysdate()
+        where taskid = #{taskid} and status = 0 and isnewest = 1
+    </update>
+
+    <!-- 根据taskid更新结果档位类型-->
+    <update id="updateDixiaoRankType">
+        update dixiao_result set
+        ranktype = #{ranktype},
+        updatetime = sysdate()
+        where taskid = #{taskid}
+    </update>
+
+    <!-- 根据taskid更新任务档位类型-->
+    <update id="updateTaskRankType">
+        update dixiao_task_pool set
+        ranktype = #{ranktype},
+        updatetime = sysdate()
+        where taskid = #{taskid}
+    </update>
+
+    <!-- 统计人数 -->
+    <select id="querySumResult" parameterType="java.util.Map" resultType="java.util.Map">
+        select sum(t.matchno) as totalnum
+        from market.dixiao_result t
+        where isnewest = 1
+        <if test="taskid != null">
+            and t.taskid = #{taskid}
+        </if>
+        <if test="area != null and area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="isonline != null">
+            and t.isonline = #{isonline}
+        </if>
+        <if test="partnercode != null and partnercode != ''">
+            and t.partnercode = #{partnercode}
+        </if>
+        <if test="method != null">
+            and t.method = #{method}
+        </if>
+        <if test="status != null">
+            and t.status = #{status}
+        </if>
+    </select>
+
+    <!-- 统计线上团队本批次分配人数 -->
+    <select id="queryPartnerSumResult" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+        t.partnercode as partnercode,
+        p.partner_name as partnername,
+        sum(t.matchno) as totalnum
+        from market.dixiao_result t left join market.partner_from_voiceplus p on t.partnercode = p.partner_code
+        where isnewest = 1 and status = 1 and taskid = #{taskid} and isonline = 1 and ftpflag = 0
+        group by t.partnercode
+    </select>
+
+    <!-- 统计线上团队每个档位分配人数 -->
+    <select id="queryPartnerRankIDSumResult" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+        t.partnercode as partnercode,
+        p.partner_name as partnername,
+        t.rankid as rankid,
+        t.updatetime as updatetime,
+        t.area as area,
+        t.matchno as totalnum
+        from market.dixiao_result t left join market.partner_from_voiceplus p on t.partnercode = p.partner_code
+        where isnewest = 1 and status = 1 and taskid = #{taskid} and isonline = 1 and ftpflag = 1
+        order by t.updatetime,t.partnercode,t.area,cast(t.rankid as decimal)
+    </select>
+
+    <!-- 根据低消配置文件查询未失效的低消任务 -->
+    <select id="queryValidDixiaoTaskByConfig" resultType="com.axon.market.common.domain.iconsumption.DixiaoTaskDomain"
+            parameterType="java.util.Map">
+        select
+        t.taskid as taskid,
+        t.sale_id as saleid,
+        t.sale_name as salename,
+        t.sale_boid_id as boid,
+        t.aim_sub_id as aim_sub_id,
+        t.aim_sub_name as aim_sub_name,
+        t.status as status,
+        t.createtime as createtime,
+        t.updatetime as updatetime,
+        t.START_DATE as start_date,
+        t.END_DATE as end_date,
+        t.SALE_EPARCHY_CODE as sale_eparchy_code,
+        t.config_file_name as config_file_name,
+        t.user_file_name as user_file_name,
+        t.notify_ftp as notify_ftp,
+        t.ranktype as ranktype
+        from market.dixiao_task_pool t
+        where 1=1 and t.status != 10
+        <if test="saleid != null and saleid != ''">
+            and t.sale_id = #{saleid}
+        </if>
+        <if test="boid != null and boid != ''">
+            and t.sale_boid_id = #{boid}
+        </if>
+        <if test="notify_ftp != null">
+            and t.notify_ftp = #{notify_ftp}
+        </if>
+    </select>
+
+    <!-- 根据taskid更新ftpflag-->
+    <update id="updateDixiaoFtpflag">
+        update dixiao_result set
+        ftpflag = 1,
+        updatetime = sysdate()
+        where taskid = #{taskid} and status = 1 and isonline = 1 and ftpflag = 0
+    </update>
+
+    <!-- 查询列表中已经推送档位个数-->
+    <select id="queryOnlineFtpTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.dixiao_result t
+        where t.taskid = #{taskid} and ftpflag = 1
+        <if test="idlist != ''">
+          and FIND_IN_SET(t.id, #{idlist})
+        </if>
+    </select>
+
+    <!-- 查询列表中已经推送档位个数-->
+    <select id="queryToVoiceOnlineFtpTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.dixiao_result t
+        where t.taskid = #{taskid} and ftpflag = 0 and ISONLINE = 1 and STATUS = 1
+    </select>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IMarketRecordMapper">
+    <select id="queryMarketRecordByPage" resultType="java.util.Map" parameterType="java.util.Map">
+		select
+		DISTINCT phone,
+		business_hall_coding as baseId,
+		basename as baseName,
+		taskname as taskName,
+		from_unixtime(send_time) as sendTime,
+		content,
+		create_user_name as createUserName
+		from analysisdb.push_cd_sms_send_cdr_day
+		where 1=1
+		<if test="phone != null and phone != ''">
+			and phone = #{phone}
+		</if>
+		<if test="baseCode != null and baseCode != ''">
+			and  business_hall_coding like concat('%',#{baseCode},'%')
+		</if>
+		<if test="startTime != ''">
+			and  cdate = #{startTime}
+		</if>
+		<if test="businessCodes != ''">
+			and baseid in (${businessCodes})
+		</if>
+		<if test="businessCodes == '' and areaCode != '99999'">
+			and city_code in (#{areaCode},99999)
+		</if>
+		order by send_time desc
+		limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryMarketRecordByCount" resultType="int" parameterType="java.util.Map">
+		select count(1) FROM (
+		select
+		DISTINCT phone,
+		business_hall_coding as baseId,
+		basename as baseName,
+		taskname as taskName,
+		from_unixtime(send_time) as sendTime,
+		content,
+		create_user_name as createUserName
+		from analysisdb.push_cd_sms_send_cdr_day
+		where 1=1
+		<if test="phone != null and phone != ''">
+			and phone = #{phone}
+		</if>
+		<if test="baseCode != null and baseCode != ''">
+			and  business_hall_coding like concat('%',#{baseCode},'%')
+		</if>
+		<if test="startTime != ''">
+			and  cdate = #{startTime}
+		</if>
+		<if test="businessCodes != ''">
+			and baseid in (${businessCodes})
+		</if>
+		<if test="businessCodes == '' and areaCode != '99999'">
+			and city_code in(#{areaCode},99999)
+		</if>
+		) as sss
+    </select>
+</mapper>

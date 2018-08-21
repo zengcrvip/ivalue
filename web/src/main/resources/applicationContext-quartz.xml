@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+
+    <!--<bean id="firstTask"-->
+          <!--class="org.springframework.scheduling.quartz.JobDetailFactoryBean">-->
+        <!--<property name="jobClass" value="com.axon.market.web.quartz.FirstTask" />-->
+        <!--<property name="jobDataMap">-->
+            <!--<map>-->
+                <!--<entry key="firstService" value-ref="firstService" />-->
+            <!--</map>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+    <bean id="firstTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="firstService" />
+        <property name="targetMethod" value="service" />
+    </bean>
+
+    <bean id="firstCronTrigger"
+          class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="firstTask" />
+        <property name="cronExpression" value="0/5 * * ? * *" />
+    </bean>
+
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="dataSource" ref="metaDataSource" />
+        <property name="configLocation" value="classpath:quartz.properties" />
+        <property name="triggers">
+            <list>
+                <ref bean="firstCronTrigger" />
+            </list>
+        </property>
+    </bean>
+
+</beans>

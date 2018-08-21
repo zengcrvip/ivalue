@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.itag.IRemoteServerMapper">
+
+    <select id="queryAllRemoteServerCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_remote_server as s
+        where s.status = 0
+        <if test="serverName != null &amp;&amp; serverName != ''">
+            and s.name like concat('%',#{serverName},'%')
+        </if>
+    </select>
+
+    <select id="queryRemoteServersByPage" resultType="com.axon.market.common.domain.itag.RemoteServerDomain">
+        select
+            s.id as id,
+            s.name as name,
+            s.connect_type as connectType,
+            s.server_ip as serverIp,
+            s.server_user as serverUser,
+            s.password as password,
+            s.port as port,
+            s.create_user as createUser,
+            s.create_time as createTime,
+            s.update_user as updateUser,
+            s.update_time as updateTime,
+            s.remarks as remarks
+        from market_remote_server as s
+        where s.status = 0
+        <if test="serverName != null &amp;&amp; serverName != ''">
+            and s.name like concat('%',#{serverName},'%')
+        </if>
+        order by s.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryRemoteServerById" resultType="com.axon.market.common.domain.itag.RemoteServerDomain">
+        select
+            s.id as id,
+            s.name as name,
+            s.connect_type as connectType,
+            s.server_ip as serverIp,
+            s.server_user as serverUser,
+            s.password as password,
+            s.port as port,
+            s.create_user as createUser,
+            s.create_time as createTime,
+            s.update_user as updateUser,
+            s.update_time as updateTime,
+            s.remarks as remarks
+        from market_remote_server as s
+        where s.status = 0 and s.id = #{id}
+    </select>
+
+    <insert id="createRemoteServer">
+        insert into market_remote_server
+        (
+            name,
+            connect_type,
+            server_ip,
+            server_user,
+            password,
+            port,
+            create_user,
+            create_time,
+            remarks
+        )
+        values
+        (
+            #{info.name},
+            #{info.connectType},
+            #{info.serverIp},
+            #{info.serverUser},
+            #{info.password},
+            #{info.port},
+            #{info.createUser},
+            #{info.createTime},
+            #{info.remarks}
+        )
+    </insert>
+
+    <update id="updateRemoteServer">
+        update market_remote_server set
+        <if test="info.name != null">
+            name = #{info.name},
+        </if>
+        <if test="info.connectType != null">
+            connect_type = #{info.connectType},
+        </if>
+        <if test="info.serverIp != null">
+            server_ip = #{info.serverIp},
+        </if>
+        <if test="info.serverUser != null">
+            server_user = #{info.serverUser},
+        </if>
+        <if test="info.password != null&amp;&amp;info.password != ''">
+            password = #{info.password},
+        </if>
+        <if test="info.port != null">
+            port = #{info.port},
+        </if>
+        <if test="info.updateUser != null">
+            update_user = #{info.updateUser},
+        </if>
+        <if test="info.updateUser != null">
+            update_time = #{info.updateTime},
+        </if>
+        <if test="info.remarks != null">
+            remarks = #{info.remarks},
+        </if>
+        id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteRemoteServer">
+        update market_remote_server set
+            update_user = #{userId},
+            update_time = #{time},
+            status = -1
+        where id = #{id}
+    </update>
+
+    <select id="queryAllRemoteServerIdAndNames" resultType="java.util.Map">
+        select
+            s.id as serverId,
+            s.name as serverName
+        from market_remote_server as s
+        where s.status = 0
+    </select>
+
+</mapper>

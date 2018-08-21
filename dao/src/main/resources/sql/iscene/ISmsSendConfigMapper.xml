@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.ISmsSendConfigMapper">
+
+    <select id="queryAllSmsSendConfigCount" resultType="int">
+        select count(0)
+        from market_config_send_sms
+        where status = 0 and (#{accessNumber} is null or access_number like concat('%',#{accessNumber},'%'))
+    </select>
+
+    <select id="querySmsSendConfigByPage" resultType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        select
+            mcss.id                             as id,
+            mcss.access_number                  as accessNumber,
+            mcss.send_begin_time                as sendBeginTime,
+            mcss.send_end_time                  as sendEndTime,
+            mcss.send_pause_begin_time          as sendPauseBeginTime,
+            mcss.send_pause_end_time            as sendPauseEndTime,
+            mcss.ip                             as ip,
+            mcss.port                           as port,
+            mcss.login_name                     as loginName,
+            mcss.login_password                 as loginPassword,
+            mcss.company_code                   as companyCode,
+            mcss.service_type                   as serviceType,
+            mcss.node_id                        as nodeId,
+            mcss.report_flag                    as reportFlag,
+            mcss.same_user_send_interval        as sameUserSendInterval,
+            mcss.different_user_send_interval   as differentUserSendInterval,
+            mcss.create_time                    as createTime,
+            mcss.update_time                    as updateTime,
+            mcss.create_user                    as createUser,
+            mcss.update_user                    as updateUser,
+            mcss.status                         as status
+        from market_config_send_sms mcss
+        where mcss.status = 0 and (#{accessNumber} is null or mcss.access_number like concat('%',#{accessNumber},'%'))
+        order by mcss.id desc
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="querySmsSendConfigByAccessNumber" resultType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        select
+            mcss.id                             as id,
+            mcss.access_number                  as accessNumber,
+            mcss.send_begin_time                as sendBeginTime,
+            mcss.send_end_time                  as sendEndTime,
+            mcss.send_pause_begin_time          as sendPauseBeginTime,
+            mcss.send_pause_end_time            as sendPauseEndTime,
+            mcss.ip                             as ip,
+            mcss.port                           as port,
+            mcss.login_name                     as loginName,
+            mcss.login_password                 as loginPassword,
+            mcss.company_code                   as companyCode,
+            mcss.service_type                   as serviceType,
+            mcss.node_id                        as nodeId,
+            mcss.report_flag                    as reportFlag,
+            mcss.same_user_send_interval        as sameUserSendInterval,
+            mcss.different_user_send_interval   as differentUserSendInterval,
+            mcss.create_time                    as createTime,
+            mcss.update_time                    as updateTime,
+            mcss.create_user                    as createUser,
+            mcss.update_user                    as updateUser,
+            mcss.status                         as status
+        from market_config_send_sms mcss
+        where mcss.status = 0 and mcss.access_number = #{accessNumber}
+    </select>
+
+    <select id="queryAllEffectiveAccessNumbers" resultType="java.util.Map">
+        select
+            id              as id,
+            access_number   as accessNumber
+        from market_config_send_sms
+        where status = 0
+    </select>
+
+    <select id="querySmsSendConfigById" resultType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        select
+            mcss.id                             as id,
+            mcss.access_number                  as accessNumber,
+            mcss.send_begin_time                as sendBeginTime,
+            mcss.send_end_time                  as sendEndTime,
+            mcss.send_pause_begin_time          as sendPauseBeginTime,
+            mcss.send_pause_end_time            as sendPauseEndTime,
+            mcss.ip                             as ip,
+            mcss.port                           as port,
+            mcss.login_name                     as loginName,
+            mcss.login_password                 as loginPassword,
+            mcss.company_code                   as companyCode,
+            mcss.service_type                   as serviceType,
+            mcss.node_id                        as nodeId,
+            mcss.report_flag                    as reportFlag,
+            mcss.same_user_send_interval        as sameUserSendInterval,
+            mcss.different_user_send_interval   as differentUserSendInterval,
+            mcss.create_time                    as createTime,
+            mcss.update_time                    as updateTime,
+            mcss.create_user                    as createUser,
+            mcss.update_user                    as updateUser,
+            mcss.status                         as status
+        from market_config_send_sms mcss
+        where mcss.id = #{id}
+    </select>
+
+    <insert id="insertSmsSendConfig" parameterType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        insert into market_config_send_sms
+        (
+            access_number,
+            send_begin_time,
+            send_end_time,
+            send_pause_begin_time,
+            send_pause_end_time,
+            ip,
+            port,
+            login_name,
+            login_password,
+            company_code,
+            service_type,
+            node_id,
+            report_flag,
+            same_user_send_interval,
+            different_user_send_interval,
+            create_time,
+            update_time,
+            create_user,
+            update_user
+        )
+        values
+        (
+            #{info.accessNumber},
+            #{info.sendBeginTime},
+            #{info.sendEndTime},
+            #{info.sendPauseBeginTime},
+            #{info.sendPauseEndTime},
+            #{info.ip},
+            #{info.port},
+            #{info.loginName},
+            #{info.loginPassword},
+            #{info.companyCode},
+            #{info.serviceType},
+            #{info.nodeId},
+            #{info.reportFlag},
+            #{info.sameUserSendInterval},
+            #{info.differentUserSendInterval},
+            sysdate(),
+            sysdate(),
+            #{info.createUser},
+            #{info.updateUser}
+        )
+    </insert>
+
+    <update id="updateSmsSendConfig" parameterType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        update market_config_send_sms set
+            access_number                         = #{info.accessNumber},
+            send_begin_time                       = #{info.sendBeginTime},
+            send_end_time                         = #{info.sendEndTime},
+            send_pause_begin_time                 = #{info.sendPauseBeginTime},
+            send_pause_end_time                   = #{info.sendPauseEndTime},
+            ip                                    = #{info.ip},
+            port                                  = #{info.port},
+            login_name                            = #{info.loginName},
+            login_password                        = #{info.loginPassword},
+            company_code                          = #{info.companyCode},
+            service_type                          = #{info.serviceType},
+            node_id                               = #{info.nodeId},
+            report_flag                           = #{info.reportFlag},
+            same_user_send_interval               = #{info.sameUserSendInterval},
+            different_user_send_interval          = #{info.differentUserSendInterval},
+            update_time                           = sysdate(),
+            update_user                           = #{info.updateUser},
+            id                                    = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteSmsSendConfig">
+        update market_config_send_sms set
+        status                                = -1
+        where id = #{id}
+    </update>
+
+    <select id="getAccessNumber" resultType="java.util.Map">
+        select
+            mcss.access_number                  as spnum,
+            mcss.send_begin_time                as progbegin,
+            mcss.send_end_time                  as progend,
+            mcss.send_pause_begin_time          as noonbegin,
+            mcss.send_pause_end_time            as noonend,
+            mcss.ip                             as ip,
+            mcss.port                           as port,
+            mcss.login_name                     as loginname,
+            mcss.login_password                 as loginpswd,
+            mcss.company_code                   as corpid,
+            mcss.service_type                   as servicetype,
+            mcss.node_id                        as nodeid,
+            mcss.report_flag                    as reportflag,
+            mcss.same_user_send_interval        as sleeptime,
+            mcss.different_user_send_interval   as msginterval,
+            mcss.update_time                    as lastwritetime,
+            u.name                              as lastwriterid,
+            sn3_start                           as sn3start,
+            sn3_end                             as sn3end
+        from market_config_send_sms as mcss
+        left join market_user as u on mcss.update_user = u.id
+        where mcss.status = 0
+    </select>
+
+    <select id="getAccessNumberCountByHost" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_config_send_sms
+        where status = 0 and ip = #{host}
+    </select>
+
+    <select id="getAccessNumberByHost" resultType="java.util.Map">
+        select
+            mcss.access_number                  as spnum,
+            mcss.send_begin_time                as progbegin,
+            mcss.send_end_time                  as progend,
+            mcss.send_pause_begin_time          as noonbegin,
+            mcss.send_pause_end_time            as noonend,
+            mcss.ip                             as ip,
+            mcss.port                           as port,
+            mcss.login_name                     as loginname,
+            mcss.login_password                 as loginpswd,
+            mcss.company_code                   as corpid,
+            mcss.service_type                   as servicetype,
+            mcss.node_id                        as nodeid,
+            mcss.report_flag                    as reportflag,
+            mcss.same_user_send_interval        as sleeptime,
+            mcss.different_user_send_interval   as msginterval,
+            mcss.update_time                    as lastwritetime,
+            u.name                              as lastwriterid
+        from market_config_send_sms as mcss
+        left join market_user as u on mcss.update_user = u.id
+        where mcss.status = 0 and mcss.ip = #{host}
+        order by mcss.access_number desc
+    </select>
+
+    <update id="batchUpdateSmsSendConfig">
+        update market_config_send_sms set
+            same_user_send_interval = #{info.sleeptime},
+            different_user_send_interval = #{info.msginterval},
+            sn3_start = #{info.sn3start},
+            sn3_end = #{info.sn3end}
+        where access_number = #{info.spnum}
+    </update>
+
+    <select id="querySmsSendConfigList" resultType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        select
+        mcss.id                             as id,
+        mcss.access_number                  as accessNumber,
+        mcss.send_begin_time                as sendBeginTime,
+        mcss.send_end_time                  as sendEndTime,
+        mcss.send_pause_begin_time          as sendPauseBeginTime,
+        mcss.send_pause_end_time            as sendPauseEndTime,
+        mcss.ip                             as ip,
+        mcss.port                           as port,
+        mcss.login_name                     as loginName,
+        mcss.login_password                 as loginPassword,
+        mcss.company_code                   as companyCode,
+        mcss.service_type                   as serviceType,
+        mcss.node_id                        as nodeId,
+        mcss.report_flag                    as reportFlag,
+        mcss.same_user_send_interval        as sameUserSendInterval,
+        mcss.different_user_send_interval   as differentUserSendInterval,
+        mcss.create_time                    as createTime,
+        mcss.update_time                    as updateTime,
+        mcss.create_user                    as createUser,
+        mcss.update_user                    as updateUser,
+        mcss.status                         as status,
+        mmu.name                            as updateUserName
+        from market_config_send_sms mcss
+        left join market_user mmu on mcss.update_user = mmu.id
+        where mcss.status = 0
+        <if test="accessNumber != null &amp;&amp; accessNumber != ''">
+           and (#{accessNumber} is null or mcss.access_number like concat('%',#{accessNumber},'%'))
+        </if>
+        order by mcss.id
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryAccessNumberByAreacode" resultType="com.axon.market.common.domain.iscene.SmsSendConfigDomain">
+        select
+        mcss.access_number                  as accessNumber
+        from market_config_send_sms mcss
+        where mcss.status = 0 and mcss.area_code = #{areaCode}
+        limit 0 offset 1
+    </select>
+</mapper>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IOrgMapper">
+
+    <select id="queryRootOrgByOrgType" resultType="com.axon.market.common.domain.icommon.OrgDomain">
+        select
+            a.org_id              as orgId,
+            a.org_type_id         as orgTypeId,
+            a.org_name            as orgName,
+            a.parent_id           as parentId,
+            a.create_date         as createDate,
+            a.state               as state,
+            ifnull(a.comments,"") as comments
+        from keeper.keeper_org a
+        where a.org_type_id = #{orgTypeId}
+        and a.state='1'
+        <if test="orgName != '' and orgName != null">
+            and a.org_name like concat('%',#{orgName},'%')
+        </if>
+    </select>
+
+    <select id="queryOrgListByParentId" resultType="com.axon.market.common.domain.icommon.OrgDomain">
+        select
+            a.org_id              as orgId,
+            a.org_type_id         as orgTypeId,
+            a.org_name            as orgName,
+            a.parent_id           as parentId,
+            a.create_date         as createDate,
+            a.state               as state,
+            ifnull(a.comments,"") as comments
+        from keeper.keeper_org a
+        where a.parent_id = #{parentId}
+        and a.state='1'
+    </select>
+
+    <select id="queryOrgListByOrgId" resultType="com.axon.market.common.domain.icommon.OrgDomain">
+        select
+            a.org_id              as orgId,
+            a.org_type_id         as orgTypeId,
+            a.org_name            as orgName,
+            a.parent_id           as parentId,
+            a.create_date         as createDate,
+            a.state               as state,
+            ifnull(a.comments,"") as comments,
+            ifnull((select p.org_name from keeper.keeper_org p where p.org_id= a.parent_id),"") as parentOrgName
+        from keeper.keeper_org a
+        where a.org_id = #{orgId}
+        and a.state='1'
+    </select>
+
+    <select id="queryOrgByOrgName" resultType="com.axon.market.common.domain.icommon.OrgDomain">
+        select
+            a.org_id              as orgId,
+            a.org_type_id         as orgTypeId,
+            a.org_name            as orgName,
+            a.parent_id           as parentId,
+            a.create_date         as createDate,
+            a.state               as state,
+            ifnull(a.comments,"") as comments
+        from keeper.keeper_org a
+        where a.state = '1'
+        and a.org_name = #{orgName}
+        and a.parent_id = #{parentId}
+    </select>
+
+    <insert id="addOrg" parameterType="com.axon.market.common.domain.icommon.OrgDomain">
+        insert into keeper.keeper_org
+        (
+        org_type_id,
+        org_name,
+        parent_id,
+        create_date,
+        state,
+        comments
+        )
+        values
+        (
+        #{orgDomain.orgTypeId},
+        #{orgDomain.orgName},
+        #{orgDomain.parentId},
+        now(),
+        '1',
+        #{orgDomain.comments}
+        )
+    </insert>
+
+    <update id="deleteOrg">
+        update keeper.keeper_org
+        set state = '-1'
+        where org_id = #{orgId}
+    </update>
+
+    <update id="updateOrg" parameterType="com.axon.market.common.domain.icommon.OrgDomain">
+        update keeper.keeper_org
+        set org_name = #{orgDomain.orgName},comments = #{orgDomain.comments}
+        where org_id = #{orgDomain.orgId}
+    </update>
+</mapper>

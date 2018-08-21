@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IUrlBlacklistMapper">
+
+    <select id="queryUrlBlacklist" resultType="com.axon.market.common.domain.iscene.BannedHostsDomain">
+        select
+        host as host
+        from banned_hosts
+        <if test="url != null &amp;&amp; url != ''">
+            where host = #{url}
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryUrlBlacklistCount" resultType="int">
+        select
+        count(1)
+        from banned_hosts
+        <if test="url != null &amp;&amp; url != ''">
+            where host = #{url}
+        </if>
+    </select>
+
+    <insert id="addUrlBlacklist" parameterType="com.axon.market.common.domain.iscene.BannedHostsDomain">
+        insert into banned_hosts
+        (
+            host,
+            task_id,
+            banned_type,
+            banned_by,
+            banned_at
+        )
+        VALUES
+        (
+            #{info.host},
+            #{info.taskId},
+            #{info.bannedType},
+            #{info.bannedBy},
+            sysdate()
+        )
+    </insert>
+
+    <delete id="deleteUrlBlacklist">
+        delete from banned_hosts where host = #{url}
+    </delete>
+
+</mapper>

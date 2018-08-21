@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iwebservice.ICloudMapper">
+
+   <insert id="insertActiveData">
+       insert into sale_activity
+       (
+          sale_id,
+          sale_name,
+          sale_desc,
+          sale_eparchy_code,
+          sale_boid_id,
+          sale_cust_name,
+          start_date,
+          end_date
+       )
+       values
+       (
+          #{info.saleId},
+          #{info.saleName},
+          #{info.saleDesc},
+          #{info.saleEparchyCode},
+          #{info.saleBoidId},
+          #{info.saleCustName},
+          #{info.startDate},
+          #{info.endDate}
+
+       )
+   </insert>
+
+    <insert id="insertActiveAimData">
+      insert into sale_activity_aim
+      (
+        sale_id,
+        aim_sub_id,
+        aim_sub_name,
+        interface_type,
+        code,
+        value,
+        sale_type_info,
+        channel_sale_info,
+        mark_desc,
+        deal_type,
+        web_url,
+        real_type
+      )
+      values
+    <foreach collection ="list" item="item" index= "index" separator =",">
+     (
+        #{saleId},
+        #{item.aimSubId},
+        #{item.aimSubName},
+        #{item.interfaceType},
+        #{item.code},
+        #{item.value},
+        #{item.channel.saleTypeInfo},
+        #{item.channel.channelSaleInfo},
+        #{item.channel.markDesc},
+        #{item.channel.dealType},
+        #{item.channel.webUrl},
+        #{item.channel.realType}
+     )
+    </foreach>
+    </insert>
+
+    <insert id="insertActiveProduct">
+      insert into sale_aim_2_prd
+      (
+        sale_id,
+        aim_sub_id,
+        prd_id,
+        prd_name
+      )
+      values
+      <foreach collection ="list" item="item" index= "index" separator =",">
+        (
+            #{saleId},
+            #{item.aimSubId},
+            #{item.product.id},
+            #{item.product.name}
+        )
+      </foreach>
+    </insert>
+
+    <update id="changeMarketingInfoStatus">
+        update sale_activity set status = #{operationStatus.status},update_time = now() where sale_boid_id = #{operationStatus.saleBoidId}
+    </update>
+
+    <select id="queryTaskIdByBoidId" resultType="java.lang.String">
+         select s.id as id from market_jobs s where s.sale_boid_id = #{operationStatus.saleBoidId}
+    </select>
+
+</mapper>

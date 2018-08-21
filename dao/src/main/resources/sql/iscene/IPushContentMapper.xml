@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IPushContentMapper">
+
+    <select id="getPushList" resultType="com.axon.market.common.domain.iscene.PushContentDomain">
+        select
+            p.id as id,
+            p.taskId as taskId,
+            t.name as taskName,
+            c.Name as
+            pushName,
+            title,
+            content,
+            href,
+            orderKey,
+            remark,
+            p.type,
+            kind,
+            kindContent,
+            p.isUsed,
+            p.sort,
+            p.imgUrl
+        from push as p
+            INNER JOIN market_scene_pilot as t on p.taskId=t.id
+            INNER JOIN pushconfig as c on p.kind=c.id
+        where p.IsDelete=0
+        <if test="kind != null &amp;&amp; kind != ''">
+            and kind = #{kind}
+        </if>
+        <if test="name != null &amp;&amp; name != ''">
+            and t.name like concat('%',#{name},'%')
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="getPushListCount" resultType="int">
+        select
+            count(0)
+        from push as p
+            INNER JOIN market_scene_pilot as t on p.taskId=t.id
+            INNER JOIN pushconfig as c on p.kind=c.id
+        where p.IsDelete=0
+        <if test="kind != null &amp;&amp; kind != ''">
+            and kind = #{kind}
+        </if>
+        <if test="name != null &amp;&amp; name != ''">
+            and t.name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <select id="getTaskList" resultType="com.axon.market.common.domain.iscene.TaskDomain">
+        SELECT id,name from market_scene_pilot where isDelete=0 and pilot_type=2
+         limit ${limit} offset ${offset}
+    </select>
+    <select id="getTaskListCount" resultType="int">
+        SELECT count(0) from market_scene_pilot where isDelete=0 and pilot_type=2
+    </select>
+
+    <select id="getSelectPushConfig" resultType="com.axon.market.common.domain.iscene.PushConfigDomain">
+        SELECT id,name from pushConfig where isUsed=1 and isDelete=0
+    </select>
+
+    <insert id="addPushContent" parameterType="com.axon.market.common.domain.iscene.PushDomain">
+        insert into push
+        (
+            taskId,
+            title,
+            imgUrl,
+            imgByte,
+            icon,
+            content,
+            href,
+            remark,
+            orderKey,
+            netWork,
+            type,
+            kind,
+            kindContent,
+            sort,
+            isDelete,
+            isUsed,
+            editTime,
+            editUserId,
+            editUserName,
+            provinceId,
+            createId
+        )
+        VALUES
+        (
+            #{info.taskId},
+            #{info.title},
+            #{info.imgUrl},
+            #{info.imgByte},
+            #{info.icon},
+            #{info.content},
+            #{info.href},
+            #{info.remark},
+            #{info.orderKey},
+            #{info.netWork},
+            #{info.type},
+            #{info.kind},
+            #{info.kindContent},
+            #{info.sort},
+            #{info.isDelete},
+            #{info.isUsed},
+            sysdate(),
+            #{info.editUserId},
+            #{info.editUserName},
+            #{info.provinceId},
+            #{info.createId}
+        )
+    </insert>
+
+    <update id="editPushContent">
+        update push SET
+        <if test="info.taskId != null">
+            taskId= #{info.taskId},
+        </if>
+        <if test="info.title != null">
+            title= #{info.title},
+        </if>
+        <if test="info.imgUrl != null">
+            imgUrl= #{info.imgUrl},
+        </if>
+        <if test="info.imgByte != null">
+            imgByte= #{info.imgByte},
+        </if>
+        <if test="info.icon != null">
+            icon= #{info.icon},
+        </if>
+        <if test="info.content != null">
+            content= #{info.content},
+        </if>
+        <if test="info.href != null">
+            href= #{info.href},
+        </if>
+        <if test="info.remark != null">
+            remark= #{info.remark},
+        </if>
+        <if test="info.orderKey != null">
+            orderKey= #{info.orderKey},
+        </if>
+        <if test="info.netWork != null">
+            netWork= #{info.netWork},
+        </if>
+        <if test="info.type != null">
+            type= #{info.type},
+        </if>
+        <if test="info.kind != null">
+            kind= #{info.kind},
+        </if>
+        <if test="info.kindContent != null">
+            kindContent= #{info.kindContent},
+        </if>
+        <if test="info.sort != null">
+            sort= #{info.sort},
+        </if>
+        <if test="info.isUsed != null">
+            isUsed= #{info.isUsed},
+        </if>
+        editTime=sysdate(),
+        <if test="info.editUserId != null">
+            editUserId= #{info.editUserId},
+        </if>
+        <if test="info.editUserName != null">
+            editUserName= #{info.editUserName},
+        </if>
+        provinceId= #{info.provinceId}
+        WHERE id=#{info.id}
+    </update>
+
+    <update id="deletePush">
+        update push set
+        isDelete = '-1'
+        where id = #{id}
+    </update>
+
+    <select id="getContent" resultType="com.axon.market.common.domain.iscene.PushContentDomain">
+        select
+        p.id as id,
+        p.taskId as taskId,
+        t.name as taskName,
+        c.Name as
+        pushName,
+        title,
+        content,
+        href,
+        orderKey,
+        remark,
+        p.type,
+        kind,
+        kindContent,
+        p.isUsed,
+        p.sort,
+        p.imgUrl
+        from push as p
+        INNER JOIN market_scene_pilot as t on p.taskId=t.id
+        INNER JOIN pushconfig as c on p.kind=c.id
+        where p.id = #{id}
+
+    </select>
+</mapper>

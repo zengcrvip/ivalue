@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IImageMgrMapper">
+
+    <select id="queryImageMgrList" resultType="com.axon.market.common.domain.iscene.PicturesDomain">
+        select
+        p.id,
+        p.title,
+        p.pictureByte,
+        t.typeName,
+        p.isdelete
+        from
+        pictures as p
+        left join
+        templetype as t on p.tempId = t.id
+        where
+        p.isdelete = 0
+        <if test="name != null &amp;&amp; name != ''">
+            and title like '%${name}%'
+        </if>
+        order by
+        p.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryImageMgrListCount" resultType="int">
+        select
+        count(1)
+        from
+        pictures as p
+        left join
+        templetype as t on p.tempId = t.id
+        where
+        p.isdelete = 0
+        <if test="name != null &amp;&amp; name != ''">
+            and title like '%${name}%'
+        </if>
+    </select>
+
+    <select id="queryTempleTypeList" resultType="com.axon.market.common.domain.iscene.TempleTypeDomain">
+        select
+            id,
+            typeName,
+            typeJS,
+            multiPicture
+        from templetype
+        order by id desc
+    </select>
+
+    <select id="queryScenesCount" resultType="int">
+        select
+            count(1)
+        from
+            scenes
+        where
+            isdelete=0 and imgUrl like '%${imgUrl}%'
+    </select>
+
+    <insert id="addImage" parameterType="com.axon.market.common.domain.iscene.PicturesDomain">
+       insert into pictures
+        (
+        url,
+        thumbnail,
+        tempId,
+        title,
+        pictureByte,
+        editTime,
+        editUserId,
+        editUserName,
+        provinceId,
+        createId
+        )
+        VALUES
+        (
+        #{info.url},
+        #{info.thumbnail},
+        #{info.tempId},
+        #{info.title},
+        #{info.pictureByte},
+        sysdate(),
+        #{info.editUserId},
+        #{info.editUserName},
+        #{info.provinceId},
+        #{info.createId}
+        )
+
+    </insert>
+
+    <update id="deleteImage">
+        update pictures set
+            isdelete= #{isDelete},
+            editTime=sysdate(),
+            editUserId=#{editUserId},
+            editUserName=#{editUserName}
+        where
+            id=#{id}
+    </update>
+</mapper>

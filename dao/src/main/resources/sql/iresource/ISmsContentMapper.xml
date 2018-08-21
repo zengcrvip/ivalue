@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iresource.ISmsContentMapper">
+
+    <select id="querySmsContentCounts" resultType="java.lang.Integer">
+        select
+            count(DISTINCT sc.id)
+        from market_content sc
+        left join market_user u on sc.create_user = u.id
+        left join market_product p on find_in_set(p.id,sc.product_ids)
+        where sc.status = 0
+        <if test="searchContent != null and searchContent != ''">
+            and sc.content like concat('%',#{searchContent},'%')
+        </if>
+        <if test="key != null and key != ''">
+            and sc.key_words like concat('%',#{key},'%')
+        </if>
+        <if test="mob != null and mob != ''">
+            and u.telePhone like concat('%',#{mob},'%')
+        </if>
+    </select>
+
+    <select id="querySmsContentsByPage" resultType="com.axon.market.common.domain.iresource.SmsContentDomain">
+        select
+            sc.id as id,
+            sc.content as content,
+            sc.url as url,
+            sc.business_type as businessType,
+            sc.key_words as keywords,
+            sc.product_ids as productIds,
+            group_concat(p.name) as productNames,
+            sc.create_time as createTime,
+            sc.update_time as updateTime,
+            sc.create_user as createUser,
+            u.name as createUserName,
+            u.area_id   as createUserArea,
+            u.telePhone as createUserTelePhone,
+            sc.update_user as updateUser,
+            sc.extend_id  as extendId
+        from market_content sc
+        left join market_user u on sc.create_user = u.id
+        left join market_product p on find_in_set(p.id,sc.product_ids)
+        where sc.status = 0
+        <if test="searchContent != null and searchContent != ''">
+            and sc.content like concat('%',#{searchContent},'%')
+        </if>
+        <if test="key != null and key != ''">
+            and sc.key_words like concat('%',#{key},'%')
+        </if>
+        <if test="mob != null and mob != ''">
+            and u.telePhone like concat('%',#{mob},'%')
+        </if>
+        group by sc.id
+        order by sc.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="querySmsContentById" resultType="com.axon.market.common.domain.iresource.SmsContentDomain">
+        select
+            sc.id                        as id,
+            sc.content                   as content,
+            sc.url                       as url,
+            sc.key_words                 as keywords,
+            sc.product_ids               as productIds,
+            sc.create_time               as createTime,
+            sc.update_time               as updateTime,
+            sc.create_user               as createUser,
+            sc.update_user               as updateUser
+        from market_content sc
+        where sc.id = #{contentId}
+    </select>
+
+    <insert id="insertSmsContent" parameterType="com.axon.market.common.domain.iresource.SmsContentDomain">
+        insert into market_content
+        (
+            content,
+            url,
+            business_type,
+            key_words,
+            product_ids,
+            create_user,
+            create_time,
+            status
+        )
+        values
+        (
+            #{smsContent.content},
+            #{smsContent.url},
+            #{smsContent.businessType},
+            #{smsContent.keywords},
+            #{smsContent.productIds},
+            #{smsContent.createUser},
+            sysdate(),
+            0
+        )
+    </insert>
+
+    <update id="updateSmsContent" parameterType="com.axon.market.common.domain.iresource.SmsContentDomain">
+        update market_content set
+        <if test="smsContent.content != null">
+            content = #{smsContent.content},
+        </if>
+        <if test="smsContent.productIds != null">
+            product_ids = #{smsContent.productIds},
+        </if>
+        <if test="smsContent.url != null">
+            url = #{smsContent.url},
+        </if>
+        <if test="smsContent.businessType != null">
+            business_type = #{smsContent.businessType},
+        </if>
+        <if test="smsContent.keywords != null">
+            key_words = #{smsContent.keywords},
+        </if>
+        <if test="smsContent.updateUser != null">
+            update_user = #{smsContent.updateUser},
+        </if>
+        <if test="smsContent.updateTime != null">
+            update_time = sysdate(),
+        </if>
+            id = #{smsContent.id}
+        where id = #{smsContent.id}
+    </update>
+
+    <update id="deleteSmsContent">
+        update market_content set
+            update_user = #{userId},
+            status = -1
+        where id = #{contentId}
+    </update>
+
+    <select id="queryAllProductUnderCatalog" resultType="com.axon.market.common.domain.iresource.ProductDomain">
+        select
+         id,
+         name
+         from market_product
+        where status = 0
+        order by id desc
+    </select>
+    
+    <select id="queryContentByBusinessType" resultType="com.axon.market.common.domain.iresource.SmsContentDomain">
+        select
+        sc.id                        as id,
+        sc.content                   as content,
+        sc.url                       as url,
+        sc.key_words                 as keywords,
+        sc.product_ids               as productIds,
+        sc.create_time               as createTime,
+        sc.update_time               as updateTime,
+        sc.create_user               as createUser,
+        sc.update_user               as updateUser
+        from market_content sc
+        where sc.business_type = #{businessType} and status = 0
+        <if test="searchContent != null and searchContent != ''">
+            and sc.content like concat('%',#{searchContent},'%')
+        </if>
+        <if test="key != null and key != ''">
+            and sc.key_words like concat('%',#{key},'%')
+        </if>
+        order by sc.id desc
+        limit ${limit} offset ${offset}
+    </select>
+    
+    <select id="queryContentByBusinessTypeCount" resultType="int">
+        select COUNT(1) 
+        from market_content sc
+        where sc.business_type = #{businessType}  and status = 0
+    </select>
+</mapper>

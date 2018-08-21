@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperTaskMapper">
+
+    <resultMap id="taskShow" type="com.axon.market.common.domain.ikeeper.TaskShowDomain">
+        <id property="taskId" column="taskId"></id>
+        <result property="taskName" column="taskName"></result>
+        <result property="effDate" column="effDate"></result>
+        <result property="expDate" column="expDate"></result>
+        <result property="typeId" column="typeId"></result>
+        <result property="comments" column="comments"></result>
+        <result property="filedId" column="filedId"></result>
+        <result property="importFileDesc" column="importFileDesc"></result>
+        <collection property="businessOrgs" javaType="ArrayList" ofType="com.axon.market.common.domain.icommon.OrgDomain">
+            <result property="orgId" column="orgId"></result>
+            <result property="orgName" column="orgName"></result>
+        </collection>
+        <collection property="rules" javaType="ArrayList" ofType="java.util.Map">
+            <result property="ruleId" column="ruleId"></result>
+            <result property="ruleType" column="ruleType"></result>
+            <result property="ruleName" column="ruleName"></result>
+        </collection>
+        <collection property="welfares" javaType="ArrayList" ofType="java.util.Map">
+            <result property="welfareId" column="welfareId"></result>
+            <result property="welfareName" column="welfareName"></result>
+        </collection>
+        <collection property="channels" javaType="ArrayList" ofType="com.axon.market.common.domain.ikeeper.TaskChannelDomain">
+            <result property="id" column="channelId"></result>
+            <result property="channelContent" column="channelContent"></result>
+            <result property="channelPhone" column="channelPhone"></result>
+            <result property="channelType" column="channelType"></result>
+            <result property="triggerLimit" column="triggerLimit"></result>
+        </collection>
+    </resultMap>
+
+
+    <select id="queryTaskById" resultMap="taskShow">
+        select
+        t.task_id         as taskId,
+        t.task_name       as taskName,
+        t.type_id		  as typeId,
+        t.eff_date		  as effDate,
+        t.exp_date        as expDate,
+        o.org_id	      as orgId,
+        o.org_name        as orgName,
+        t.comments		  as comments,
+        t.task_customer_file_id as filedId,
+        r.RULE_ID		  as ruleId,
+        r.RULE_TYPE 	  as ruleType,
+        r.RULE_NAME       as ruleName,
+        w.welfare_id      as welfareId,
+        w.welfare_name    as welfareName,
+        c.id	          as channelId,
+        c.channel_content as channelContent,
+        c.channel_phone	  as channelPhone,
+        c.channel_type    as channelType,
+        c.trigger_limit	  as triggerLimit,
+        d.result as importFileDesc
+        from keeper.keeper_task t
+        left join keeper.keeper_org o on find_in_set(o.org_id ,t.task_org_ids)
+        left join keeper.keeper_task_customer p on t.task_customer_file_id = p.file_id
+        left join keeper.keeper_task_rule tr on t.task_id = tr.TASK_ID
+        left join keeper.keeper_rule r on r.RULE_ID = tr.RULE_ID
+        left join keeper.keeper_welfare w on find_in_set(w.welfare_id,t.welfare_ids)
+        left join keeper.keeper_task_channel c on t.task_id = c.task_id
+        left join keeper.keeper_import_file d on t.task_customer_file_id = d.file_id
+        where t.task_id = #{taskId}
+    </select>
+
+
+    <select id="queryKeeperTaskType" resultType="java.util.Map">
+        select
+        type_id as typeId,
+        type_name as typeName
+        from
+        keeper.keeper_type
+        where type_classify = 1
+    </select>
+
+
+    <select id="queryKeeperWelfareType" resultType="java.util.Map">
+        select
+        type_id as typeId,
+        type_name as typeName
+        from
+        keeper.keeper_type
+        where type_classify = 2
+    </select>
+
+    <select id="queryKeeperRuleByTypeId" resultType="java.util.Map">
+        select
+        RULE_ID as ruleId,
+        RULE_TYPE as ruleType,
+        RULE_NAME as ruleName
+        from
+        keeper.keeper_rule
+        where
+        TYPE_ID = #{typeId}
+        and
+        STATE = 1
+    </select>
+
+
+    <insert id="batchImportRowData" parameterType="java.util.List">
+        insert  into  keeper.keeper_import_data(
+        file_id
+        ,row_no
+        ,row_data
+        ,operate_status
+        ,operate_result
+        )
+        values
+        <foreach collection="list" item="map" separator=",">
+            (
+            #{map.fileId},#{map.rowNo},#{map.rowData},#{map.status},#{map.result}
+            )
+        </foreach>
+    </insert>
+
+
+    <insert id="insertFile" parameterType="java.util.Map">
+        insert into keeper.keeper_import_file(
+        file_id
+        ,file_name
+        ,file_size
+        ,task_type
+        ,create_user
+        ,create_date
+        ,target_table
+        ,status
+        ,result
+        )
+        values(#{fileId},#{fileName},#{fileSize},#{taskType},#{createUser},now(),#{targetTable},#{status},#{result})
+    </insert>
+
+    <insert id="saveKeeperTaskCustomer">
+        insert into keeper.keeper_task_customer
+        (
+          file_id,
+          phone
+        )
+        select m.file_id,m.row_data from keeper.keeper_import_data m
+        where  file_id = #{fileId}  and operate_status = 'success'
+    </insert>
+
+
+    <insert id="createKeeperTask"  useGeneratedKeys="true" keyProperty="keeperTask.taskId">
+        insert into keeper.keeper_task
+        (
+        type_id,
+        task_name,
+        eff_date,
+        exp_date,
+        create_user_id,
+        task_area_code,
+        task_org_ids,
+        task_org_names,
+        state,
+        comments,
+        task_customer_file_id,
+        welfare_ids
+        )
+        values (
+        #{keeperTask.typeId},
+        #{keeperTask.taskName},
+        #{keeperTask.effDate},
+        #{keeperTask.expDate},
+        #{keeperTask.createUserId},
+        #{keeperTask.taskAreaCode},
+        #{keeperTask.taskOrgIds},
+        #{keeperTask.taskOrgNames},
+        0,
+        #{keeperTask.comments},
+        #{keeperTask.keeperCustomerFileId},
+        #{keeperTask.welfareProductIds}
+        )
+    </insert>
+
+
+    <update id="updateKeeperTask">
+        update keeper.keeper_task
+        set type_id = #{keeperTask.typeId},
+        task_name = #{keeperTask.taskName},
+        eff_date = #{keeperTask.effDate},
+        exp_date = #{keeperTask.expDate},
+        update_user_id = #{keeperTask.updateUserId},
+        task_area_code = #{keeperTask.taskAreaCode},
+        task_org_ids = #{keeperTask.taskOrgIds},
+        task_org_names = #{keeperTask.taskOrgNames},
+        state = 0,
+        comments = #{keeperTask.comments},
+        task_customer_file_id = #{keeperTask.keeperCustomerFileId},
+        welfare_ids = #{keeperTask.welfareProductIds}
+        where task_id = #{keeperTask.taskId}
+    </update>
+
+    <insert id="createKeeperPhoneChannel">
+        insert into keeper.keeper_task_channel
+        (
+        task_id,
+        channel_type,
+        channel_phone,
+        channel_content,
+        trigger_limit
+        )
+        values (
+        #{phoneChannel.taskId},
+        #{phoneChannel.channelType},
+        #{phoneChannel.outbandPhone},
+        #{phoneChannel.outbandContent},
+        #{phoneChannel.outbandCount}
+        )
+    </insert>
+
+
+    <insert id="createKeeperSmsChannel">
+        INSERT INTO keeper.keeper_task_channel
+        (
+        task_id,
+        channel_type,
+        channel_content,
+        channel_phone
+        )VALUES (
+        #{smsChannel.taskId},
+        #{smsChannel.channelType},
+        #{smsChannel.smsContent},
+        10016666
+        )
+    </insert>
+
+    <insert id="createKeeperAudit">
+        insert  into  keeper.keeper_task_audit
+        (
+        TASK_ID,
+        USER_ID,
+        AUDIT_STATE,
+        UPDATE_TIME
+        )values (
+        #{param.taskId},
+        #{param.auditUserId},
+        0,
+        now()
+        )
+    </insert>
+
+    <insert id="createKeeperRemindRule">
+        insert  into  keeper.keeper_task_rule
+        (
+        TASK_ID,
+        RULE_ID
+        )values (
+        #{param.taskId},
+        #{param.remindRuleId}
+        )
+    </insert>
+
+
+    <insert id="createKeeperFailureRule">
+        insert  into  keeper.keeper_task_rule
+        (
+        TASK_ID,
+        RULE_ID
+        )values (
+        #{param.taskId},
+        #{param.failureRuleId}
+        )
+    </insert>
+
+
+    <insert id="createKeeperWelfare">
+        insert  into  keeper.keeper_task_welfare
+        (
+        task_id,
+        welfare_id
+        )values (
+        #{taskId},
+        #{welfareId}
+        )
+    </insert>
+
+    <select id="queryKeeperTaskByPage" parameterType="java.util.Map" resultType="java.util.Map">
+        select
+        t.task_id as taskId,
+        t.task_name as taskName,
+        kt.type_name as typeName ,
+        a.name as areaName,
+        t.create_user_id as createUserId,
+        t.eff_date as effDate,
+        t.exp_date as expDate,
+        w.RULE_NAME as ruleName,
+        t.create_time as createTime,
+        (select  group_concat(a.welfare_name) from keeper.keeper_welfare a where a.state = 1 and find_in_set(a.welfare_id,t.welfare_ids) )  as welfareName,
+        t.state
+        from
+        keeper.keeper_task t
+        left join market.market_area a on t.task_area_code = a.code
+        left join keeper.keeper_type kt on t.type_id =  kt.type_id and kt.type_classify = 1
+        left join keeper.keeper_task_rule tr on t.task_id = tr.TASK_ID
+        left join keeper.keeper_rule w on tr.RULE_ID = w.RULE_ID
+        where t.state not in (3,5) and w.RULE_TYPE = 1
+        <if test="taskName != null and taskName != ''">
+            and t.task_name like concat('%',#{taskName},'%')
+        </if>
+        <if test="areaCode != null and areaCode != ''">
+            and t.task_area_code = #{areaCode}
+        </if>
+        order by t.create_time desc
+        limit ${length} offset ${start}
+    </select>
+
+    <select id="queryKeeperTaskByCount" parameterType="java.util.Map" resultType="int">
+        select
+          count(*)
+        from
+        keeper.keeper_task t
+        left join keeper.keeper_task_rule tr on t.task_id = tr.TASK_ID
+        left join keeper.keeper_rule w on tr.RULE_ID = w.RULE_ID
+        where t.state in (3,5) and w.RULE_TYPE = 1
+        <if test="taskName != null and taskName != ''">
+            and t.task_name like concat('%',#{taskName},'%')
+        </if>
+        <if test="areaCode != null and areaCode != ''">
+            and t.task_area_code = #{areaCode}
+        </if>
+    </select>
+
+
+    <select id="queryKeeperTaskById" resultType="java.util.Map">
+        select
+        t.task_name as taskName,
+        t.type_id as typeId,
+        t.eff_date as effDate,
+        t.exp_date as expDate,
+        t.org_ids as orgIds,
+        (select  group_concat(o.org_name) from keeper.keeper_org o where o.state = 1 and find_in_set(o.org_id,t.org_ids) )  as orgNames,
+        t.comments,
+        t.task_customer_file_id as fileId,
+        kt.type_name as typeName ,
+        a.name as areaName,
+        t.eff_date as effData,
+        t.exp_date as expDate,
+        w.RULE_NAME as ruleName,
+        (select  group_concat(a.welfare_name) from keeper.keeper_welfare a where a.state = 1 AND find_in_set(a.welfare_id,t.welfare_ids) )  as welfareName,
+        t.state
+        from
+        keeper.keeper_task t
+        left join market.market_area a on t.task_area_code = a.code
+        left join keeper.keeper_type kt on t.type_id =  kt.type_id and kt.type_classify = 1
+        left join keeper.keeper_task_rule tr on t.task_id = tr.TASK_ID
+        left join keeper.keeper_rule w on tr.RULE_ID = w.RULE_ID
+        where
+        t.task_id = #{taskId}
+    </select>
+
+    <update id="deleteKeeperTask" >
+        update keeper.keeper_task
+        set state = 3
+        where task_id = #{taskId}
+    </update>
+
+    <select id="queryTaskCountByWelfareId" resultType="int">
+        select count(1)
+        from keeper.keeper_task t
+        where t.exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        and find_in_set(#{welfareId},t.welfare_ids) and t.state != 3
+    </select>
+
+    <select id="queryTaskNameIsExist" resultType="int">
+        select count(*) from keeper.keeper_task where task_name = #{taskName}
+    </select>
+
+    <delete id="deleteOldTaskChannel">
+        delete from keeper.keeper_task_channel where task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteOldTaskAudit">
+        delete from keeper.keeper_task_audit where task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteOldTaskRule">
+        delete from keeper.keeper_task_rule where task_id = #{taskId}
+    </delete>
+
+
+    <select id="queryNeedMeAuditKeeperTask" resultType="java.util.Map">
+        select
+        t.task_id as taskId,
+        t.task_name as taskName,
+        kt.type_name as typeName,
+        b.name  as areaName,
+        t.eff_date as effDate,
+        t.exp_date as expDate,
+        w.RULE_NAME as ruleName,
+        t.create_time as createTime,
+        (select  group_concat(d.welfare_name) from keeper.keeper_welfare d where d.state = 1 and find_in_set(d.welfare_id,t.welfare_ids) )  as welfareName,
+        t.state
+        from keeper.keeper_task t
+        join keeper.keeper_task_audit a
+        on t.task_id = a.TASK_ID  and a.AUDIT_STATE = 0
+        left join keeper.keeper_type kt on t.type_id =  kt.type_id and kt.type_classify = 1
+        left join market.market_area b on t.task_area_code = b.code
+        left join keeper.keeper_task_rule tr on t.task_id = tr.TASK_ID
+        left join keeper.keeper_rule w on tr.RULE_ID = w.RULE_ID
+        where a.USER_ID = #{userId} and t.state = 0 and w.RULE_TYPE = 1
+        <if test="taskName != '' and taskName != null">
+            and t.task_name like concat('%',#{taskName},'%')
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+
+    <select id="queryNeedMeAuditKeeperTaskCount" resultType="int">
+        select
+          count(*)
+        from keeper.keeper_task t
+        join keeper.keeper_task_audit a
+        on t.task_id = a.TASK_ID  and a.AUDIT_STATE = 0
+        where a.USER_ID = #{userId} and t.state = 0
+        <if test="taskName != '' and taskName != null">
+            and t.task_name like concat('%',#{taskName},'%')
+        </if>
+    </select>
+
+
+    <update id="auditKeeperTask">
+        update keeper.keeper_task_audit
+        set
+          audit_state = #{auditState},
+          audit_result = #{auditDesc}
+        where task_id = #{taskId}
+    </update>
+
+
+    <update id="updateKeeperTaskState">
+        update keeper.keeper_task
+        set state = #{state}
+        where task_id = #{taskId}
+    </update>
+
+
+    <select id="queryAuditFailureReason" resultType="java.lang.String">
+        select audit_result from keeper.keeper_task_audit where AUDIT_STATE = 2 and TASK_ID = #{taskId}
+    </select>
+
+
+    <update id="terminateKeeperTask">
+        update keeper.keeper_task set state = 4 where task_id = #{taskId}
+    </update>
+
+    <update id="terminateKeeperTaskInst">
+        update keeper.keeper_task_inst set state = 0 where task_id = #{taskId}
+    </update>
+
+    <update id="expireKeeperTask">
+        update keeper.keeper_task set state = 5 where #{date} > exp_date and state in (0,1,2)
+    </update>
+</mapper>

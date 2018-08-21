@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ischeduling.IMarketingTasksMapper">
+
+   <select id="queryTasksCount" resultType="int">
+       select count(0) from market_jobs j where j.status != -1
+       <if test="condition != null and condition.name != null">
+           and j.name like concat('%',#{condition.name},'%')
+       </if>
+       <if test="condition != null and condition.status != -1 and condition.status != null">
+           and j.status = #{condition.status}
+       </if>
+       <if test="condition != null and condition.marketType != '' and condition.marketType != null">
+           and j.market_type = #{condition.marketType}
+       </if>
+       <if test="condition != null and condition.businessType != -1 and condition.businessType != null">
+           and j.business_type = #{condition.businessType}
+       </if>
+   </select>
+
+    <select id="queryTasksByPage" resultType="com.axon.market.common.domain.ischeduling.MarketingTasksDomain">
+        select
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.cron_value                      as cronValue,
+            j.send_interval                   as sendInterval,
+            j.test_phones                     as testPhones,
+            j.repeat_strategy                 as repeatStrategy,
+            j.market_segment_names            as marketSegmentNames,
+            j.market_segment_ids              as marketSegmentIds,
+            j.market_segment_user_counts      as marketSegmentUserCounts,
+            j.create_user                     as createUser,
+            j.create_time                     as createTime,
+            j.last_update_user                as lastUpdateUser,
+            j.last_update_time                as lastUpdateTime,
+            j.next_market_time                as nextMarketTime,
+            j.status                          as status,
+            j.area_codes                      as areaCodes,
+            j.area_names                      as areaNames,
+            j.market_user_count_limit         as marketUserCountLimit,
+            j.remarks                         as remarks,
+            j.scene_pilot_sort                as scenePilotSort,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId,
+            j.is_boid_sale                    as isBoidSale
+          from market_jobs j
+          where j.status != -1
+        <if test="condition != null and condition.name != null">
+            and j.name like concat('%',#{condition.name},'%')
+        </if>
+        <if test="condition != null and condition.status != -1 and condition.status != null">
+            and j.status = #{condition.status}
+        </if>
+        <if test="condition != null and condition.marketType != '' and condition.marketType != null">
+            and j.market_type = #{condition.marketType}
+        </if>
+        <if test="condition != null and condition.businessType != -1 and condition.businessType != null">
+            and j.business_type = #{condition.businessType}
+        </if>
+        order by j.create_time desc
+        limit #{maxRecord} offset #{offset}
+    </select>
+
+    <select id="queryMarketingTaskById" resultType="com.axon.market.common.domain.ischeduling.MarketingTasksDomain">
+        select
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            s.scene_name                     as sceneSmsName,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.cron_value                      as cronValue,
+            j.send_interval                   as sendInterval,
+            j.test_phones                     as testPhones,
+            j.repeat_strategy                 as repeatStrategy,
+            j.market_segment_names            as marketSegmentNames,
+            j.market_segment_ids              as marketSegmentIds,
+            j.market_segment_user_counts      as marketSegmentUserCounts,
+            j.create_user                     as createUser,
+            u.name                            as createUserName,
+            j.create_time                     as createTime,
+            j.last_update_user                as lastUpdateUser,
+            j.last_update_time                as lastUpdateTime,
+            j.next_market_time                as nextMarketTime,
+            j.status                          as status,
+            j.area_codes                      as areaCodes,
+            j.area_names                      as areaNames,
+            j.market_user_count_limit         as marketUserCountLimit,
+            j.remarks                         as remarks,
+            j.scene_pilot_sort                as scenePilotSort,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId,
+            j.is_boid_sale                    as isBoidSale
+          from market_jobs j
+          left join market_user as u on j.create_user = u.id
+          left join conf_new_scene as s on j.market_type_value = s.id
+          where j.id = #{id} and j.status != -1
+    </select>
+
+    <select id="queryUserPhoneOfCreateTaskById" resultType="java.lang.String">
+        select
+          u.telephone
+        from market_jobs as j
+        left join market_user as u on j.create_user = u.id
+        where j.id = #{taskId}
+    </select>
+
+    <select id="queryAllMarketJobsAuditByUser" resultType="java.util.Map">
+        select
+            u.marketing_audit_users           as marketingAuditUsers,
+            u.name                            as createUser,
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.cron_value                      as cronValue,
+            j.send_interval                   as sendInterval,
+            j.test_phones                     as testPhones,
+            j.repeat_strategy                 as repeatStrategy,
+            j.market_segment_names            as marketSegmentNames,
+            j.market_segment_ids              as marketSegmentIds,
+            j.market_segment_user_counts      as marketSegmentUserCounts,
+            j.create_user                     as createUser,
+            j.create_time                     as createTime,
+            j.last_update_user                as lastUpdateUser,
+            j.last_update_time                as lastUpdateTime,
+            j.next_market_time                as nextMarketTime,
+            j.status                          as status,
+            j.area_codes                      as areaCodes,
+            j.area_names                      as areaNames,
+            j.market_user_count_limit         as marketUserCountLimit,
+            j.remarks                         as remarks,
+            j.scene_pilot_sort                as scenePilotSort,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId,
+            j.is_boid_sale                    as isBoidSale
+        from market_jobs j
+        left join market_user as u on j.create_user = u.id
+        where u.marketing_audit_users like '%,"auditUser":"${auditUserId}",%' and j.status = 1
+    </select>
+
+    <select id="queryMarketingTasksAuditInfo" resultType="java.util.Map">
+        select
+            marketjob_id                                as id,
+            count(1)                                   as count
+        from market_job_audit_history
+        where marketjob_id in ${marketJobIds} and audit_result = 'approve'
+        group by marketjob_id
+    </select>
+
+    <select id="checkMarketingTaskName" resultType="int">
+        select
+          count(0)
+        from market_jobs j
+        where j.status != -1
+        <if test="id != null">
+            and j.id != #{id}
+        </if>
+        and j.name = #{name}
+    </select>
+
+    <select id="queryMarketingUserDistribution" resultType="java.util.Map">
+        select
+        s.name                                                                                          as name,
+        s.user_count                                                                                    as value,
+        round((s.user_count_4g/s.user_count)*100,2)                                                     as userCount4GRate,
+        round((s.user_count/(select sum(user_count) from market_muser_statistics))*100,2)              as userCountRate
+        from market_muser_statistics s group by s.name
+    </select>
+
+    <insert id="insertMarketingTask" parameterType="com.axon.market.common.domain.ischeduling.MarketingTasksDomain" useGeneratedKeys="true" keyProperty="id">
+        insert into market_jobs
+        (
+            name,
+            market_type,
+            market_type_value,
+            business_type,
+            access_number,
+            market_content,
+            content_id,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            schedule_type,
+            cron_value,
+            send_interval,
+            test_phones,
+            repeat_strategy,
+            market_segment_names,
+            market_segment_ids,
+            market_segment_user_counts,
+            create_user,
+            create_time,
+            next_market_time,
+            status,
+            area_codes,
+            area_names,
+            market_user_count_limit,
+            remarks,
+            scene_pilot_sort,
+            sale_id,
+            sale_boid_id,
+            aim_sub_id,
+            is_boid_sale
+        )
+        values
+        (
+            #{name},
+            #{marketType},
+            #{marketTypeValue},
+            #{businessType},
+            #{accessNumber},
+            #{marketContent},
+            #{marketContentId},
+            #{startTime},
+            #{stopTime},
+            #{beginTime},
+            #{endTime},
+            #{scheduleType},
+            #{cronValue},
+            #{sendInterval},
+            #{testPhones},
+            #{repeatStrategy},
+            #{marketSegmentNames},
+            #{marketSegmentIds},
+            #{marketSegmentUserCounts},
+            #{createUser},
+            sysdate(),
+            #{nextMarketTime},
+            #{status},
+            #{areaCodes},
+            #{areaNames},
+            #{marketUserCountLimit},
+            #{remarks},
+            #{scenePilotSort},
+            #{saleId},
+            #{saleBoidId},
+            #{aimSubId},
+            #{isBoidSale}
+        )
+    </insert>
+
+    <update id="updateMarketingTask">
+        update market_jobs j set
+        j.name                            = #{task.name},
+        j.market_type                     = #{task.marketType},
+        j.market_type_value               = #{task.marketTypeValue},
+        j.business_type                   = #{task.businessType},
+        j.access_number                   = #{task.accessNumber},
+        j.content_id                      = #{task.marketContentId},
+        j.market_content                  = #{task.marketContent},
+        j.start_time                      = #{task.startTime},
+        j.stop_time                       = #{task.stopTime},
+        j.begin_time                      = #{task.beginTime},
+        j.end_time                        = #{task.endTime},
+        j.schedule_type                   = #{task.scheduleType},
+        j.cron_value                      = #{task.cronValue},
+        j.send_interval                   = #{task.sendInterval},
+        <if test="task.testPhones != null and task.testPhones != ''">
+            j.test_phones                     = #{task.testPhones},
+        </if>
+        j.repeat_strategy                 = #{task.repeatStrategy},
+        j.market_segment_names            = #{task.marketSegmentNames},
+        j.market_segment_ids              = #{task.marketSegmentIds},
+        j.market_segment_user_counts      = #{task.marketSegmentUserCounts},
+        j.last_update_user                = #{task.lastUpdateUser},
+        j.last_update_time                = sysdate(),
+        j.status                          = #{task.status},
+        j.area_codes                      = #{task.areaCodes},
+        j.area_names                      = #{task.areaNames},
+        j.market_user_count_limit         = #{task.marketUserCountLimit},
+        j.remarks                         = #{task.remarks},
+        j.scene_pilot_sort                = #{task.scenePilotSort},
+        j.sale_id                         = #{task.saleId},
+        j.sale_boid_id                    = #{task.saleBoidId},
+        j.aim_sub_id                      = #{task.aimSubId},
+        j.is_boid_sale                    = #{task.isBoidSale}
+        where j.id = #{task.id}
+    </update>
+
+    <update id="deleteMarketingTask">
+        update market_jobs j set j.status = -1 where j.id = #{taskId}
+    </update>
+
+    <update id="updateMarketingTaskStatus">
+        update market_jobs j set j.status = #{status} where j.id = #{taskId}
+    </update>
+
+    <update id="batchUpdateMarketingTasksNextMarketTime">
+        update market_jobs j set
+          j.next_market_time = if(date_add(j.next_market_time,interval j.send_interval day) &lt;= j.stop_time, date_add(j.next_market_time,interval j.send_interval day),'-')
+        where j.status in(2,40)
+        and j.next_market_time = date_format(now(),'%Y-%m-%d')
+        and j.stop_time >= date_format(now(),'%Y-%m-%d')
+    </update>
+
+    <update id="updateMarketingTaskNextMarketTime">
+        update market_jobs j set
+          j.next_market_time =
+          if (j.start_time > date_format(now(), '%Y-%m-%d'),
+            j.start_time,
+            if(date_add(date_format(now(),'%Y-%m-%d'),interval j.send_interval day) &lt;= j.stop_time,
+              date_add(date_format(now(),'%Y-%m-%d'),interval j.send_interval day),
+              '-'
+            )
+          )
+        where j.id = #{taskId}
+        and j.status = 2
+        and j.stop_time >= date_format(now(),'%Y-%m-%d')
+    </update>
+
+    <select id="queryAllWaitingExecuteMarketTask" resultType="com.axon.market.common.domain.ischeduling.MarketingPoolTaskDomain">
+           select
+                        j.id                              as id,
+                        j.name                            as name,
+                        j.market_type                     as marketType,
+                        j.market_type_value               as marketTypeValue,
+                        j.business_type                   as businessType,
+                        j.access_number                   as accessNumber,
+                        j.content_id                      as marketContentId,
+                        j.market_content                  as marketContent,
+                        j.start_time                      as startTime,
+                        j.stop_time                       as stopTime,
+                        j.begin_time                      as beginTime,
+                        j.end_time                        as endTime,
+                        j.schedule_type                   as scheduleType,
+                        j.send_interval                   as sendInterval,
+                        j.repeat_strategy                 as repeatStrategy,
+                        j.market_segment_ids              as marketSegmentIds,
+                        j.create_time                     as createTime,
+                        j.status                          as status,
+                        u.name                            as createUserName,
+                        j.area_codes                      as areaCodes,
+                        j.market_user_count_limit         as marketUserCountLimit,
+                        j.sale_id                         as saleId,
+                        j.sale_boid_id                    as saleBoidId,
+                        j.aim_sub_id                      as aimSubId,
+                        j.is_boid_sale                    as isBoidSale
+                      from market_jobs_pool j
+                      left join market_jobs mj on j.id = mj.id
+                      left join market_user u on mj.create_user = u.id
+            where j.date = #{date}
+            and j.schedule_type = 'manu'
+            and j.status in (30,36) and j.execute_times  &lt; 6
+            UNION
+            select
+                        j.id                              as id,
+                        j.name                            as name,
+                        j.market_type                     as marketType,
+                        j.market_type_value               as marketTypeValue,
+                        j.business_type                   as businessType,
+                        j.access_number                   as accessNumber,
+                        j.content_id                      as marketContentId,
+                        j.market_content                  as marketContent,
+                        j.start_time                      as startTime,
+                        j.stop_time                       as stopTime,
+                        j.begin_time                      as beginTime,
+                        j.end_time                        as endTime,
+                        j.schedule_type                   as scheduleType,
+                        j.send_interval                   as sendInterval,
+                        j.repeat_strategy                 as repeatStrategy,
+                        j.market_segment_ids              as marketSegmentIds,
+                        j.create_time                     as createTime,
+                        j.status                          as status,
+                        u.name                            as createUserName,
+                        j.area_codes                      as areaCodes,
+                        j.market_user_count_limit         as marketUserCountLimit,
+                        j.sale_id                         as saleId,
+                        j.sale_boid_id                    as saleBoidId,
+                        j.aim_sub_id                      as aimSubId,
+                        j.is_boid_sale                    as isBoidSale
+                      from market_jobs_pool j join market_jobs s on j.id = s.id
+                      left join market_user u on s.create_user = u.id
+            where j.date = #{date}
+            and j.schedule_type = 'single'
+            and j.status in (2,36,30)
+            and s.status = 40 and  j.execute_times  &lt; 6
+    </select>
+
+    <update id="updateMarketTaskExecuteBySystemId">
+        update market_jobs_pool j set
+        j.status = #{status}
+        where j.id = #{taskId}
+    </update>
+
+    <update id="updateMarketTaskExecuteById">
+        update market_jobs_pool set
+            <if test="marketNum != '' and marketNum != null">
+                market_nums = #{marketNum},
+            </if>
+            <if test="lastTaskId != null and lastTaskId != ''">
+                last_task_id = #{lastTaskId},
+            </if>
+            <if test="taskStatus != null and taskStatus != ''">
+                status = #{taskStatus},
+            </if>
+             execute_times = execute_times + 1
+        where id = #{taskId} and date = DATE_FORMAT(now(),'%Y%m%d')
+    </update>
+
+    <delete id="deleteMarketingTaskAuditHis">
+         delete from market_job_audit_history where marketjob_id = #{taskId}
+    </delete>
+</mapper>

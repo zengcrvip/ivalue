@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.IUserMapper">
+
+    <resultMap id="userInfo" type="com.axon.market.common.domain.isystem.UserDomain">
+        <id property="id" column="id"></id>
+        <result property="name" column="name"></result>
+        <result property="telephone" column="telephone"></result>
+        <result property="password" column="password"></result>
+        <result property="areaId" column="areaId"></result>
+        <result property="areaCode" column="areaCode"></result>
+        <result property="areaName" column="areaName"></result>
+        <result property="homePageUrl" column="homePageUrl"></result>
+        <result property="userType" column="userType"></result>
+        <result property="businessHallIds" column="businessHallIds"></result>
+        <result property="businessHallTypes" column="businessHallTypes"></result>
+        <result property="email" column="email"></result>
+        <result property="status" column="status"></result>
+        <result property="roleIds" column="roleIds"></result>
+        <result property="segmentAuditUsers" column="segmentAuditUsers"></result>
+        <result property="tagAuditUsers" column="tagAuditUsers"></result>
+        <result property="marketingAuditUsers" column="marketingAuditUsers"></result>
+        <result property="remarks" column="remarks"></result>
+        <association property="keeperUser" column="keeperUser"
+                     javaType="com.axon.market.common.domain.ikeeper.KeeperUserDomain">
+            <id property="userId" column="userId"/>
+            <result property="interfaceMan" column="interfaceMan"/>
+            <result property="isCanManage" column="isCanManage"/>
+            <result property="systemOrgId" column="systemOrgId"/>
+            <result property="businessOrgId" column="businessOrgId"/>
+            <result property="ability" column="ability"/>
+            <result property="smsSignature" column="smsSignature"/>
+            <result property="status" column="keeperStatus"/>
+            <result property="token" column="token"/>
+        </association>
+    </resultMap>
+
+    <select id="queryUsersCount" resultType="int">
+        select
+        count(0)
+        from market_user u
+        where u.id != #{loginUser.id} and u.id != 100000
+        <if test="condition != null and condition.name != null">
+            and u.name like concat('%',#{condition.name},'%')
+        </if>
+        <if test="condition != null and condition.telephone != null">
+            and u.telephone like concat('%',#{condition.telephone},'%')
+        </if>
+        <if test="condition != null and condition.areaId != null">
+            and u.area_id = #{condition.areaId}
+        </if>
+        <if test="condition != null and condition.roleId != null">
+            and u.role_ids = #{condition.roleId}
+        </if>
+        <if test="loginUser.businessHallIds != null and loginUser.businessHallIds != ''">
+            and false
+        </if>
+        and (u.create_user = #{loginUser.id}
+        <if test="loginUser.businessHallIds == null or loginUser.businessHallIds == ''">
+            or (#{loginUser.areaId} = 99999 or (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id))
+        </if>)
+    </select>
+
+    <select id="queryUsersByPage" resultType="com.axon.market.common.domain.isystem.UserDomain">
+        select
+        u.id as id,
+        u.name as name,
+        u.telephone as telephone,
+        u.area_id as areaId,
+        u.business_hall_Ids as businessHallIds,
+        group_concat(b.base_name) as businessHallNames,
+        a.name as areaName,
+        a.code as areaCode,
+        u.email as email,
+        u.status as status,
+        u.create_user as createUserId,
+        u.remarks as remarks,
+        u.role_ids as roleIds,
+        (select max(r.type) from market_role r where find_in_set(r.id,u.role_ids)) as userType,
+        (select group_concat(r.name) from market_role r where find_in_set(r.id,u.role_ids)) as roleNames,
+        u.segment_audit_users as segmentAuditUsers,
+        u.tag_audit_users as tagAuditUsers,
+        u.marketing_audit_users as marketingAuditUsers
+        from market_user u
+        left join market_area a on a.id = u.area_id
+        left join conf_baseinfo b on find_in_set(b.base_id,u.business_hall_Ids)
+        where u.id != #{loginUser.id} and u.id != 100000
+        <if test="condition != null and condition.name != null">
+            and u.name like concat('%',#{condition.name},'%')
+        </if>
+        <if test="condition != null and condition.telephone != null">
+            and u.telephone like concat('%',#{condition.telephone},'%')
+        </if>
+        <if test="condition != null and condition.areaId != null">
+            and u.area_id = #{condition.areaId}
+        </if>
+        <if test="condition != null and condition.roleId != null">
+            and u.role_ids = #{condition.roleId}
+        </if>
+        <if test="loginUser.businessHallIds != null and loginUser.businessHallIds != ''">
+            and false
+        </if>
+        and (u.create_user = #{loginUser.id}
+        <if test="loginUser.businessHallIds == null or loginUser.businessHallIds == ''">
+            or (#{loginUser.areaId} = 99999 or (#{loginUser.areaId} != 99999 and #{loginUser.areaId} = u.area_id))
+        </if>)
+        group by u.id
+        order by u.create_time desc
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="queryAuditUsers" resultType="com.axon.market.common.domain.isystem.UserDomain">
+        select
+        u.id as id,
+        u.name as name,
+        u.area_id as areaId
+        from market_user u
+        left join market_role r on find_in_set(r.id,u.role_ids)
+        where u.status = 0 and (u.area_id = #{areaId} or u.area_id = 99999)
+        and (#{beHandleUser} is null or u.id != #{beHandleUser})
+        <if test="auditType == 'auditModel'">
+            and find_in_set((select id from market_menu m where m.permission = 'auditModel'),r.permission_menu)
+        </if>
+        <if test="auditType == 'auditTag'">
+            and find_in_set((select id from market_menu m where m.permission = 'auditTag'),r.permission_menu)
+        </if>
+        <if test="auditType == 'auditMarketJob'">
+            and find_in_set((select id from market_menu m where m.permission = 'auditMarketJob'),r.permission_menu)
+        </if>
+        group by u.id
+    </select>
+
+    <select id="queryUserByTelephone" resultMap="userInfo">
+        select
+            u.id                                                                                                          as id,
+            u.name                                                                                                        as name,
+            u.telephone                                                                                                   as telephone,
+            u.password                                                                                                    as password,
+            u.area_id                                                                                                     as areaId,
+            a.code                                                                                                        as areaCode,
+            a.name                                                                                                        as areaName,
+            m.url                                                                                                         as homePageUrl,
+            (select max(r.type) from market_role r where find_in_set(r.id,u.role_ids))                                  as userType,
+            u.business_hall_Ids                                                                                           as businessHallIds,
+            (select GROUP_CONCAT(DISTINCT location_type_id) from conf_baseinfo where FIND_IN_SET(base_id,u.business_hall_Ids))  as businessHallTypes,
+            u.business_hall_Ids                                                                                           as businessHallIds,
+            u.email                                                                                                       as email,
+            u.status                                                                                                      as status,
+            u.role_ids                                                                                                    as roleIds,
+            u.segment_audit_users		                                                                                  as segmentAuditUsers,
+            u.tag_audit_users				                                                                              as tagAuditUsers,
+            u.marketing_audit_users	                                                                                      as marketingAuditUsers,
+            u.remarks                                                                                                     as remarks,
+            ku.user_id                                                                                                    as userId,
+            ku.interface_man                                                                                              as interfaceMan,
+            ku.is_can_manage                                                                                              as isCanManage,
+            ku.system_org_id                                                                                              as systemOrgId,
+            ku.business_org_id                                                                                            as businessOrgId,
+            ku.ability                                                                                                    as ability,
+            group_concat(t.type_name)                                                                                     as abilityNames,
+            ku.status                                                                                                     as keeperStatus,
+            ku.sms_signature                                                                                              as smsSignature
+        from market_user u
+        left join market_area a on u.area_id = a.id
+        left join market_role r on u.role_ids = r.id
+        left join market_menu m on r.home_page_id = m.id
+        left join keeper.keeper_user ku on u.id = ku.user_id
+        left join keeper.keeper_type t on find_in_set(t.type_id, ku.ability) and t.type_classify = 1
+        where u.telephone = #{telephone}
+    </select>
+
+    <select id="queryUserById" resultMap="userInfo">
+        select
+            u.id                                                                                                          as id,
+            u.name                                                                                                        as name,
+            u.telephone                                                                                                   as telephone,
+            u.password                                                                                                    as password,
+            u.area_id                                                                                                     as areaId,
+            a.code                                                                                                        as areaCode,
+            a.name                                                                                                        as areaName,
+            m.url                                                                                                         as homePageUrl,
+            (select max(r.type) from market_role r where find_in_set(r.id,u.role_ids))                                  as userType,
+            u.business_hall_Ids                                                                                           as businessHallIds,
+            (select GROUP_CONCAT(DISTINCT location_type_id) from conf_baseinfo where FIND_IN_SET(base_id,u.business_hall_Ids))  as businessHallTypes,
+            u.email                                                                                                       as email,
+            u.status                                                                                                      as status,
+            u.role_ids                                                                                                    as roleIds,
+            u.segment_audit_users		                                                                                  as segmentAuditUsers,
+            u.tag_audit_users				                                                                              as tagAuditUsers,
+            u.marketing_audit_users	                                                                                      as marketingAuditUsers,
+            u.remarks                                                                                                     as remarks,
+            ku.user_id                                                                                                    as userId,
+            ku.interface_man                                                                                              as interfaceMan,
+            ku.is_can_manage                                                                                              as isCanManage,
+            ku.system_org_id                                                                                              as systemOrgId,
+            ku.business_org_id                                                                                            as businessOrgId,
+            ku.ability                                                                                                    as ability,
+            ku.status                                                                                                     as keeperStatus,
+            ku.sms_signature                                                                                              as smsSignature
+        from market_user u
+        left join market_area a on u.area_id = a.id
+        left join market_role r on u.role_ids = r.id
+        left join market_menu m on r.home_page_id = m.id
+        left join keeper.keeper_user ku on u.id = ku.user_id
+        where u.id = #{userId}
+    </select>
+
+    <select id="queryUserByToken" resultMap="userInfo">
+         select
+            u.id                                                                                                          as id,
+            u.name                                                                                                        as name,
+            u.telephone                                                                                                   as telephone,
+            u.password                                                                                                    as password,
+            u.area_id                                                                                                     as areaId,
+            a.code                                                                                                        as areaCode,
+            a.name                                                                                                        as areaName,
+            (select max(r.type) from market_role r where find_in_set(r.id,u.role_ids))                                  as userType,
+            u.business_hall_Ids                                                                                           as businessHallIds,
+            u.email                                                                                                       as email,
+            u.status                                                                                                      as status,
+            u.remarks                                                                                                     as remarks,
+            ku.user_id                                                                                                    as userId,
+            ku.interface_man                                                                                              as interfaceMan,
+            ku.is_can_manage                                                                                              as isCanManage,
+            ku.system_org_id                                                                                              as systemOrgId,
+            ku.business_org_id                                                                                            as businessOrgId,
+            ku.ability                                                                                                    as ability,
+            ku.sms_signature                                                                                              as smsSignature,
+            ku.status                                                                                                     as keeperStatus,
+            ku.token                                                                                                      as token
+        from market_user u
+        left join market_area a on u.area_id = a.id
+        left join market_role r on u.role_ids = r.id
+        left join keeper.keeper_user ku on u.id = ku.user_id
+        where ku.status in (0,1) and u.status = 0 and ku.token = #{token}
+    </select>
+
+    <select id="queryUsersNameByAuditUser" resultType="java.lang.String">
+        select
+          u.name       as name
+        from market_user u
+        where u.status != -1 and (
+            u.segment_audit_users like  concat('%"auditUser":"',#{auditUserId},'","auditUserName"%')
+            or u.tag_audit_users like concat('%"auditUser":"',#{auditUserId},'","auditUserName"%')
+            or u.marketing_audit_users like concat('%"auditUser":"',#{auditUserId},'","auditUserName"%')
+        )
+    </select>
+
+    <select id="queryNeedAuditOfModel" resultType="java.lang.String">
+        select
+            m.name
+        from market_model m
+        where  m.status = 2
+        and m.create_user = #{userId}
+    </select>
+
+    <select id="queryNeedAuditOfTag" resultType="java.lang.String">
+        select
+            t.name
+        from market_tag t
+        where t.status = 2
+        and t.create_user = #{userId}
+    </select>
+
+    <select id="queryNeedAuditOfMarketingTask" resultType="java.util.Map">
+        select '营销任务' as type,group_concat(j.name) as names from market_jobs j  where j.status = 5  and j.create_user = #{userId}
+        union all
+        select '炒店任务' as type,group_concat(t.task_name) as names from shop_task t where t.status = 1 and t.create_user = #{userId}
+        union all
+        select '营业厅' as type,group_concat(c.base_name) as names from conf_baseinfo c where c.status = 2 and
+          exists (select * from market_user u where find_in_set(c.base_id,u.business_hall_Ids) and u.id = #{userId})
+    </select>
+
+    <select id="queryNeedAuditNamesOfUser" resultType="java.lang.String">
+          select m.name as names from market_model m where  m.status = 2 and m.create_user = #{userId}
+          union all
+          select t.name as names from market_tag t where t.status = 2 and t.create_user = #{userId}
+          union all
+          select j.name as names from market_jobs j  where j.status = 5  and j.create_user = #{userId}
+          union all
+          select st.task_name as names from shop_task st where st.status = 1 and st.create_user = #{userId}
+    </select>
+
+    <select id="querySameBusinessHallNames" resultType="java.lang.String">
+       select
+          group_concat(b.base_name)
+       from conf_baseinfo b
+       where find_in_set(b.base_id,#{businessHandleIds})
+        and find_in_set(b.base_id,(
+          select
+             group_concat(u.business_hall_Ids)
+          from market_user u
+          where u.business_hall_Ids != ''
+          and u.id != #{editUserId})
+        )
+    </select>
+
+    <select id="queryPhonesByUserRoleIds" resultType="java.lang.String">
+        select telephone from market_user u where find_in_set(u.role_ids,#{roleIds})
+    </select>
+
+    <select id="queryUserCanOperateTaskGX" resultType="java.lang.String">
+        select
+          find_in_set(m.permission,'auditModel,auditMarketJob,task_setting,model_setting')
+        from market_user u
+        left join market_role r on u.role_ids = r.id
+        left join market_menu m on find_in_set(m.id,r.permission_menu)
+        where u.id = #{userId} and find_in_set(m.permission,'auditModel,auditMarketJob,task_setting,model_setting')
+        order by find_in_set(m.permission,'auditModel,auditMarketJob,task_setting,model_setting')
+    </select>
+
+    <select id="queryAllMyCreatedSubUsers" resultType="java.util.Map">
+        select
+          u.id      as id,
+          u.name    as name
+        from market_user u
+        where u.create_user = #{userId}
+        and u.status = 0 and u.area_id = #{areaId}
+    </select>
+
+    <select id="queryAllSubUserIdsCreatedByI" resultType="java.lang.Integer">
+        select
+        u.id
+        from market_user u
+        where u.create_user = #{userId}
+        and u.status = 0 and u.area_id = #{areaId} and u.id != #{targetUser}
+    </select>
+
+    <insert id="insertUser" parameterType="com.axon.market.common.domain.isystem.UserDomain">
+        insert into market_user
+        (
+            name,
+            telephone,
+            password,
+            area_id,
+            business_hall_Ids,
+            email,
+            role_ids,
+            tag_audit_users,
+            segment_audit_users,
+            marketing_audit_users,
+            create_user,
+            create_time,
+            status,
+            remarks
+        )
+        values
+        (
+            #{user.name},
+            #{user.telephone},
+            #{user.password},
+            #{user.areaId},
+            #{user.businessHallIds},
+            #{user.email},
+            #{user.roleIds},
+            #{user.tagAuditUsers},
+            #{user.segmentAuditUsers},
+            #{user.marketingAuditUsers},
+            #{user.createUserId},
+            sysdate(),
+            0,
+            #{user.remarks}
+        )
+    </insert>
+
+    <update id="updateUser" parameterType="com.axon.market.common.domain.isystem.UserDomain">
+        update market_user u set
+        u.name = #{user.name},
+        u.telephone = #{user.telephone},
+        u.area_id = #{user.areaId},
+        u.business_hall_Ids = #{user.businessHallIds},
+        u.email = #{user.email},
+        u.role_ids = #{user.roleIds},
+        u.tag_audit_users = #{user.tagAuditUsers},
+        u.segment_audit_users = #{user.segmentAuditUsers},
+        u.marketing_audit_users = #{user.marketingAuditUsers},
+        u.update_time = #{user.updateTime},
+        <if test="user.password != null and user.password != ''">
+            u.password = #{user.password},
+        </if>
+        u.remarks = #{user.remarks}
+        where u.id = #{user.id}
+    </update>
+
+    <update id="updatePersonalInfo" parameterType="com.axon.market.common.domain.isystem.UserDomain">
+        update market_user u set
+        <if test="user.password != '' and user.password != null">
+            u.password = #{user.password},
+        </if>
+        update_time = sysdate()
+        where u.id = #{user.id}
+    </update>
+
+    <update id="startStopUser">
+        update market_user u
+        set u.status = #{status}
+        where u.id = #{userId}
+    </update>
+
+    <select id="queryBatchAuditUserIdsByType" resultType="java.util.Map">
+        select
+            u.id,
+            'add' as type
+        from market_user u left join conf_baseinfo b on find_in_set(b.base_id,u.business_hall_Ids)
+        where find_in_set(b.base_id,#{businessHallIds})
+        and u.id not in (
+            select u1.id from market_user u1 where u1.marketing_audit_users like concat('%"auditUser":"',#{subAdmin},'","auditUserName"%')
+        )
+        group by u.id
+        union all
+        select
+            u1.id,
+            'del' as type
+        from market_user u1
+        where u1.marketing_audit_users like concat('%"auditUser":"',#{subAdmin},'","auditUserName"%')
+        and u1.id not in (
+            select u.id from market_user u left join conf_baseinfo b on find_in_set(b.base_id,u.business_hall_Ids)
+            where find_in_set(b.base_id,#{businessHallIds}) group by u.id
+        )
+    </select>
+
+    <update id="batchAddUsersAuditUser">
+        update market_user set
+        marketing_audit_users = concat("[{\"order\":\"1\",\"auditUser\":\"",#{userDomain.id},"\",\"auditUserName\":\"",#{userDomain.name},"\"}]")
+        where find_in_set(id,#{typeUserIds})
+    </update>
+
+    <update id="batchDeleteUsersAuditUser">
+        update market_user set
+        marketing_audit_users = concat("[{\"order\":\"1\",\"auditUser\":\"",#{userDomain.id},"\",\"auditUserName\":\"",#{userDomain.name},"\"}]")
+        where find_in_set(id,#{typeUserIds})
+    </update>
+
+    <select id="queryUsersByOrgIds" resultType="com.axon.market.common.domain.isystem.UserDomain">
+        select
+        u.id                                                                                                          as id,
+        u.name                                                                                                        as name,
+        u.telephone                                                                                                   as telephone,
+        u.password                                                                                                    as password,
+        u.area_id                                                                                                     as areaId,
+        u.business_hall_Ids                                                                                           as businessHallIds,
+        u.email                                                                                                       as email,
+        u.status                                                                                                      as status,
+        u.token                                                                                                       as token,
+        u.segment_audit_users		                                                                                  as segmentAuditUsers,
+        u.tag_audit_users				                                                                              as tagAuditUsers,
+        u.marketing_audit_users	                                                                                      as marketingAuditUsers
+        from market_user u,market_user_org o
+        WHERE u.id = o.user_id and o.org_id in (${orgIds})
+
+    </select>
+</mapper>

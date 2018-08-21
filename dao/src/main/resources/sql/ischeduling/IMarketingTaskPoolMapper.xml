@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ischeduling.IMarketingTaskPoolMapper">
+
+   <select id="queryMarketingPoolTasksCount" resultType="int">
+       select count(0) from market_jobs_pool j where j.date = date_format(now(),'%Y%m%d')
+       <if test="condition != null and condition.name != null">
+           and j.name like concat('%',#{condition.name},'%')
+       </if>
+       <if test="condition != null and condition.status != null and condition.status != -1">
+           and j.status = #{condition.status}
+       </if>
+       <if test="condition != null and condition.marketType != '' and condition.marketType != null">
+           and j.market_type = #{condition.marketType}
+       </if>
+       <if test="condition != null and condition.businessType != -1 and condition.businessType != null">
+           and j.business_type = #{condition.businessType}
+       </if>
+   </select>
+
+    <select id="queryMarketingPoolTasksByPage" resultType="com.axon.market.common.domain.ischeduling.MarketingPoolTaskDomain">
+        select
+            j.date                            as date,
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.market_segment_ids              as marketSegmentIds,
+            mj.market_segment_names 		  as marketSegmentNames,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.send_interval                   as sendInterval,
+            j.repeat_strategy                 as repeatStrategy,
+            j.create_time                     as createTime,
+            mj.create_user                    as createUser,
+            j.update_time                     as updateTime,
+            j.status                          as status,
+            j.is_boid_sale                    as isBoidSale,
+	        mj.status                         as isFistStatus,
+            j.area_codes                      as areaCodes,
+            j.last_task_id                    as lastTaskId,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId
+        from market_jobs_pool j
+        left join market_jobs mj on j.id = mj.id
+        where j.date = date_format(now(),'%Y%m%d')
+        <if test="condition != null and condition.name != null">
+            and j.name like concat('%',#{condition.name},'%')
+        </if>
+        <if test="condition != null and condition.status != null and condition.status != -1">
+            and j.status = #{condition.status}
+        </if>
+        <if test="condition != null and condition.marketType != '' and condition.marketType != null">
+            and j.market_type = #{condition.marketType}
+        </if>
+        <if test="condition != null and condition.businessType != -1 and condition.businessType != null">
+            and j.business_type = #{condition.businessType}
+        </if>
+        order by j.create_time desc
+        limit #{maxRecord} offset #{offset}
+    </select>
+
+    <select id="queryMarketingPoolTaskById" resultType="com.axon.market.common.domain.ischeduling.MarketingPoolTaskDomain">
+        select
+            j.date                            as date,
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            s.scene_name                      as sceneSmsName,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.market_segment_ids              as marketSegmentIds,
+            mj.market_segment_names 		  as marketSegmentNames,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.send_interval                   as sendInterval,
+            j.repeat_strategy                 as repeatStrategy,
+            j.create_time                     as createTime,
+            mj.create_user                    as createUser,
+            j.update_time                     as updateTime,
+            j.status                          as status,
+            j.target_nums                     as targetNums,
+            j.target_nums                     as marketSegmentUserCounts,
+            j.is_boid_sale                    as isBoidSale,
+            j.area_codes                      as areaCodes,
+           mj.area_names                      as areaNames,
+           mj.remarks                         as remarks,
+            j.last_task_id                    as lastTaskId,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId
+        from market_jobs_pool j
+        left join market_jobs mj on j.id = mj.id
+        left join conf_new_scene as s on j.market_type_value = s.id
+        where j.id = #{taskId} and j.status != -1
+         and j.date = date_format(now(),'%Y%m%d')
+    </select>
+
+    <select id="queryTodayNormalMarketingPoolTasks" resultType="com.axon.market.common.domain.ischeduling.MarketingPoolTaskDomain">
+        select
+            j.date                            as date,
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.content_id                      as marketContentId,
+            j.market_content                  as marketContent,
+            j.market_segment_ids              as marketSegmentIds,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.send_interval                   as sendInterval,
+            j.repeat_strategy                 as repeatStrategy,
+            j.create_time                     as createTime,
+            j.update_time                     as updateTime,
+            j.status                          as status,
+            j.is_boid_sale                    as isBoidSale,
+            j.area_codes                      as areaCodes,
+            j.last_task_id                    as lastTaskId,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId
+        from market_jobs_pool j
+        where j.date = date_format(now(),'%Y%m%d')
+        and j.market_type = 'sms'
+    </select>
+
+    <insert id="batchInsertMarketingTasksToPool">
+        insert into market_jobs_pool
+        (
+            date,
+            id,
+            name,
+            market_type,
+            market_type_value,
+            business_type,
+            access_number,
+            content_id,
+            market_content,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            schedule_type,
+            send_interval,
+            repeat_strategy,
+            market_segment_ids,
+            create_time,
+            status,
+            is_boid_sale,
+            area_codes,
+            market_user_count_limit,
+            last_task_id,
+            sale_id,
+            sale_boid_id,
+            aim_sub_id
+        )
+        select
+            date_format(now(),'%Y%m%d'),
+            id,
+            name,
+            market_type,
+            market_type_value,
+            business_type,
+            access_number,
+            content_id,
+            market_content,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            schedule_type,
+            send_interval,
+            repeat_strategy,
+            market_segment_ids,
+            sysdate(),
+            2,
+            is_boid_sale,
+            area_codes,
+            market_user_count_limit,
+            null,
+            sale_id,
+            sale_boid_id,
+            aim_sub_id
+        from market_jobs j
+        where j.status in (2,40)
+        and j.next_market_time = date_format(now(),'%Y-%m-%d')
+        and j.stop_time >= date_format(now(),'%Y-%m-%d')
+    </insert>
+
+    <insert id="insertMarketingTaskToPool">
+        insert into market_jobs_pool
+        (
+            date,
+            id,
+            name,
+            market_type,
+            market_type_value,
+            business_type,
+            access_number,
+            content_id,
+            market_content,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            schedule_type,
+            send_interval,
+            repeat_strategy,
+            market_segment_ids,
+            create_time,
+            status,
+            area_codes,
+            market_user_count_limit,
+            last_task_id,
+            sale_id,
+            sale_boid_id,
+            aim_sub_id,
+            is_boid_sale
+        )
+        values
+        (
+            date_format(now(),'%Y%m%d'),
+            #{task.id},
+            #{task.name},
+            #{task.marketType},
+            #{task.marketTypeValue},
+            #{task.businessType},
+            #{task.accessNumber},
+            #{task.marketContentId},
+            #{task.marketContent},
+            #{task.startTime},
+            #{task.stopTime},
+            #{task.beginTime},
+            #{task.endTime},
+            #{task.scheduleType},
+            #{task.sendInterval},
+            #{task.repeatStrategy},
+            #{task.marketSegmentIds},
+            sysdate(),
+            #{task.status},
+            #{task.areaCodes},
+            #{task.marketUserCountLimit},
+            null,
+            #{task.saleId},
+            #{task.saleBoidId},
+            #{task.aimSubId},
+            #{task.isBoidSale}
+        )
+    </insert>
+
+    <update id="updateMarketingPoolTaskStatus">
+        update market_jobs_pool j set j.status = #{status} where j.id = #{taskId} and j.date = date_format(now(),'%Y%m%d')
+    </update>
+
+    <update id="updateMarketingPoolTaskTargetCount">
+        update market_jobs_pool j set j.target_nums = #{targetNum} where j.id = #{taskId} and j.date = date_format(now(),'%Y%m%d')
+    </update>
+
+    <update id="updateMarketingPoolTaskInfo">
+        update market_jobs_pool j set
+            j.market_nums     = #{poolTask.marketNums},
+            j.last_task_id    = #{poolTask.lastTaskId},
+            j.update_time     = #{poolTask.updateTime},
+            j.status          = #{poolTask.status}
+        where j.id = #{poolTask.id} and j.date = date_format(now(),'%Y%m%d')
+    </update>
+
+    <select id="queryJXHMarketingPoolTasks" resultType="com.axon.market.common.domain.ischeduling.MarketingPoolTaskDomain">
+          select
+            j.date                            as date,
+            j.id                              as id,
+            j.name                            as name,
+            j.market_type                     as marketType,
+            j.market_type_value               as marketTypeValue,
+            j.business_type                   as businessType,
+            j.access_number                   as accessNumber,
+            j.market_content                  as marketContent,
+            j.market_content                  as marketContent,
+            j.market_segment_ids              as marketSegmentIds,
+            j.start_time                      as startTime,
+            j.stop_time                       as stopTime,
+            j.begin_time                      as beginTime,
+            j.end_time                        as endTime,
+            j.schedule_type                   as scheduleType,
+            j.send_interval                   as sendInterval,
+            j.repeat_strategy                 as repeatStrategy,
+            j.create_time                     as createTime,
+            j.update_time                     as updateTime,
+            j.status                          as status,
+            j.is_boid_sale                    as isBoidSale,
+            j.area_codes                      as areaCodes,
+            j.last_task_id                    as lastTaskId,
+            j.sale_id                         as saleId,
+            j.sale_boid_id                    as saleBoidId,
+            j.aim_sub_id                      as aimSubId
+        from market_jobs_pool j
+        where j.date = date_format(now(),'%Y%m%d')
+        and j.market_type = 'jxhsms'
+        and j.target_nums = 0;
+    </select>
+
+    <update id="updateMarketingPoolTaskCountByBaseId">
+        update market_jobs_pool j set j.target_nums = #{targetNum} where j.sale_id = #{saleId} and j.sale_boid_id = #{saleBoidId} and j.aim_sub_id = #{aimSubId} and j.date = date_format(now(),'%Y%m%d')
+    </update>
+
+</mapper>

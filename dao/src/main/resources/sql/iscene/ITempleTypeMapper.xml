@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.ITempleTypeMapper">
+
+    <select id="queryTempleType" resultType="com.axon.market.common.domain.iscene.TempleTypeDomain">
+        select
+            id,
+            typeName,
+            typeJS,
+            multiPicture
+        from templetype
+        where isDelete=0
+        <if test="name != null and name != ''">
+            and typeName like concat('%','${name}','%')
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryTempleTypeCount" resultType="java.lang.Integer">
+        select
+            count(1)
+        from templetype
+        where isDelete=0
+        <if test="name != null and name != ''">
+            and typeName like concat('%','${name}','%')
+        </if>
+    </select>
+
+    <insert id="addTempleType" parameterType="com.axon.market.common.domain.iscene.TempleTypeDomain">
+        insert into templetype
+        (
+            typeName,
+            typeJS,
+            multiPicture,
+            editTime,
+            editUserId,
+            editUserName
+        )
+        VALUES
+        (
+            #{info.typeName},
+            #{info.typeJS},
+            #{info.multiPicture},
+            sysdate(),
+            #{info.editUserId},
+            #{info.editUserName}
+        )
+    </insert>
+
+    <update id="editTempleType">
+        update templetype set
+            typeName = #{info.typeName},
+            typeJS = #{info.typeJS},
+            multiPicture = #{info.multiPicture},
+            editTime = sysdate(),
+            editUserId = #{info.editUserId},
+            editUserName = #{info.editUserName}
+        where id=#{info.id}
+    </update>
+
+    <update id="deleteTempleType">
+        update templetype set
+        isDelete = '-1'
+        where id = #{id}
+    </update>
+
+</mapper>

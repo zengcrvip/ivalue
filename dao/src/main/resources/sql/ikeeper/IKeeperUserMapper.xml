@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperUserMapper">
+
+    <select id="queryKeeperUsersCount" resultType="int">
+        select count(0) from keeper.keeper_user ku
+        left join market_user u on ku.user_id = u.id
+        where ku.status != -1
+        <if test="condition != null and condition.phone != null and condition.phone != ''">
+         and u.telephone like concat('%',#{condition.phone},'%')
+        </if>
+        <if test="areaId != 99999">
+            and ku.create_user = #{userId}
+        </if>
+    </select>
+
+    <select id="queryKeeperUsersByPage" resultType="com.axon.market.common.domain.ikeeper.KeeperUserDomain">
+        select
+            ku.user_id                                    as userId,
+            u.name                                        as userName,
+            a.name                                        as areaName,
+            u.telephone                                   as telephone,
+            ku.create_user                                as createUser,
+            ku.interface_man                              as interfaceMan,
+            ku.is_can_manage                              as isCanManage,
+            o.org_name                                    as systemOrgName,
+            o1.org_name                                   as businessOrgName,
+            group_concat(t.type_name)                     as abilityNames,
+            ku.status                                     as status
+        from keeper.keeper_user ku
+        left join market_user u on ku.user_id = u.id
+        left join market_area a on u.area_id = a.id
+        left join keeper.keeper_type t on find_in_set(t.type_id,ku.ability) and t.type_classify = 1
+        left join keeper.keeper_org o on o.org_id = ku.system_org_id
+        left join keeper.keeper_org o1 on o1.org_id = ku.business_org_id
+        where ku.status != -1
+        <if test="condition != null and condition.phone != null and condition.phone != ''">
+            and u.telephone like concat('%',#{condition.phone},'%')
+        </if>
+        <if test="areaId != 99999">
+            and ku.create_user = #{userId}
+        </if>
+        group by ku.user_id
+        order by ku.create_time desc
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="queryKeeperUserDetail" resultType="com.axon.market.common.domain.ikeeper.KeeperUserDomain">
+      select
+         ku.user_id                         as userId,
+         u.name                             as userName,
+         u.telephone                        as telephone,
+         u.area_id                          as areaId,
+         a.name                             as areaName,
+         ku.create_time                     as createTime,
+         ku.interface_man                   as interfaceMan,
+         ku.is_can_manage                   as isCanManage,
+         ku.system_org_id                   as systemOrgId,
+         o.org_name                         as systemOrgName,
+         ku.business_org_id                 as businessOrgId,
+         o1.org_name                        as businessOrgName,
+         ku.ability                         as ability,
+         group_concat(t.type_name)          as abilityNames,
+         ku.sms_signature                   as smsSignature,
+         ku.audit_user                      as auditUser
+      from keeper.keeper_user ku
+      left join market_user u on ku.user_id = u.id
+      left join market_area a on u.area_id = a.id
+      left join keeper.keeper_type t on find_in_set(t.type_id,ku.ability) and t.type_classify = 1
+      left join keeper.keeper_org o on o.org_id = ku.system_org_id
+      left join keeper.keeper_org o1 on o1.org_id = ku.business_org_id
+      where ku.user_id = #{userId} and u.status = 0 and ku.status != -1
+      group by ku.user_id
+    </select>
+
+    <select id="queryUsersForKeeperUser" resultType="java.util.Map">
+        select
+            u.id              as id,
+            u.name            as name,
+            u.telephone       as telephone
+        from market_user u
+        where u.area_id = #{areaId}
+        and u.status = 0
+        and u.id not in (select ku.user_id from keeper.keeper_user ku where ku.status != -1)
+    </select>
+
+    <select id="queryKeeperAuditUsers" resultType="java.util.Map">
+        select
+          u.id                    as id,
+          u.name                  as name
+        from keeper.keeper_user ku
+        left join market_user u on ku.user_id = u.id
+        where ku.status = 0 and u.status = 0 and u.area_id = #{areaId}
+        <if test="auditType == 'smsSignature'">
+            and ku.is_can_manage = 1
+        </if>
+        <if test="auditType == 'task'">
+            and ku.system_org_id = #{keeperUser.systemOrgId}
+            and ku.business_org_id = #{keeperUser.businessOrgId}
+            and ku.user_id != #{keeperUser.userId}
+        </if>
+    </select>
+
+    <select id="queryKeeperUserByTelephone" resultType="com.axon.market.common.domain.ikeeper.KeeperUserDomain">
+      select
+         ku.user_id                         as userId,
+         u.name                             as userName,
+         u.telephone                        as telephone,
+         a.name                             as areaName,
+         ku.create_time                     as createTime,
+         ku.interface_man                   as interfaceMan,
+         ku.is_can_manage                   as isCanManage,
+         o.org_name                         as systemOrgName,
+         o1.org_name                        as businessOrgName,
+         group_concat(t.type_name)          as abilityNames,
+         ku.sms_signature                   as smsSignature
+      from keeper.keeper_user ku
+      left join market_user u on ku.user_id = u.id
+      left join market_area a on u.area_id = a.id
+      left join keeper.keeper_type t on find_in_set(t.type_id,ku.ability) and t.type_classify = 1
+      left join keeper.keeper_org o on o.org_id = ku.system_org_id
+      left join keeper.keeper_org o1 on o1.org_id = ku.business_org_id
+      where u.telephone = #{telephone} and u.status = 0 and ku.status != -1
+      group by ku.user_id
+    </select>
+
+    <select id="queryKeeperUserByToken" resultType="com.axon.market.common.domain.ikeeper.KeeperUserDomain">
+        select
+        ku.user_id                         as userId,
+        u.name                             as userName,
+        u.telephone                        as telephone,
+        a.name                             as areaName,
+        ku.create_time                     as createTime,
+        ku.interface_man                   as interfaceMan,
+        ku.is_can_manage                   as isCanManage,
+        o.org_name                         as systemOrgName,
+        o1.org_name                        as businessOrgName,
+        group_concat(t.type_name)          as abilityNames,
+        ku.sms_signature                   as smsSignature,
+        ku.token                           as token
+        from keeper.keeper_user ku
+        left join market_user u on ku.user_id = u.id
+        left join market_area a on u.area_id = a.id
+        left join keeper.keeper_type t on find_in_set(t.type_id,ku.ability) and t.type_classify = 1
+        left join keeper.keeper_org o on o.org_id = ku.system_org_id
+        left join keeper.keeper_org o1 on o1.org_id = ku.business_org_id
+        where ku.token = #{token} and u.status = 0 and ku.status != -1
+        group by ku.user_id
+    </select>
+
+    <select id="checkCustomerBeMaintenanceByKeeperUser" resultType="int">
+        select
+            count(0)
+        from keeper.keeper_user_maintain m
+        where m.maintain_user_id = #{userId}
+        and m.user_phone = #{customerPhone}
+    </select>
+
+    <select id="queryInterfaceManUnderSameOrg" resultType="java.util.Map">
+        select
+            u1.id        as id,
+            u1.name      as name
+        from keeper.keeper_user ku1 left join market_user u1 on ku1.user_id = u1.id
+        where ku1.is_can_manage = 1
+        and u1.status = 0
+        and u1.area_id = (
+            select u.area_id
+            from keeper.keeper_user ku left join market_user u on ku.user_id = u.id
+            where ku.token = #{token}
+        )
+    </select>
+
+    <select id="queryMyOrgByToken" resultType="java.util.Map">
+         select
+           o.org_name               as businessOrgName,
+           o1.org_name              as systemOrgName,
+            o.comments              as comments,
+            group_concat(u.name)    as groupUsers
+        from keeper.keeper_user ku
+        left join keeper.keeper_user ku1 on ku.business_org_id = ku1.business_org_id and ku.system_org_id = ku1.system_org_id
+        left join market_user u on ku1.user_id = u.id
+        left join keeper.keeper_org o on ku.business_org_id = o.org_id
+        left join keeper.keeper_org o1 on ku.system_org_id = o1.org_id
+        where ku.token = #{token} and u.id != ku.user_id;
+    </select>
+
+    <select id="queryAuditingSmsSignatureCount" resultType="int">
+        select count(0) from keeper.keeper_audit_sms_signature s
+        left join keeper.keeper_user u on s.user_id = u.user_id
+        where u.audit_user = #{userId} and s.state = 1 and u.status not in (-1,3)
+    </select>
+
+    <select id="queryAuditingSmsSignatureByPage" resultType="com.axon.market.common.domain.ikeeper.SmsSignatureAuditDomain">
+         select
+            s.id                                    as id,
+            s.user_id                               as userId,
+            u.sms_signature                         as currentSmsSignature,
+            s.auditing_sms_signature                as auditingSmsSignature,
+            s.state                                 as state,
+            s.create_time                           as createTime
+        from keeper.keeper_audit_sms_signature s
+        left join keeper.keeper_user u on s.user_id = u.user_id
+        where u.audit_user = #{userId} and s.state = 1
+        and u.status not in (-1,3)
+    </select>
+
+    <select id="queryMySmsSignature" resultType="java.lang.String">
+        select u.sms_signature from keeper.keeper_user u where u.token = #{token}
+    </select>
+
+    <insert id="insertKeeperUser">
+        insert into keeper.keeper_user
+        (
+            user_id,
+            interface_man,
+            is_can_manage,
+            system_org_id,
+            business_org_id,
+            ability,
+            sms_signature,
+            audit_user,
+            status,
+            create_time,
+            create_user
+        )
+        values
+        (
+            #{userId},
+            #{interfaceMan},
+            #{isCanManage},
+            #{systemOrgId},
+            #{businessOrgId},
+            #{ability},
+            #{smsSignature},
+            #{auditUser},
+            0,
+            sysdate(),
+            #{createUser}
+        )
+    </insert>
+
+
+    <insert id="insertAuditKeeperUserSmsSignature">
+        insert into keeper.keeper_audit_sms_signature
+        (
+            user_id,
+            auditing_sms_signature,
+            state,
+            create_time
+        )
+        values
+        (
+            #{userId},
+            #{newSmsSignature},
+            1,
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateKeeperUser">
+        update keeper.keeper_user u set
+          u.interface_man     = #{interfaceMan},
+          u.system_org_id     = #{systemOrgId},
+          u.business_org_id   = #{businessOrgId},
+          u.ability           = #{ability},
+          u.audit_user        = #{auditUser},
+          u.update_time       = sysdate(),
+          u.update_user       = #{updateUser}
+        where u.user_id = #{userId}
+    </update>
+
+    <update id="handleKeeperUserStatus">
+        update  keeper.keeper_user set
+          status = #{status}
+        where user_id = #{userId}
+    </update>
+
+    <update id="updateKeeperUserToken">
+        update keeper.keeper_user u set u.token = #{token} where u.user_id = #{userId}
+    </update>
+
+    <update id="auditSmsSignature">
+        update keeper.keeper_audit_sms_signature s,keeper.keeper_user u set
+        s.state = if(#{auditResult} = 'approve', 2, 3),
+        s.audit_time = sysdate(),
+        s.audit_result_desc = #{auditResultDesc},
+        u.sms_signature = if(#{auditResult} = 'approve', s.auditing_sms_signature, u.sms_signature)
+        where s.id = #{auditSmsSignatureId}
+        and s.user_id = u.user_id
+        and s.state = 1
+    </update>
+
+    <update id="deleteUnAuditSmsSignature">
+        update keeper.keeper_audit_sms_signature s set
+            s.state = -1
+        where s.user_id = #{userId} and s.state = 1
+    </update>
+
+    <delete id="deleteKeeperUser">
+        delete from keeper.keeper_user where user_id = #{userId} and create_user = #{loginUserId}
+    </delete>
+
+    <select id="querySystemOrgByOrgId" resultType="java.lang.Integer">
+        select
+        count(1)
+        from keeper.keeper_user u
+        where u.system_org_id = #{orgId}
+    </select>
+
+    <select id="queryBusinessOrgByOrgId" resultType="java.lang.Integer">
+        select
+        count(1)
+        from keeper.keeper_user u
+        where u.business_org_id = #{orgId}
+    </select>
+
+</mapper>

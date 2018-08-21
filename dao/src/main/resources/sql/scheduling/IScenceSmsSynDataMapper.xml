@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.scheduling.IScenceSmsSynDataMapper">
+    
+    <insert id="insertConfScene" parameterType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        insert into pdc_aide.conf_scene(id
+                                        ,name
+                                        ,type_id
+                                        ,send_number
+                                        ,begin_time
+                                        ,end_time
+                                        ,isclient
+                                        ,iswebsite
+                                        ,islocate
+                                        ,isua
+                                        ,isimei
+                                        ,ll_type
+                                        ,ll_number
+                                        ,ctime
+                                        ,editer
+                                        ,flag
+                                        ,isUpdate
+                                        ,channelType
+                                        ,iskeys
+                                        ,searchKeyWord
+                                        )
+        select #{serialNum},#{scenceName},5,#{accessNum},#{beginTime},#{endTime},#{matchClient},
+                #{matchSite},#{matchPosition},0,#{matchTerminal},0,0,now(),#{editor},1,1,1,#{matchKeywords},#{keywords}
+    </insert>
+    
+    <insert id="insertCdr" parameterType="com.axon.market.common.domain.scheduling.CdrDomain" useGeneratedKeys="true" keyProperty="id">
+         insert into pdc.cdr(
+                                areano
+                                ,uid
+                                ,sp_code
+                                ,res_title
+                                ,typeid
+                                ,ct_id1
+                                ,ct_id2
+                                ,res_link
+                                ,productid
+                                ,res_status
+                                ,res_saveday
+                                ,is_top
+                                ,is_autosend
+                                ,res_editer
+                                ,res_edittime
+                                ,res_lasttime
+                                )
+         select 99999,0,'axon',#{resTitle},17,53,236,'','0',0,0,0,0,'axon',now(),now()
+    </insert>
+
+    <!-- 插入表pdc_aide.conf_scene_client-->
+    <insert id="insertSceneClient" >
+        insert into pdc_aide.conf_scene_client(
+                                                 scene_id
+                                                ,client_id
+                                                ,ctime
+                                                ,editer
+                                                )
+         values
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+             #{sceneId},#{item},now(),#{editor}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 插入表pdc_aide.conf_scene_imei-->
+    <insert id="insertSceneImei">
+        insert into pdc_aide.conf_scene_imei(scene_id,imei_id,ctime)
+        values
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            #{sceneId},#{item},now()
+            )
+        </foreach>
+    </insert>
+
+
+    <!-- 插入表pdc_aide.conf_scene_message-->
+    <insert id="insertSceneMessage">
+        insert into pdc_aide.conf_scene_message(scene_id,messageType,message_id,ctime,editer)
+        values (#{sceneId},1,#{cdrId},now(),#{editor})
+    </insert>
+
+    <!-- 插入表pdc_aide.conf_scene_website-->
+    <insert id="insertSceneWebSit" >
+        insert into pdc_aide.conf_scene_website(
+        scene_id
+        ,website_url
+        ,ctime
+        ,editer
+        )
+        values
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            #{sceneId},#{item},now(),#{editor}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 插入表ppdc.p_task-->
+    <insert id="inserPTask" parameterType="com.axon.market.common.domain.scheduling.PTaskDomain"  useGeneratedKeys="true" keyProperty="id">
+          insert into pdc.p_task(
+                                    task_type
+                                    ,push_type
+                                    ,task_title
+                                    ,task_url
+                                    ,product_id
+                                    ,push_name
+                                    ,cid
+                                    ,exe_time
+                                    ,type_id
+                                    ,push_method
+                                    ,if_execute
+                                    ,ctime
+                                    ,user_num
+                                    ,success_num
+                                    ,ischecked
+                                    ,click_pv
+                                    ,click_uv
+                                    ,where_str
+                                    ,sp_num
+                                    ,Account_id
+                                    ,areano
+                                    ,uid
+                                    ,status
+                                    ,addtest
+                                    ,is_mutex
+                                    ,is_second
+                                    ,is_timing
+                                    ,addEmployees
+                                    ,module_id
+                                    ,task_filter
+                                    ,is_show
+                                    ,pseudo_check_status )
+          select 0,7,#{taskTitle},#{taskUrl},'0',#{content},#{cId},UNIX_TIMESTAMP(now()),5,2,1,UNIX_TIMESTAMP(now()),#{userNum},0,1,0,0,#{whereStr},#{spNum},1,99999,0,1,0,1,0,0,0,0,'6',0,0
+    </insert>
+
+
+    <insert id="insertSceneTask" parameterType="com.axon.market.common.domain.scheduling.PSceneTask">
+        insert into pdc.scene_task(
+                                task_id
+                                ,scene_id
+                                ,begin_time
+                                ,end_time
+                                ,where_str
+                                ,Isrepeat
+                                ,user_filter
+                                ,priority
+                                )
+        select #{taskId},#{sceneId},UNIX_TIMESTAMP(#{beginTime}),UNIX_TIMESTAMP(#{endTime}),#{whereStr},0,'',999
+    </insert>
+
+    <select id="queryConfSceneIdByName" resultType="string" parameterType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        select id from pdc_aide.conf_scene where name = #{scenceName}
+    </select>
+
+    <select id="queryPTaskIdByName" resultType="string" parameterType="com.axon.market.common.domain.scheduling.PTaskDomain">
+        select id from pdc.p_task where task_title = #{taskTitle}
+    </select>
+
+    <select id="queryPTaskByName" resultType="com.axon.market.common.domain.scheduling.PTaskDomain">
+        select id as id,task_title as taskTitle,task_url as taskUrl,push_name as content,cid as cId,user_num as userNum,
+        where_str as whereStr,sp_num as spNum,if_execute as ifExecute
+        from pdc.p_task where task_title  = #{taskTitle}
+    </select>
+
+    <select id="queryPTaskById" resultType="com.axon.market.common.domain.scheduling.PTaskDomain">
+        select id as id,task_title as taskTitle,task_url as taskUrl,push_name as content,cid as cId,user_num as userNum,
+        where_str as whereStr,sp_num as spNum,if_execute as ifExecute
+        from pdc.p_task where id  = #{taskId}
+    </select>
+
+    <select id="querySceneIdByTaskId" resultType="string">
+        select scene_id as sceneId from pdc.scene_task where task_id = #{pTaskId}
+    </select>
+    
+    <delete id="deleteConfSceneById">
+        delete from pdc_aide.conf_scene where id = #{confSceneId}
+    </delete>
+
+    <delete id="deleteSceneClientById">
+        delete from pdc_aide.conf_scene_client where scene_id = #{confSceneId}
+    </delete>
+
+    <delete id="deleteSceneImeiById">
+        delete from pdc_aide.conf_scene_imei where scene_id = #{confSceneId}
+    </delete>
+
+    <delete id="deleteSceneMessageById">
+        delete from pdc_aide.conf_scene_message where scene_id = #{confSceneId}
+    </delete>
+
+    <delete id="deleteSceneWebSitById">
+        delete from pdc_aide.conf_scene_website where scene_id = #{confSceneId}
+    </delete>
+    
+    <delete id="deleteSceneTask">
+        delete from pdc.scene_task where task_id = #{pTaskId}
+    </delete>
+
+    <delete id="deletePTaskById">
+        delete from pdc.p_task where id = #{pTaskId}
+    </delete>
+
+    <update id="updatePTaskStatus" parameterType="com.axon.market.common.domain.scheduling.PTaskDomain">
+        update pdc.p_task set if_execute  = #{ifExecute} where id = #{id}
+    </update>
+
+    <update id="createPhoneTable">
+        create table  ${tableName} (phone varchar(20)) ENGINE=InnoDB DEFAULT CHARSET=utf8
+    </update>
+
+    <insert id="syncPhone">
+        insert into ${tableName}(
+        phone
+        )
+        values
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            #{item}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

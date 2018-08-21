@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.itag.ITagMapper">
+
+    <select id="queryAllTagCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_tag as t
+        where t.status = 0
+        <if test="searchContent != null and searchContent != ''">
+            and t.name like concat('%', '${searchContent}', '%')
+        </if>
+    </select>
+
+    <select id="queryAllTags" resultType="com.axon.market.common.domain.itag.TagDomain">
+        select
+            t.id as id,
+            t.name as name,
+            t.db_schema as dbSchema,
+            t.table_name as tableName,
+            t.phone_column_name as phoneColumnName,
+            t.area_column_name as areaColumnName,
+            t.data_time as dataTime,
+            t.need_auto_fetch as needAutoFetch,
+            t.remote_server_id as remoteServerId,
+            s.name as remoteServerName,
+            t.remote_file as remoteFile,
+            t.execute_time as executeTime,
+            t.interval_time as intervalTime,
+            t.create_user as createUser,
+            u.name as createUserName,
+            t.create_time as createTime,
+            t.status as status,
+            t.remarks as remarks,
+            t.refresh_result as refreshResult,
+            t.refresh_result_reason as refreshResultReason,
+            t.last_refresh_total_count as lastRefreshTotalCount,
+            t.last_refresh_success_count as lastRefreshSuccessCount,
+            t.last_refresh_fail_count as lastRefreshFailCount
+        from market_tag as t
+        left join market_user as u on u.id = t.create_user
+        left join market_remote_server as s on t.remote_server_id = s.id
+        where t.status = 0 and t.need_auto_fetch = 0
+    </select>
+
+    <select id="queryTagsByPage" resultType="com.axon.market.common.domain.itag.TagDomain">
+        select
+            t.id as id,
+            t.name as name,
+            t.db_schema as dbSchema,
+            t.table_name as tableName,
+            t.phone_column_name as phoneColumnName,
+            t.area_column_name as areaColumnName,
+            t.data_time as dataTime,
+            t.need_auto_fetch as needAutoFetch,
+            t.remote_server_id as remoteServerId,
+            s.name as remoteServerName,
+            t.remote_file as remoteFile,
+            t.execute_time as executeTime,
+            t.interval_time as intervalTime,
+            t.create_user as createUser,
+            u.name as createUserName,
+            t.create_time as createTime,
+            t.status as status,
+            t.remarks as remarks,
+            t.refresh_result as refreshResult,
+            t.refresh_result_reason as refreshResultReason,
+            t.last_refresh_total_count as lastRefreshTotalCount,
+            t.last_refresh_success_count as lastRefreshSuccessCount,
+            t.last_refresh_fail_count as lastRefreshFailCount
+        from market_tag as t
+        left join market_user as u on u.id = t.create_user
+        left join market_remote_server as s on t.remote_server_id = s.id
+        where t.status = 0
+        <if test="searchContent != null and searchContent != ''">
+            and t.name like concat('%', '${searchContent}', '%')
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryTagById" resultType="com.axon.market.common.domain.itag.TagDomain">
+        select
+            t.id as id,
+            t.name as name,
+            t.db_schema as dbSchema,
+            t.table_name as tableName,
+            t.phone_column_name as phoneColumnName,
+            t.area_column_name as areaColumnName,
+            t.data_time as dataTime,
+            t.need_auto_fetch as needAutoFetch,
+            t.remote_server_id as remoteServerId,
+            s.name as remoteServerName,
+            t.remote_file as remoteFile,
+            t.execute_time as executeTime,
+            t.interval_time as intervalTime,
+            t.create_user as createUser,
+            u.name as createUserName,
+            t.create_time as createTime,
+            t.status as status,
+            t.remarks as remarks,
+            t.refresh_result as refreshResult,
+            t.refresh_result_reason as refreshResultReason,
+            t.last_refresh_total_count as lastRefreshTotalCount,
+            t.last_refresh_success_count as lastRefreshSuccessCount,
+            t.last_refresh_fail_count as lastRefreshFailCount
+        from market_tag as t
+        left join market_user as u on u.id = t.create_user
+        left join market_remote_server as s on t.remote_server_id = s.id
+        where t.status = 0 and t.id = #{tagId}
+    </select>
+
+    <select id="queryTagByName" resultType="com.axon.market.common.domain.itag.TagDomain">
+        select
+            t.id as id,
+            t.name as name,
+            t.db_schema as dbSchema,
+            t.table_name as tableName,
+            t.phone_column_name as phoneColumnName,
+            t.area_column_name as areaColumnName,
+            t.data_time as dataTime,
+            t.need_auto_fetch as needAutoFetch,
+            t.remote_server_id as remoteServerId,
+            s.name as remoteServerName,
+            t.remote_file as remoteFile,
+            t.execute_time as executeTime,
+            t.interval_time as intervalTime,
+            t.create_user as createUser,
+            u.name as createUserName,
+            t.create_time as createTime,
+            t.status as status,
+            t.remarks as remarks,
+            t.refresh_result as refreshResult,
+            t.refresh_result_reason as refreshResultReason,
+            t.last_refresh_total_count as lastRefreshTotalCount,
+            t.last_refresh_success_count as lastRefreshSuccessCount,
+            t.last_refresh_fail_count as lastRefreshFailCount
+        from market_tag as t
+        left join market_user as u on u.id = t.create_user
+        left join market_remote_server as s on t.remote_server_id = s.id
+        where t.status = 0 and t.name = #{name}
+    </select>
+
+    <select id="queryTagByTableName" resultType="com.axon.market.common.domain.itag.TagDomain">
+        select
+            t.id as id,
+            t.name as name,
+            t.db_schema as dbSchema,
+            t.table_name as tableName,
+            t.phone_column_name as phoneColumnName,
+            t.area_column_name as areaColumnName,
+            t.data_time as dataTime,
+            t.need_auto_fetch as needAutoFetch,
+            t.remote_server_id as remoteServerId,
+            s.name as remoteServerName,
+            t.remote_file as remoteFile,
+            t.execute_time as executeTime,
+            t.interval_time as intervalTime,
+            t.create_user as createUser,
+            u.name as createUserName,
+            t.create_time as createTime,
+            t.status as status,
+            t.remarks as remarks,
+            t.refresh_result as refreshResult,
+            t.refresh_result_reason as refreshResultReason,
+            t.last_refresh_total_count as lastRefreshTotalCount,
+            t.last_refresh_success_count as lastRefreshSuccessCount,
+            t.last_refresh_fail_count as lastRefreshFailCount
+        from market_tag as t
+        left join market_user as u on u.id = t.create_user
+        left join market_remote_server as s on t.remote_server_id = s.id
+        where t.status = 0 and t.table_name = #{tableName} and t.db_schema = #{dbSchema}
+    </select>
+
+    <select id="queryUserPhoneOfCreateModelByModelId" resultType="java.lang.String">
+        select
+        u.telephone
+        from market_user as u
+        left join market_tag as t on t.create_user = u.id
+        where t.id = #{tagId}
+    </select>
+
+    <!-- 插入标签信息-->
+    <insert id="createTag" parameterType="com.axon.market.common.domain.itag.TagDomain">
+        insert into market_tag
+        (
+            name,
+            catalog_id,
+            catalog_name,
+            db_schema,
+            table_name,
+            phone_column_name,
+            area_column_name,
+            need_auto_fetch,
+            remote_server_id,
+            remote_file,
+            execute_time,
+            interval_time,
+            create_user,
+            create_time,
+            status,
+            remarks
+        )
+        values
+        (
+            #{info.name},
+            '1',
+            '标签管理',
+            #{info.dbSchema},
+            #{info.tableName},
+            #{info.phoneColumnName},
+            #{info.areaColumnName},
+            #{info.needAutoFetch},
+            #{info.remoteServerId},
+            #{info.remoteFile},
+            #{info.executeTime},
+            #{info.intervalTime},
+            #{info.createUser},
+            #{info.createTime},
+            0,
+            #{info.remarks}
+        )
+    </insert>
+
+    <!-- 更新标签信息-->
+    <update id="updateTag" parameterType="com.axon.market.common.domain.itag.TagDomain">
+        update market_tag set
+        <if test="info.name != null">
+            name = #{info.name},
+        </if>
+        <if test="info.catalogId != null">
+            catalog_id = '1',
+        </if>
+        <if test="info.catalogName != null">
+            catalog_name = '标签管理',
+        </if>
+        <if test="info.dbSchema != null">
+            db_schema = #{info.dbSchema},
+        </if>
+        <if test="info.tableName != null">
+            table_name = #{info.tableName},
+        </if>
+        <if test="info.phoneColumnName != null">
+            phone_column_name = #{info.phoneColumnName},
+        </if>
+        <if test="info.areaColumnName != null">
+            area_column_name = #{info.areaColumnName},
+        </if>
+        <if test="info.needAutoFetch != null">
+            need_auto_fetch = #{info.needAutoFetch},
+        </if>
+        <if test="info.remoteServerId != null">
+            remote_server_id = #{info.remoteServerId},
+        </if>
+        <if test="info.remoteFile != null">
+            remote_file = #{info.remoteFile},
+        </if>
+        <if test="info.executeTime != null">
+            execute_time = #{info.executeTime},
+        </if>
+        <if test="info.intervalTime != null">
+            interval_time = #{info.intervalTime},
+        </if>
+        <if test="info.lastUpdateUser != null">
+            last_update_user = #{info.lastUpdateUser},
+        </if>
+        <if test="info.lastUpdateTime != null">
+            last_update_time = #{info.lastUpdateTime},
+        </if>
+        <if test="info.remarks != null">
+            remarks = #{info.remarks},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <!-- 删除标签信息-->
+    <update id="deleteTag">
+        update market_tag set
+            last_update_user = #{userId},
+            last_update_time = #{time},
+            status = -1
+        where id = #{id}
+    </update>
+
+    <select id="queryAllTagSchemaAndNames" resultType="java.util.Map">
+        select
+            t.table_name as tableName,
+            t.db_schema as schemaName
+        from market_tag as t
+        where t.status = 0
+    </select>
+
+    <update id="updateTagRefreshInfo">
+        update market_tag set
+            data_time = #{refreshTime},
+            refresh_result = #{result},
+            refresh_result_reason = #{resultReason},
+            last_refresh_total_count = #{totalCount},
+            last_refresh_success_count = #{successCount},
+            last_refresh_fail_count = #{failCount}
+        where id = #{tagId}
+    </update>
+
+    <select id="queryTagRefreshTimeByTagId" resultType="java.lang.String">
+        select
+            t.data_time
+        from market_tag as t
+        where t.id = #{tagId}
+    </select>
+
+    <update id="setTagStatus">
+        update market_tag set
+        status = #{status}
+        where id = #{id}
+    </update>
+
+</mapper>

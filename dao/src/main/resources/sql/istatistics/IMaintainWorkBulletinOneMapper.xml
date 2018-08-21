@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.istatistics.IMaintainWorkBulletinOneMapper">
+
+    <select id="queryMaintainWorkBulletinOne" resultType="java.util.Map">
+SELECT acct_month as monthYear,
+       city_name as cityName,
+       CONCAT(ROUND(fee_rate,1),'%') as feeRate,
+       CONCAT(ROUND(uv_rate,1),'%') as uvRate,
+       CONCAT(ROUND(fee2_rate,1),'%') as feeTwoRate,
+       CONCAT(ROUND(uv2_rate,1),'%') as uvTwoRate,
+       CONCAT(ROUND(2gwangl_rate,1),'%') as twoGWang,
+       CONCAT(ROUND(4gwangl_rate,1),'%') as fourGWang,
+       CONCAT(ROUND(2zhongd_rate,1),'%') as twoZhongd,
+       CONCAT(ROUND(4zhongd_rate,1),'%') as fourZhongd,
+       ROUND(arpu,2) as arpu,ROUND(cha,2) as cha FROM analysisdb.monthly_report WHERE acct_month = #{yearMonth};
+    </select>
+
+</mapper>

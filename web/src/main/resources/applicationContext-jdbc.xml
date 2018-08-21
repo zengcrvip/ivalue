@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--******************* greenPlum database config start *******************-->
+    <bean id="greenPlumDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${mpp.driver}"/>
+        <property name="url" value="${mpp.url}"/>
+        <property name="username" value="${mpp.username}"/>
+        <property name="password" value="${mpp.password}"/>
+        <property name="initialSize" value="${mpp.initialSize}"/>
+        <property name="maxActive" value="${mpp.maxActive}"/>
+        <property name="maxIdle" value="${mpp.maxIdle}"/>
+        <property name="minIdle" value="${mpp.minIdle}"/>
+        <property name="validationQuery" value="${mpp.validationQuery}"/>
+    </bean>
+
+    <!--mpp 数据库需要拼接代码，使用如下bean执行SQL命令-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource">
+            <ref bean="greenPlumDataSource"/>
+        </property>
+    </bean>
+    <!--******************* mpp database config end *******************-->
+
+    <!--******************* meta database config start *******************-->
+    <bean id="metaDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${meta.driver}"/>
+        <property name="url" value="${meta.url}"/>
+        <property name="username" value="${meta.username}"/>
+        <property name="password" value="${meta.password}"/>
+        <property name="initialSize" value="${meta.initialSize}"/>
+        <property name="maxActive" value="${meta.maxActive}"/>
+        <property name="maxIdle" value="${meta.maxIdle}"/>
+        <property name="minIdle" value="${meta.minIdle}"/>
+        <property name="validationQuery" value="${meta.validationQuery}"/>
+    </bean>
+
+    <bean id="metaSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="metaDataSource"/>
+        <property name="configLocation" value="classpath:mybatisConfig.xml"/>
+        <property name="mapperLocations" value="classpath*:sql/i*/*.xml"/>
+    </bean>
+
+    <!--自动扫描数据库访问接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.axon.market.dao.mapper"/>
+        <property name="markerInterface" value="com.axon.market.dao.base.IMyBatisMapper"/>
+        <property name="sqlSessionFactoryBeanName" value="metaSqlSessionFactory"/>
+    </bean>
+
+    <!--注解事务管理-->
+    <bean id="transactionManagerMeta" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="metaDataSource"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManagerMeta"/>
+    <!--******************* meta database config end *******************-->
+
+    <!--******************* scheduling database config start *******************-->
+    <bean id="scheduling_dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${scheduling.driver}"/>
+        <property name="url" value="${scheduling.url}"/>
+        <property name="username" value="${scheduling.username}"/>
+        <property name="password" value="${scheduling.password}"/>
+        <property name="initialSize" value="${scheduling.initialSize}"/>
+        <property name="maxActive" value="${scheduling.maxActive}"/>
+        <property name="maxIdle" value="${scheduling.maxIdle}"/>
+        <property name="minIdle" value="${scheduling.minIdle}"/>
+        <property name="validationQuery" value="${scheduling.validationQuery}"/>
+    </bean>
+
+    <bean id="schedulingSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="scheduling_dataSource"/>
+        <property name="mapperLocations" value="classpath*:sql/scheduling/*.xml"/>
+    </bean>
+
+    <!--自动扫描数据库访问接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.axon.market.dao.scheduling"/>
+        <property name="markerInterface" value="com.axon.market.dao.base.IMyBatisMapper"/>
+        <property name="sqlSessionFactoryBeanName" value="schedulingSqlSessionFactory"/>
+    </bean>
+    <!--******************* scheduling database config end *******************-->
+
+</beans>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IScenceSmsRuleMapper">
+
+    <select id="queryScenceRuleTotal" resultType="int">
+        select count(1) as count from
+        (
+        select m.scence_name,p.scence_type_name,m.channel_name,m.match_client,m.match_keywords,m.match_position,
+        m.match_site,m.match_terminal,m.status
+        from market_scence_sms m join market_scence_sms_type p  on m.scence_type = p.scence_type_id
+        where 1=1 and status != 2
+        <if test="sceneceName != ''"  >
+            and  m.scence_name like  concat('%',#{sceneceName},'%')
+        </if>
+        <if test="scenceStatus != ''"  >
+            and  m.status = #{scenceStatus}
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryScenceRuleByPage" resultType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        select m.id as id, m.scence_name as scenceName, m.scence_type as scenceType, p.scence_type_name as scenceTypeName,m.channel_name as channelName,m.match_client as matchClient,m.match_position as matchPosition,
+                m.match_site as matchSite,m.match_terminal as matchTerminal,m.status as status,m.match_keywords as matchKeywords,
+                m.client_names as clientNames,m.terminal_names as terminalNames
+        from market_scence_sms m
+        join market_scence_sms_type p  on m.scence_type = p.scence_type_id
+        where 1=1 and status != 2
+        <if test="sceneceName != ''"  >
+            and  m.scence_name like  concat('%',#{sceneceName},'%')
+        </if>
+        <if test="scenceStatus != ''"  >
+            and  m.status = #{scenceStatus}
+        </if>
+        order by m.create_time DESC
+        limit #{limit} offset #{offset}
+    </select>
+
+    <update id="deleteSenceSmsRuleById">
+        update market_scence_sms r
+        set
+        r.status = 2
+        where r.id = #{id}
+    </update>
+
+    <select id="queryScenceClientTotal" resultType="int">
+        select count(1) as count from
+        (
+         select c.client_id as id,c.client_name as name,s.ct_name2 as type2,s.ct_name1 as type1 from b_client c
+        join b_ct_sort s on c.client_type_id = s.ct_id2
+        where 1=1
+        <if test="clientName != ''"  >
+            and  c.client_name like  concat('%',#{clientName},'%')
+        </if>
+        <if test="clientType != '-1'"  >
+            and  s.ct_id1 = #{clientType}
+        </if>
+        <if test="clientType2 != '-1'"  >
+            and  s.ct_id2 = #{clientType2}
+        </if>
+        order by c.client_id
+        ) tab
+    </select>
+
+    <select id="queryScenceClientByPage" resultType="com.axon.market.common.domain.iscene.ScenceSmsClientDomain">
+        select c.client_id as id,c.client_name as name,s.ct_name2 as type2,s.ct_name1 as type1 from b_client c
+        join b_ct_sort s on c.client_type_id = s.ct_id2
+        where 1=1
+        <if test="clientName != ''"  >
+            and  c.client_name like  concat('%',#{clientName},'%')
+        </if>
+        <if test="clientType != '-1'"  >
+            and  s.ct_id1 = #{clientType}
+        </if>
+        <if test="clientType2 != '-1'"  >
+            and  s.ct_id2 = #{clientType2}
+        </if>
+        order by c.client_id
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="querySenceRuleType" resultType="java.util.Map">
+         select scence_type_id as id,scence_type_name as name from market_scence_sms_type
+    </select>
+
+    <select id="querySenceRuleSmsType" resultType="java.util.Map">
+        select id as id,scene_name as name from conf_new_scene where state = 1 order by scene_name
+    </select>
+
+    <select id="querySenceClientTypeOne" resultType="java.util.Map">
+        select distinct ct_id1 as id ,ct_name1 as name from b_ct_sort where ct_id1 in (50,82)
+    </select>
+
+    <select id="querySenceClientTypeTwo" resultType="java.util.Map">
+        select distinct ct_id2 as id ,ct_name2 as name  from b_ct_sort
+        where ct_id1 = #{scenceClientType}
+    </select>
+
+    <select id="queryScenceTerminalTotal" resultType="int">
+        select count(1) FROM
+        (
+        select b.id as id,CONCAT(b.brand,b.name) as name from b_terminal b
+        ) t where 1=1
+        <if test="terminalName != ''"  >
+            and  t.name like  concat('%',#{terminalName},'%')
+        </if>
+    </select>
+
+    <select id="queryScenceTerminalByPage" resultType="java.util.Map">
+        select id,name FROM
+        (
+        select b.id as id,CONCAT(b.brand,b.name) as name from b_terminal b
+        ) t where 1=1
+        <if test="terminalName != ''"  >
+            and  t.name like  concat('%',#{terminalName},'%')
+        </if>
+        order by t.id
+        limit #{limit} offset #{offset}
+    </select>
+
+
+    <!-- 插入表信息-->
+    <insert id="createSceneRule" parameterType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        insert into market_scence_sms
+        (
+        scence_name,
+        scence_type,
+        channel_name,
+        access_num,
+        begin_time,
+        end_time,
+        match_client,
+        client_ids,
+        match_keywords,
+        keywords,
+        match_position,
+        positions,
+        match_site,
+        web_sits,
+        match_terminal,
+        terminals,
+        client_names,
+        terminal_names,
+        status
+        )
+        values
+        (
+        #{scenceName},
+        #{scenceType},
+        '短彩信',
+        #{accessNum},
+        #{beginTime},
+        #{endTime},
+        #{matchClient},
+        #{clientIds},
+        #{matchKeywords},
+        #{keywords},
+        #{matchPosition},
+        #{positions},
+        #{matchSite},
+        #{webSits},
+        #{matchTerminal},
+        #{terminals},
+        #{clientNames},
+        #{terminalNames},
+        #{status}
+        )
+    </insert>
+
+    <update id="updateSceneRule" parameterType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        update market_scence_sms
+        set     scence_type  = #{scenceType},
+                 access_num  = #{accessNum},
+                 begin_time  = #{beginTime},
+                 end_time  = #{endTime},
+                match_client = #{matchClient},
+                client_ids   = #{clientIds},
+                match_keywords = #{matchKeywords},
+                keywords =  #{keywords},
+                match_position = #{matchPosition},
+                positions = #{positions},
+                match_site = #{matchSite},
+                web_sits = #{webSits},
+                match_terminal = #{matchTerminal},
+                terminals = #{terminals},
+                client_names = #{clientNames},
+                terminal_names = #{terminalNames},
+                status = #{status}
+        where id = #{id}
+    </update>
+
+    <select id="querySenceRuleById" resultType="com.axon.market.common.domain.iscene.ScenceSmsRuleDomain">
+        select m.id as id, m.scence_name as scenceName, m.scence_type as scenceType, p.scence_type_name as scenceTypeName,m.channel_name as channelName,
+               m.match_client as matchClient,m.client_ids as clientIds,m.client_names as clientNames,
+               m.match_keywords as matchKeywords,m.keywords as keywords,
+               m.match_position as matchPosition,m.positions as positions,
+               m.match_site as matchSite,m.web_sits as webSits,
+               m.match_terminal as matchTerminal,m.terminals as terminals,m.terminal_names as terminalNames,
+               m.access_num as accessNum,m.begin_time as beginTime,m.end_time as endTime,
+               m.status as status
+        from market_scence_sms m
+        join market_scence_sms_type p  on m.scence_type = p.scence_type_id
+        where m.id =  #{senceRuleId}
+    </select>
+
+</mapper>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.IRoleMapper">
+
+    <select id="queryRolesCount" resultType="int">
+        select
+          count(0)
+        from market_role r
+        where r.status = 0
+        <if test="condition != null and condition.name != null">
+            and r.name like concat('%',#{condition.name},'%')
+        </if>
+    </select>
+
+    <select id="queryRolesByPage" resultType="com.axon.market.common.domain.isystem.RoleDomain">
+        select
+            r.id                  as id,
+            r.name                as name,
+            r.create_time         as createTime,
+            r.create_user         as createUser,
+            r.permission_menu     as permissionMenuIds,
+            r.permission_data     as permissionDataIds,
+            r.home_page_id        as homePageId,
+            u.name                as createUserName,
+            r.type                as type,
+            r.remarks             as remarks,
+           (select group_concat(m.title) from market_menu m where find_in_set(m.id,r.permission_menu)) as permissionMenuNames,
+           (select group_concat(concat(m.id,"^",m.title)) from market_menu m where find_in_set(m.id,r.permission_menu)) as permissionIdNames,
+           (select group_concat(d.name) from market_permission_data d where find_in_set(d.id,r.permission_data)) as permissionDataNames
+        from market_role r
+        left join market_user u on r.create_user = u.id
+        where r.status = 0
+        <if test="condition != null and condition.name != null">
+            and r.name like concat('%',#{condition.name},'%')
+        </if>
+        order by r.${sortColumn} desc
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="queryAllRole" resultType="java.util.Map">
+        select
+            r.id                  as id,
+            r.name                as name,
+            r.type                as type,
+            'role0'              as pId
+        from market_role r
+        where r.status = 0
+    </select>
+
+    <select id="queryAllMenuPermissions" resultType="java.util.Map">
+        select
+        mm.id	          as id,
+        mm.name           as name,
+        mm.permission     as permission,
+        mm.parentId       as pId,
+        'menu'           as permissionType
+        from (
+        select
+        m.id	as id,
+        m.id as subId,
+        m.title as name,
+        m.permission as permission,
+        m.parent_id as parentId
+        from market_menu m where m.status = 0 order by sort_no
+        )  mm
+    </select>
+
+    <select id="queryAllDataPermissions" resultType="java.util.Map">
+        select
+            d.id                    as id,
+            d.name                  as name,
+            d.permission            as permission,
+            d.parent_id             as pId,
+            'data'                 as permissionType
+        from market_permission_data d
+    </select>
+
+    <select id="queryUserDataPermissionList" resultType="java.util.Map">
+        select
+            d.url                                                               as url,
+            d.permission                                                        as permission,
+            if(find_in_set(d.id,group_concat(r.permission_data)),true,false)   as isContain
+        from market_permission_data d,market_user u,market_role r
+        where u.id = #{userId} and find_in_set(r.id,u.role_ids) and d.url != ''group by d.id
+    </select>
+
+    <select id="queryUserNameUnderRoleByRoleId" resultType="java.lang.String">
+        select
+          u.name
+        from market.market_user u
+        where find_in_set(#{id},u.role_ids)
+    </select>
+
+    <!--select
+    m.url                                                       as url,
+    m.permission                                                as permission,
+    if(find_in_set(m.id,mw.m_permission),true,false)            as result
+    from market_menu m,
+    (
+    select
+    group_concat(r.permission_menu)               as m_permission,
+    group_concat(r.permission_data)               as d_permission
+    from market_role r left join market_user u on find_in_set(r.id,u.role_ids)
+    where u.id = 100012
+    ) mw
+    where m.url != ''
+    union
+    select
+    d.url                                                       as url,
+    d.permission                                                as permission,
+    if(find_in_set(d.id,dw.d_permission),true,false)           as result
+    from market_permission_data d,
+    (
+    select
+    group_concat(r.permission_menu)                   as m_permission,
+    group_concat(r.permission_data)                   as d_permission
+    from market_role r left join market_user u on find_in_set(r.id,u.role_ids)
+    where u.id = 100012
+    ) dw
+    where d.url != ''-->
+
+    <insert id="insertRole">
+        insert into market_role
+        (
+          name,
+          permission_menu,
+          permission_data,
+          home_page_id,
+          remarks,
+          type,
+          create_user,
+          create_time
+        )
+        values
+        (
+          #{role.name},
+          #{role.permissionMenuIds},
+          #{role.permissionDataIds},
+          #{role.homePageId},
+          #{role.remarks},
+          #{role.type},
+          #{role.createUser},
+          sysdate()
+        )
+    </insert>
+
+    <update id="updateRole">
+        update market_role r set
+        <if test="role.name != null">
+            r.name  = #{role.name},
+        </if>
+        <if test="role.permissionMenuIds != null">
+            r.permission_menu  = #{role.permissionMenuIds},
+        </if>
+        <if test="role.permissionDataIds != null">
+            r.permission_data  = #{role.permissionDataIds},
+        </if>
+        r.home_page_id   = #{role.homePageId},
+        r.remarks        = #{role.remarks},
+        r.type           = #{role.type},
+        r.update_user    = #{role.updateUser},
+        r.update_time    = sysdate()
+        where r.id  = #{role.id}
+    </update>
+
+    <update id="deleteRole">
+        update market_role r set
+          r.status  = -1
+        where r.id = #{id}
+    </update>
+</mapper>

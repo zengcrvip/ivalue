@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iconsumption.IPINResultMapper">
+
+    <!-- 分页低销档位分配地市分配结果 -->
+    <select id="queryPINRankAreaByPage" resultType="java.util.Map"
+            parameterType="java.util.Map">
+        select
+        t.id as id,
+        t.monthcode as monthcode,
+        t.batchno as batchno ,
+        t.rankid as rankId,
+        t.rankname as rankname,
+        t.ranktype as ranktype,
+        t.area as area,
+        t.matchno as matchno,
+        t.allocatetime as updatetime
+        from market.pin_rank_area t
+        where 1=1 and t.status != -1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankType != ''">
+            and t.ranktype = #{rankType}
+        </if>
+        order by cast(t.rankid as decimal) asc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!-- 分页查询低销分配结果 -->
+    <select id="queryPINResultByPage" resultType="java.util.Map"
+            parameterType="java.util.Map">
+        select
+        t.id as id,
+        t.monthcode as monthcode,
+        t.batchno as batchno ,
+        t.rankid as rankId,
+        t.rankname as rankname,
+        t.ranktype as ranktype,
+        t.area as area,
+        t.matchno as matchno,
+        t.updatetime as updatetime,
+        IF(a.ID >0,1,0) isallocate
+        from market.pin_result t
+        LEFT JOIN market.pin_rank_area a on t.batchno = a.BATCHNO
+        and t.RANKID = a.RANKID and t.RANKTYPE = a.RANKTYPE and t.AREA=a.AREA and a.STATUS != -1
+        where 1=1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankType != ''">
+            and t.ranktype = #{rankType}
+        </if>
+        order by cast(t.rankid as decimal) asc
+        limit #{limit} offset #{offset}
+    </select>
+
+
+    <!-- 低销分配总条数 -->
+    <select id="queryPINResultTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.pin_result t
+        where 1=1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankType != ''">
+            and t.ranktype = #{rankType}
+        </if>
+    </select>
+
+    <!-- 低销分配匹配总人数 -->
+    <select id="queryPINResultMatchTotal" resultType="int"
+            parameterType="java.util.Map">
+        select COALESCE(sum(t.matchno),0)
+        from market.pin_result t
+        where 1=1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankType != ''">
+            and t.ranktype = #{rankType}
+        </if>
+    </select>
+
+    <!-- 低销档位分配地市总条数 -->
+    <select id="queryPINRankAreaTotal" resultType="int"
+            parameterType="java.util.Map">
+        select count(*)
+        from market.pin_rank_area t
+        where 1=1 and t.status != -1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+        <if test="rankType != ''">
+            and t.ranktype = #{rankType}
+        </if>
+    </select>
+
+    <!-- 低销档位分配地市匹配总人数 -->
+    <select id="queryPINRankAreaMatchTotal" resultType="int"
+            parameterType="java.util.Map">
+        select COALESCE(sum(t.matchno),0)
+        from market.pin_rank_area t
+        where 1=1 and status != -1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="rankname != ''">
+            and t.rankname = #{rankname}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        <if test="monthcode != ''">
+            and t.monthcode = #{monthcode}
+        </if>
+    </select>
+
+    <!-- 查询指定月份批次号 -->
+    <select id="queryLatesBatchByMonth" resultType="java.util.Map"
+            parameterType="java.util.Map">
+        select distinct batchno,status
+        from market.pin_result t
+        where t.monthcode = #{monthcode}
+    </select>
+
+    <!-- 查询已分配低销档位数据 -->
+    <select id="queryAllocatedPINPro" resultType="java.util.Map"
+            parameterType="java.util.Map">
+        select DISTINCT
+        t.rankid as rankid,
+        t.rankname as rankname,
+        t.ranktype as ranktype,
+        t.matchno as matchno
+        from market.pin_rank_area t
+        where 1=1 and t.status != -1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="ranktype != ''">
+            and t.ranktype = #{ranktype}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+        order by cast(t.rankid as decimal) asc
+    </select>
+
+    <!-- 查询未分配低销档位数据 -->
+    <select id="queryUnallocatedPINPro" resultType="java.util.Map"
+            parameterType="java.util.Map">
+        SELECT DISTINCT
+        s.rankid as rankid,
+        s.rankname as rankname,
+        s.matchno as matchno
+        FROM
+        pin_result s
+        WHERE 1= 1 and status != -1
+        <if test="area != '99999' and area != ''">
+            and s.area = #{area}
+        </if>
+        <if test="ranktype != ''">
+            and s.ranktype = #{ranktype}
+        </if>
+        <if test="batchno != ''">
+            and s.batchno = #{batchno}
+        </if>
+    AND s.rankid NOT IN (
+    SELECT
+    t.rankid AS rankid
+    FROM
+    market.pin_rank_area t
+    WHERE 1=1 and t.status != -1
+        <if test="area != '99999' and area != ''">
+            and t.area = #{area}
+        </if>
+        <if test="ranktype != ''">
+            and t.ranktype = #{ranktype}
+        </if>
+        <if test="batchno != ''">
+            and t.batchno = #{batchno}
+        </if>
+    ) order by cast(s.rankid as decimal) asc
+    </select>
+
+    <insert id="insertPINRankArea" parameterType="java.util.Map" >
+        insert into pin_rank_area(monthcode,batchno,rankid,applytime,rankname,ranktype,area,matchno,allocatetime,status)
+        select t.monthcode,t.batchno,t.rankid,sysdate(),t.rankname,t.ranktype,t.area,t.matchno,sysdate(),0 from pin_result t
+        where t.status != -1 and t.monthcode = #{monthcode} and t.batchno = #{batchno} and t.area = #{area} and t.ranktype = #{ranktype} and find_in_set(t.rankid,#{addedlist})
+    </insert>
+
+    <insert id="insertPINResult" >
+        insert into pin_result(monthcode,batchno,rankid,rankname,ranktype,area,matchno,status,updatetime)
+        values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+            (#{item.monthcode},#{item.batchno},#{item.rankid},#{item.rankname},#{item.ranktype},#{item.area},#{item.matchno},0, sysdate())
+        </foreach>
+    </insert>
+
+    <update id="deletePINResult" >
+        update pin_result set status = -1, updatetime = sysdate()
+        where status != -1
+    </update>
+
+    <update id="deletePINRankArea">
+        update pin_rank_area set status = -1, allocatetime = sysdate()
+        where status != -1
+    </update>
+
+    <delete id="deletePINRankAreaBylist" parameterType="java.util.Map">
+        delete from pin_rank_area
+        where status != -1 and monthcode = #{monthcode} and batchno = #{batchno} and area = #{area} and ranktype = #{ranktype} and find_in_set(rankid,#{deletedlist})
+    </delete>
+</mapper>

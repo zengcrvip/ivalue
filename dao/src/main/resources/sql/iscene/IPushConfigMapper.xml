@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IPushConfigMapper">
+
+    <select id="queryPushConfig" resultType="com.axon.market.common.domain.iscene.PushConfigDomain">
+        select
+        id,type,tId,name,sort,isUsed,provinceId
+        from pushconfig
+        where isDelete=0
+        <if test="name != null &amp;&amp; name != ''">
+            and name like concat('%','${name}','%')
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryPushConfigCount" resultType="int">
+        select
+        count(1)
+        from pushconfig
+        where isDelete=0
+        <if test="name != null &amp;&amp; name != ''">
+            and name like concat('%','${name}','%')
+        </if>
+    </select>
+
+    <insert id="addPushConfig" parameterType="com.axon.market.common.domain.iscene.PushConfigDomain">
+
+        insert into pushconfig
+        (
+        type,
+        tId,
+        name,
+        sort,
+        isUsed,
+        editTime,
+        editUserId,
+        editUserName,
+        provinceId,
+        createId
+        )
+        VALUES
+        (
+        #{info.type},
+        #{info.tId},
+        #{info.name},
+        #{info.sort},
+        #{info.isUsed},
+        sysdate(),
+        #{info.editUserId},
+        #{info.editUserName},
+        #{info.provinceId},
+        #{info.createId}
+        )
+
+    </insert>
+    <update id="EditPushConfig">
+        update pushconfig SET
+        type= #{info.type},tId=#{info.tId},name=#{info.name},sort=#{info.sort},isUsed=#{info.isUsed},editTime=sysdate(),
+        editUserId=#{info.editUserId},editUserName=#{info.editUserName}
+        where id=#{info.id}
+    </update>
+
+    <update id="deletePushConfig">
+        update pushconfig set
+        isDelete = '-1'
+        where id = #{id}
+    </update>
+</mapper>

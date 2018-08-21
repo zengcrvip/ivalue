@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.ITagAuditHistoryMapper">
+
+    <insert id="insertTagAuditHistory">
+        insert into market_tag_audit_history values
+        (
+            #{info.tagId},
+            #{info.auditUser},
+            #{info.auditResult},
+            #{info.remarks},
+            sysdate()
+        )
+    </insert>
+
+    <select id="queryTagAuditHistoryDomain" resultType="com.axon.market.common.domain.isystem.TagAuditHistoryDomain">
+        select
+            h.audit_user                                          as auditUser,
+            h.audit_result                                        as auditResult,
+            h.remarks                                             as remarks,
+            h.audit_time                                          as auditTime,
+            u.tag_audit_users                                     as auditUsers,
+            u1.name                                               as auditUserName
+        from
+            market_tag_audit_history h
+        left join market_tags t
+        on h.tag_id = t.id
+        left join market_users u on t.origin_user = u.id
+        left join market_users u1 on h.audit_user = u1.id
+        where h.tag_id = #{tagId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryTagAuditProgress" resultType="com.axon.market.common.domain.isystem.TagAuditHistoryDomain">
+        select
+            h.audit_result                                                    as auditResult,
+            h.audit_time                                                      as auditTime,
+            h.remarks                                                         as remarks,
+            h.audit_user                                                      as auditUser,
+            u.name                                                            as auditUserName
+        from
+            market_tag_audit_history h
+        left join market_users u on h.audit_user = u.id
+        where
+            h.tag_id = #{tagId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryAllTagAuditUser" resultType="java.util.Map">
+        select
+            u1.tag_audit_users                                as tagAuditUsers,
+            u2.id                                             as id,
+            u2.name                                           as name
+        from
+            ( select tag_audit_users from market_users where id = #{userId} ) u1, market_users u2
+        where
+            u1.tag_audit_users like replace ( '%,"auditUser":"@",%', '@', u2.id )
+    </select>
+
+    <delete id="deleteTagAuditHistory">
+        delete from market_tag_audit_history
+        where tag_id =  #{tagId}
+    </delete>
+
+</mapper>

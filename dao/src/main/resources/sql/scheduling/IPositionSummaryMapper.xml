@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.scheduling.IPositionSummaryMapper">
+
+    <select id="queryPositionSummaryByDay" resultType="java.util.Map" parameterType="java.util.Map">
+        select s.title,d.zy_business_hall_nums as zyhall,d.hz_business_hall_nums as hzhall,d.conf_business_hall_nums as confhall,
+        d.seep_rate*100 as seep,d.task_nums as taskNum,d.sms_send_nums as smsSendNum,d.sms_arrive_nums as smsArriveNum,
+        d.sms_arrive_rate*100 as smsArriveRate
+        from
+        pdc_analyse.d_daily_task_summary d
+        join pdc_aide.city_show_sequence c on d.city_code = c.city_code
+        join pdc_location.conf_segment s on s.title_code = d.city_code
+        where d.cdate = #{executeTime}
+        ORDER BY c.show_sequence
+    </select>
+
+    <select id="queryPositionSummaryByMonth" resultType="java.util.Map" parameterType="java.util.Map">
+        select s.title,d.zy_business_hall_nums as zyhall,d.hz_business_hall_nums as hzhall,d.conf_business_hall_nums as confhall,
+        d.seep_rate*100 as seep,d.task_nums as taskNum,d.sms_send_nums as smsSendNum,d.sms_arrive_nums as smsArriveNum,
+        d.sms_arrive_rate*100 as smsArriveRate
+        from
+        pdc_analyse.m_daily_task_summary d
+        join pdc_aide.city_show_sequence c on d.city_code = c.city_code
+        join pdc_location.conf_segment s on s.title_code = d.city_code
+        where d.cdate = #{executeTime}
+        ORDER BY c.show_sequence
+    </select>
+</mapper>

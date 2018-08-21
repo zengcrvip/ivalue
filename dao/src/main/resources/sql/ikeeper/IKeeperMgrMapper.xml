@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperMgrMapper">
+
+    <select id="fetchActivities" resultType="java.util.Map">
+        select
+            concat(ska.activity_id,'')       as value,
+            ska.activity_name                as name
+        from shop_keeper.shop_keeper_activity ska
+        where ska.status = 1
+    </select>
+
+    <select id="fetchFee" resultType="java.util.Map">
+        select
+            ifnull(sum(d.total_num),0)              as shopKeeperCount,
+            ifnull(sum(d.total_money),0)            as shopKeeperAmount
+        from shop_keeper.shop_keeper_activity_report_d d
+        left join shop_keeper.shop_keeper_activity ska on d.activity_id = ska.activity_id
+        where ska.status = 1
+        and d.cdate >= #{startDate} and d.cdate &lt;= #{endDate}
+        and ( #{activityId} is null or d.activity_id = #{activityId})
+        <if test="user.businessHallIds != null and user.businessHallIds != ''">
+            and d.channel_code in (select b.channel_code from shop_keeper.shop_keeper_channel b where find_in_set(b.channel_code,#{user.businessHallIds}))
+        </if>
+        <if test="!(user.businessHallIds != null and user.businessHallIds != '') and user.areaId != 99999">
+            and d.region_code = #{user.areaCode}
+        </if>
+        <if test="orgType == 2 and orgCode != null and orgCode != '' and orgCode != '-1'">
+            and d.region_code = #{orgCode}
+        </if>
+        <if test="orgType == 3 and orgCode != null and orgCode != '' and orgCode != '-1'">
+            and d.channel_code = #{orgCode}
+        </if>
+    </select>
+
+    <select id="fetchAreaRank" resultType="java.util.Map">
+        select
+          a.code                  as areaCode,
+          a.name                  as areaName,
+          ifnull(dd.totalMoney,0)   as totalMoney,
+          ifnull(dd.totalNum,0)     as totalNum
+        from market_area a
+        left join (
+            select
+                sum(d.total_num)          as totalNum,
+                sum(d.total_money)        as totalMoney,
+                d.region_code             as region_code
+            from shop_keeper.shop_keeper_activity_report_d d
+            left join shop_keeper.shop_keeper_activity ska on d.activity_id = ska.activity_id
+            where ska.status = 1
+            and d.cdate >= #{startDate} and d.cdate &lt;= #{endDate}
+            and ( #{activityId} is null or d.activity_id = #{activityId})
+            group by d.region_code
+        ) as dd on a.code = dd.region_code
+        where a.id != 99999 order by dd.totalNum desc
+    </select>
+
+    <select id="fetchChannelRank" resultType="java.util.Map">
+        select * from (
+            select
+                d.channel_code                  as channelCode,
+                d.channel_name                  as channeName,
+                ifnull(sum(d.total_money),0)   as totalMoney,
+                ifnull(sum(d.total_num),0)     as totalNum
+            from shop_keeper.shop_keeper_activity_report_d d
+            left join shop_keeper.shop_keeper_activity ska on d.activity_id = ska.activity_id
+            where ska.status = 1
+            and d.cdate >= #{startDate} and d.cdate &lt;= #{endDate}
+            <if test="areaCode != null">
+                and d.region_code = #{areaCode}
+            </if>
+            <if test="activityId != null">
+                and d.activity_id = #{activityId}
+            </if>
+            group by d.channel_code
+        ) as rsd
+        order by rsd.totalNum desc
+    </select>
+
+</mapper>

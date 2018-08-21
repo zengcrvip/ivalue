@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.istatistics.IAnalysisFlowMapper">
+    <select id="queryAnalysisFlowRate" resultType="java.util.Map">
+        select
+          total_flow,name
+        from analysisdb.analysis_flow
+        left join analysisdb.analysis_area
+        on areano = id
+        where
+          utype = 0
+        and
+          areano != 99999
+        and
+          u_date = #{yearMonth}
+    </select>
+
+
+    <select id="queryAnalysisFlowGrow" resultType="java.util.Map">
+      select
+        u_date,total_flow,utype
+      from analysisdb.analysis_flow
+      left join analysisdb.analysis_area
+      on areano = id
+      where
+      FIND_IN_SET(u_date,#{dateRange})
+      and utype in (2,3,4)
+      and areano = 99999
+    </select>
+
+    <select id="queryAnalysisFlow" resultType="java.util.Map">
+        select * from analysisdb.analysis_area a
+        LEFT JOIN (select areano,total_flow as flowWhole,total_flow_hb as proportionWhole from analysisdb.analysis_flow where u_date=#{yearMonth} and areano != 99999 and utype=0) f0 on a.id = f0.areano
+        LEFT JOIN (select areano,total_flow as flow2G,total_flow_hb as proportion2G from analysisdb.analysis_flow where u_date=#{yearMonth} and areano != 99999 and utype=2) f1 on a.id = f1.areano
+        LEFT JOIN (select areano,total_flow as flow3G,total_flow_hb as proportion3G from analysisdb.analysis_flow where u_date=#{yearMonth} and areano != 99999 and utype=3) f2 on a.id = f2.areano
+        LEFT JOIN (select areano,total_flow as flow4G,total_flow_hb as proportion4G from analysisdb.analysis_flow where u_date=#{yearMonth} and areano != 99999 and utype=4) f3 on a.id = f3.areano
+        where a.id != 99999
+    </select>
+
+
+    <select id="queryProportionOfCityUser" resultType="java.util.Map">
+        select * from analysisdb.analysis_area a
+        left join (select city_user_num_zb as proportion3G,areano from analysisdb.analysis_flow where utype=3 and areano != 99999 and u_date = #{yearMonth}) f1 on a.id = f1.areano
+        left join (select city_user_num_zb as proportion4G,areano from analysisdb.analysis_flow where utype=4 and areano != 99999 and u_date = #{yearMonth}) f2 on a.id = f2.areano
+        where a.id != 99999
+    </select>
+
+    <select id="queryProportionOfPackage" resultType="java.util.Map">
+        select
+          ter_2g_zb,ter_3g_zb,ter_4g_zb,tc_utype_2g_zb,tc_utype_3g_zb,tc_utype_4g_zb
+        from
+          analysisdb.analysis_flow
+        where u_date = #{yearMonth}
+        and
+          utype=0
+        and
+          areano=99999
+    </select>
+
+
+    <select id="queryBehaviorPreferences" resultType="java.util.Map">
+        select * from analysisdb.analysis_behavior where acct_month = #{yearMonth}
+    </select>
+
+    <select id="queryStockUserDaily" resultType="java.util.Map">
+        select * from analysisdb.${tableName} d  where Find_IN_SET(d.acct_month,#{dailyMonths}) group by d.acct_month, d.day_id
+    </select>
+
+    <select id="queryBaseMonthlyReservedDataResult" resultType="java.util.Map">
+        select * from analysisdb.analysis_city_result where city_name= #{cityName} and acct_month = #{yearMonth}
+    </select>
+
+    <select id="queryBaseMonthlyReservedDataProcess" resultType="java.util.Map">
+        select * from analysisdb.analysis_city_process where city_name= #{cityName} and acct_month = #{yearMonth}
+    </select>
+
+    <select id="downloadBaseMonthlyReserved" resultType="java.util.Map">
+        select * from analysisdb.analysis_city_result r
+        left join
+        analysisdb.analysis_city_process p on r.prof_name = p.prof_name
+        and r.city_name = p.city_name
+        and r.acct_month = p.acct_month
+        where r.city_name = #{cityName} and r.acct_month = #{yearMonth}
+    </select>
+
+    <select id="queryStockUserIncomeData" resultType="java.util.Map">
+        select * from analysisdb.analysis_store
+    </select>
+
+    <select id="downloadMonthlyReserved" resultType="java.util.Map">
+        select * from analysisdb.analysis_preserved
+        where acct_month = #{yearMonth}
+    </select>
+</mapper>

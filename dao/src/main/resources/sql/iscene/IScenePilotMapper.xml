@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IScenePilotMapper">
+
+    <select id="getScenePilotList" resultType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        SELECT
+        msp.id,msp.name,msp.onLineTm,msp.offLineTm,msp.block_mode as blockMode,msp.pilot_type as pilotType,msp.pilot_url as pilotUrl,
+        msp.interval_time as intervarTime,
+        msp.scene_ids as sceneIds,
+        msp.urlgroup_ids as urlGroupIds, msp.locationgroup_ids as locationGroupIds,msp.isDelete as isDelete,msp.ext_stop_cond as extStopCond,
+        GROUP_CONCAT(
+        DISTINCT dug. NAME
+        ORDER BY
+        dug. NAME
+        ) as urlGroupNames,
+        dsc.imgUrl
+        FROM
+        market_scene_pilot AS msp,
+        scenes AS dsc,
+        urlgroup AS dug
+        WHERE
+        dsc.isdelete = 0
+        AND dug.isdelete = 0
+        AND msp.scene_ids = dsc.id
+        AND FIND_IN_SET(dug.id, msp.urlgroup_ids)
+        and msp.isDelete=0
+        <if test="name != null and name != ''">
+            and msp.name like concat('%','${name}','%')
+        </if>
+        and msp.pilot_type= 2
+        GROUP BY msp.id,msp.name,msp.onLineTm,msp.offLineTm,msp.block_mode,msp.pilot_type ,msp.pilot_url ,
+        msp.interval_time,
+        msp.scene_ids,
+        msp.urlgroup_ids, msp.locationgroup_ids,msp.isDelete
+        order by msp.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="getScenePilotListCount" resultType="int">
+        select count(0) from market_scene_pilot
+        where isDelete=0 and pilot_type=2
+        <if test="name != null and name != ''">
+            and name like concat('%','${name}','%')
+        </if>
+    </select>
+
+    <select id="getFullPageList" resultType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        SELECT
+        msp.id,msp.name,msp.onLineTm,msp.offLineTm,msp.block_mode as blockMode,msp.pilot_type as pilotType,msp.pilot_url as pilotUrl,
+        msp.interval_time as intervarTime,
+        msp.scene_ids as sceneIds,
+        msp.urlgroup_ids as urlGroupIds, msp.locationgroup_ids as locationGroupIds,msp.isDelete as isDelete,msp.ext_stop_cond as extStopCond,
+        GROUP_CONCAT(
+        DISTINCT dug. NAME
+        ORDER BY
+        dug. NAME
+        ) as urlGroupNames,
+        dsc.imgUrl
+        FROM
+        market_scene_pilot AS msp,
+        scenes AS dsc,
+        urlgroup AS dug
+        WHERE
+        dsc.isdelete = 0
+        AND dug.isdelete = 0
+        AND FIND_IN_SET(dug.id, msp.urlgroup_ids)
+        and msp.isDelete=0
+        <if test="name != null and name != ''">
+            and msp.name like concat('%','${name}','%')
+        </if>
+        and msp.pilot_type=1
+        GROUP BY msp.id,msp.name,msp.onLineTm,msp.offLineTm,msp.block_mode,msp.pilot_type ,msp.pilot_url ,
+        msp.interval_time,
+        msp.scene_ids,
+        msp.urlgroup_ids, msp.locationgroup_ids,msp.isDelete
+        order by msp.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="getFullPageListCount" resultType="int">
+        select count(0) from market_scene_pilot
+        where isDelete=0  and pilot_type=1
+        <if test="name != null and name != ''">
+            and name like concat('%','${name}','%')
+        </if>
+    </select>
+
+    <insert id="createScenePilot" parameterType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        insert into market_scene_pilot
+        (
+            name,
+            pilot_type,
+            pilot_url,
+            interval_time,
+            onLineTm,
+            offLineTm,
+            block_mode,
+            scene_ids,
+            urlgroup_ids,
+            locationgroup_ids,
+            ext_stop_cond,
+            isDelete
+        )
+        values
+        (
+            #{info.name},
+            #{info.pilotType},
+            #{info.pilotUrl},
+            #{info.intervarTime},
+            #{info.onLineTm},
+            #{info.offLineTm},
+            #{info.blockMode},
+            #{info.sceneIds},
+            #{info.urlGroupIds},
+            #{info.locationGroupIds},
+            #{info.extStopCond},
+            0
+        )
+    </insert>
+
+    <update id="updateScenePilot" parameterType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        update market_scene_pilot set
+        <if test="info.name != null">
+            name = #{info.name},
+        </if>
+        <if test="info.pilotType != null">
+            pilot_type = #{info.pilotType},
+        </if>
+        <if test="info.pilotUrl != null">
+            pilot_url = #{info.pilotUrl},
+        </if>
+        <if test="info.intervarTime != null">
+            interval_time = #{info.intervarTime},
+        </if>
+        <if test="info.onLineTm != null">
+            onLineTm = #{info.onLineTm},
+        </if>
+        <if test="info.offLineTm != null">
+            offLineTm = #{info.offLineTm},
+        </if>
+        <if test="info.blockMode != null">
+            block_mode = #{info.blockMode},
+        </if>
+        <if test="info.sceneIds != null">
+            scene_ids = #{info.sceneIds},
+        </if>
+        <if test="info.urlGroupIds != null">
+            urlgroup_ids = #{info.urlGroupIds},
+        </if>
+        <if test="info.locationGroupIds != null">
+            locationgroup_ids = #{info.locationGroupIds},
+        </if>
+        <if test="info.extStopCond != null">
+            ext_stop_cond = #{info.extStopCond},
+        </if>
+        <if test="info.isDelete != null">
+            isDelete = #{info.isDelete},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteScenePilot">
+        update market_scene_pilot set
+            isDelete = -1
+        where id = #{id}
+    </update>
+
+    <select id="getUrlGroup" resultType="com.axon.market.common.domain.iscene.UrlGroupDomain">
+        SELECT id,name from urlgroup where isDelete=0
+    </select>
+
+    <select id="getLocationGroup" resultType="com.axon.market.common.domain.iscene.LocationGroupDomain">
+        SELECT id,name from locationgroup where isDelete=0
+    </select>
+
+    <select id="getSceneUrl" resultType="com.axon.market.common.domain.iscene.ScenesDomain">
+        SELECT s.id,client,imgUrl,picTitle from scenes as s
+         inner JOIN templetype as e on s.modelId=e.id
+        where s.isDelete=0
+    </select>
+
+    <select id="getAdditionalList" resultType="com.axon.market.common.domain.iscene.ExtStopCondConfig">
+        SELECT id,name,description,type,isDelete from extstopcondconfig
+    </select>
+
+    <select id="getTaskJobsCount" resultType="int">
+        select count(0) from market_jobs
+         where market_type='scenePilot'
+         and (status=0 or status=1 or status=5)
+        and market_type_value=#{value}
+
+    </select>
+
+    <select id="selectTaskJobs" resultType="com.axon.market.common.domain.ischeduling.MarketJobDomain">
+          select id,name,market_segment_ids as marketSegmentIds,scene_pilot_sort as scenePilotSort,
+          market_type,market_type_value,start_time as startTime,end_time as endTime from market_jobs
+          where status=1 and market_type_value= #{typeValue}
+    </select>
+
+    <select id="queryScenePilotDomain" resultType="com.axon.market.common.domain.iscene.ScenePilotDomain">
+        select
+          id as id ,
+          name as name ,
+          pilot_type as pilotType ,
+          pilot_url as pilotUrl ,
+          interval_time as intervarTime ,
+          onLineTm as onLineTm ,
+          offLineTm as offLineTm ,
+          block_mode as blockMode ,
+          scene_ids as sceneIds ,
+          urlgroup_ids as urlGroupIds,
+          locationgroup_ids as locationGroupIds,
+          ext_stop_cond as extStopCond,
+          isDelete as isDelete
+        from market_scene_pilot
+        where id = #{id}
+    </select>
+
+</mapper>

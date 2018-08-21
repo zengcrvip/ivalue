@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IUrlGroupMapper">
+    <!--分页查询总个数-->
+    <select id="queryUrlGroupCount" resultType="int">
+        SELECT
+        COUNT(DISTINCT uu.Id) as countNumber
+        FROM urlgroup as uu
+        LEFT JOIN url as ul
+        ON uu.id = ul.UrlGroupId
+        where
+        uu.IsDelete = 0
+        <if test="groupName != null">
+            AND uu.name LIKE concat('%',#{groupName},'%')
+        </if>
+        <if test="urlName != null">
+            AND ul.Name LIKE concat('%',#{urlName},'%')
+        </if>
+        <if test="urlWord != null">
+            AND ul.Url LIKE concat('%',#{urlWord},'%')
+        </if>
+    </select>
+
+    <!--查询用户群组-->
+    <select id="queryUrlGroup" resultType="com.axon.market.common.domain.iscene.UrlGroupDomain">
+        SELECT DISTINCT
+        uu.Id as id,
+        uu.Name as name,
+        uu.Count as count,
+        uu.isDelete as isDelete,
+        uu.ProvinceId as provinceId,
+        uu.CreateId as createId
+        FROM urlgroup as uu
+        LEFT JOIN url as ul
+        ON uu.id = ul.UrlGroupId
+        where
+        uu.IsDelete = 0
+        <if test="groupName != null">
+            AND uu.name LIKE concat('%',#{groupName},'%')
+        </if>
+        <if test="urlName != null">
+            AND ul.Name LIKE concat('%',#{urlName},'%')
+        </if>
+        <if test="urlWord != null">
+            AND ul.Url LIKE concat('%',#{urlWord},'%')
+        </if>
+        ORDER BY id DESC
+        limit ${limit} offset ${offset}
+    </select>
+    <!--查询url-->
+    <select id="queryUrl" resultType="com.axon.market.common.domain.iscene.UrlDomain">
+        SELECT
+            Id as id,
+            Url as url,
+            UrlGroupId as urlGroupId,
+            Name as name,
+            IsDelete as isDelete
+        FROM url
+        WHERE
+          IsDelete = 0
+        AND
+          UrlGroupId = #{id}
+        ORDER BY id DESC
+          limit ${limit} offset ${offset}
+    </select>
+    <!--分页查询url条数-->
+    <select id="queryUrlCount" resultType="int">
+        SELECT
+          COUNT(1)
+        FROM url
+        WHERE
+          IsDelete = 0
+        AND
+          UrlGroupId = #{id}
+    </select>
+    <!--根据分类名查询ID-->
+    <select id="queryUrlByName" resultType="com.axon.market.common.domain.iscene.UrlGroupDomain">
+        SELECT
+          Id as id,
+          Name as name,
+          Count as count,
+          isDelete as isDelete,
+          ProvinceId as provinceId,
+          CreateId as createId
+        FROM
+          urlgroup
+        WHERE
+          Name = #{name}
+    </select>
+
+    <!--新增新分类名称获取新增ID-->
+    <insert id="returnAddId" useGeneratedKeys="true" keyProperty="url.id">
+        INSERT INTO
+          urlgroup(Name,Count,isDelete,ProvinceId,CreateId)
+        VALUES
+          (#{url.name},#{url.count},#{url.isDelete},#{url.provinceId},#{url.createId})
+    </insert>
+
+    <!--批量上传-->
+    <select id="batchUpload">
+    load data LOCAL infile
+      #{path}
+    into table url
+    fields terminated by
+      ','
+    lines terminated by
+      '\n'
+    (Url,Name,UrlGroupId)
+    </select>
+
+    <update id="updateUrlGroup">
+      UPDATE
+        urlgroup
+      SET
+        Count = #{count}
+      WHERE
+        Name = #{fileName}
+    </update>
+
+    <update id="updateUrlGroupName">
+        UPDATE
+          urlgroup
+        SET
+          Name = #{newName},
+          ProvinceId = #{provinceId}
+        WHERE
+          Id = #{id}
+    </update>
+
+    <insert id="addUrlGroupName" parameterType="com.axon.market.common.domain.iscene.UrlGroupDomain">
+        INSERT INTO
+          urlgroup(Name,Count,isDelete,ProvinceId,CreateId)
+        VALUES
+          (#{name},#{count},#{isDelete},#{provinceId},#{createId})
+    </insert>
+
+    <select id="selectIsExistInTask" resultType="int">
+        SELECT
+          count(1)
+        FROM market_scene_pilot
+        WHERE
+          IsDelete = 0
+        AND
+          urlgroup_ids = #{uid}
+    </select>
+    
+    <select id="selectIsExistById" resultType="int">
+        SELECT
+          count(1)
+        FROM urlgroup
+        WHERE
+          Id = #{id}
+    </select>
+
+    <delete id="delUrlGroupById">
+        DELETE
+          ug,
+          ul
+        FROM
+          urlgroup as ug
+        LEFT JOIN
+          url as ul
+        ON
+          ug.Id = ul.UrlGroupId
+        WHERE
+          ug.Id = #{id}
+    </delete>
+
+    <delete id="delUrlById">
+        DELETE FROM
+          url
+        WHERE
+          Id = #{id}
+    </delete>
+
+    <update id="updateUrlGroupCount">
+        UPDATE
+          urlgroup
+        SET
+          Count = #{count}
+        WHERE
+          Id = #{id}
+    </update>
+
+    <insert id="addUrl">
+        INSERT INTO
+          url(Url,UrlGroupId,Name,IsDelete)
+        VALUES
+          (#{urlDomain.url},#{urlDomain.urlGroupId},#{urlDomain.name},#{urlDomain.isDelete})
+    </insert>
+</mapper>

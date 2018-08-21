@@ -1,0 +1,352 @@
+﻿<link href="styles/icommon/icon.css" rel="stylesheet">
+<link href="ext/morris/morris-0.4.3.min.css" rel="stylesheet"/>
+<!-- Google Fonts-->
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+<link rel="stylesheet" href="ext/Lightweight-Chart/cssCharts.css">
+<link rel="stylesheet" href="ext/cmGauge/css/cmGauge.css">
+<link rel="stylesheet" href="styles/icommon/index.css">
+<link rel="stylesheet" href="styles/icommon/home.css">
+<style type="text/css">
+    span.dButton.up {
+        background: url(images/up.png) no-repeat;
+    }
+
+    span.dButton.down {
+        background: url(images/down.png) no-repeat;
+    }
+</style>
+
+
+<!--<div id="wrapper">-->
+
+<div id="page-inner">
+    <div class="row">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image red">
+                            <i class="fa fa-eye fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="offlineUserNum">160,150</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>离网用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image orange">
+                            <i class="fa fa-shopping-cart fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="renewalUserNum">250,550</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>续约用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image blue">
+                            <i class="fa fa-tag fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="buyUserNum">101,225</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>复购用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-sm-3 col-md-3">
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image">
+                            <i class="fa fa-users fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="changePackageUserNum">720,525</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>换套用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="display:none">
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image pink">
+                            <i class="fa fa-eye fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="changeMobUserNum">160,150</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>换机用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image deep-orange">
+                            <i class="fa fa-shopping-cart fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div class="card-content">
+                                <h3 id="haltUserNum">250,550</h3>
+                            </div>
+                            <div class="card-action">
+                                <strong>停机用户预测</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3 col-md-3">
+
+                    <div class="card horizontal cardIcon waves-effect waves-dark">
+                        <div class="card-image red">
+                            <i class="fa fa-cloud fa-5x"></i>
+                        </div>
+                        <div class="card-stacked">
+                            <div style=" font-size: 91px; text-align: center; color: gray;">＋</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="toggleItem" style="text-align:center">
+                <div class="development" style="width:70px;cursor:pointer;margin: auto;">
+                    <span class="text">展开</span>
+                    <span class="dButton down"
+                          style="width:16px;height:15px;display:inline-block;vertical-align: bottom;margin-left:10px;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 地图 -->
+    <div class="row">
+
+        <!--江苏漫游数据-->
+        <div class="col-md-8 paddingRightMin">
+            <div class="card">
+                <div class="card-action cardTitle">
+                    <b id="privinceText">漫游用户数据图</b>
+                    <i class="fa fa-refresh btnRefresh"><span>刷新</span></i>
+                </div>
+                <div class="card-image">
+                    <div id="eChartMap" style=" width: 100%; height: 494px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!--捕获中心-->
+        <div class="col-md-4">
+            <div class="col-md-12 paddingRightMin">
+                <div class="card">
+                    <div class="card-action cardTitle center">
+                        <b>捕获中心</b>
+                    </div>
+                    <div class="card-image cardContent">
+                        <div>用户数：
+                            <span id="catchNum">5,123,456</span>
+                        </div>
+                        <div>占比：
+                            <span id="catchPercentage">50%</span>
+                        </div>
+                        <div>
+                            <div id="gaugeCache" class="gauge gauge-big gauge-green">
+                                <div class="gauge-arrow" data-percentage="90"
+                                     style="transform: rotate(0deg);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--适配中心-->
+            <div class="col-md-12 paddingRightMin">
+                <div class="card">
+                    <div class="card-action cardTitle center">
+                        <b>适配中心</b>
+                    </div>
+                    <div class="card-image cardContent">
+                        <div>调度用户：
+                            <span id="adaptiveNum">653,276</span>
+                        </div>
+                        <div>占比：
+                            <span id="adaptivePercentage"> 75%</span>
+                        </div>
+                        <div>
+                            <div id="gaugeAdaptive" class="gauge gauge-big gauge-green">
+                                <div class="gauge-arrow" data-percentage="40"
+                                     style="transform: rotate(0deg);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-image">
+                    <div id="morris-line-chart"></div>
+                </div>
+                <div class="card-action">
+                    <b>CLV价值分布</b>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-image">
+                    <div id="morris-bar-chart"></div>
+                </div>
+                <div class="card-action">
+                    <b>套餐匹配度</b>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 col-sm-12">
+            <div class="card">
+                <div class="card-action">
+                    <b>今日工作概况</b>
+                </div>
+                <div class="card-image">
+                    <div class="collection">
+                        <a href="#!" class="collection-item">总任务数
+                            <span class=" badge red">44</span>
+                        </a>
+                        <a href="#!" class="collection-item">完成任务数<span class=" badge blue">40</span></a>
+                        <a href="#!" class="collection-item"><span class="badge">1</span>执行中任务</a>
+                        <a href="#!" class="collection-item"><span class=" badge">3</span>驳回任务</a>
+                        <a href="#!" class="collection-item">待审批任务<span class=" badge blue">4</span></a>
+                        <a href="#!" class="collection-item"><span class="badge">14000000人</span>营销用户数</a>
+                        <a href="#!" class="collection-item">成功用户数<span class="badge">4000000人</span></a>
+                        <a href="#!" class="collection-item">反馈用户数<span class="badge">400000人</span></a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-md-8 col-sm-12">
+            <div class="card">
+                <div class="card-action">
+                    <b>活动案例</b>
+                </div>
+                <div class="card-image">
+                    <ul class="collection">
+                        <li class="collection-item avatar">
+                            <i class="material-icons circle green">insert_chart</i>
+                            <span class="title">流量活动</span>
+
+                            <p>
+                                投放渠道/营销用户数／反馈率 <br>
+                                活动概要描述
+                            </p>
+                            <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
+                        </li>
+                        <li class="collection-item avatar">
+                            <i class="material-icons circle">folder</i>
+                            <span class="title">定向活动</span>
+
+                            <p>
+                                投放渠道/营销用户数／反馈率 <br>
+                                活动概要描述
+                            </p>
+                            <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
+                        </li>
+                        <li class="collection-item avatar">
+                            <i class="material-icons circle green">insert_chart</i>
+                            <span class="title">位置营销活动</span>
+
+                            <p>
+                                投放渠道/营销用户数／反馈率 <br>
+                                活动概要描述
+                            </p>
+                            <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
+                        </li>
+                        <li class="collection-item avatar">
+                            <i class="material-icons circle red">play_arrow</i>
+                            <span class="title">场景导航活动</span>
+
+                            <p>
+                                投放渠道/营销用户数／反馈率 <br>
+                                活动概要描述
+                            </p>
+                            <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+    <!-- /. ROW  -->
+    <!--圆形工具球-->
+    <!--<div class="fixed-action-btn horizontal click-to-toggle">-->
+    <!--<a class="btn-floating btn-large red">-->
+    <!--<i class="material-icons">menu</i>-->
+    <!--</a>-->
+    <!--<ul>-->
+    <!--<li><a class="btn-floating red"><i class="material-icons">insert_chart</i></a></li>-->
+    <!--<li><a class="btn-floating yellow darken-1"><i class="material-icons">format_quote</i></a></li>-->
+    <!--<li><a class="btn-floating green"><i class="material-icons">publish</i></a></li>-->
+    <!--<li><a class="btn-floating blue"><i class="material-icons">attach_file</i></a></li>-->
+    <!--</ul>-->
+    <!--</div>-->
+
+    <footer>
+        <p>Copyright &copy; 2016.AXON All rights reserved</p>
+    </footer>
+    <!-- /. PAGE INNER  -->
+</div>
+
+<!-- Metis Menu Js 地图显示-->
+<script src="js/icommon/jquery.metisMenu.js"></script>
+<!-- Morris Chart Js -->
+<script src="ext/morris/raphael-2.1.0.min.js"></script>
+<script src="ext/morris/morris.js"></script>
+<script src="js/icommon/easypiechart.js"></script>
+<script src="js/icommon/easypiechart-data.js"></script>
+<script src="ext/Lightweight-Chart/jquery.chart.js"></script>
+<!-- Custom Js -->
+<script src="js/icommon/custom-scripts.js"></script>
+<!-- EChart JS -->
+<script src="ext/echarts/echarts.min.js"></script>
+<script src="json/china.js"></script>
+<script src="ext/cmGauge/js/cmGauge.js"></script>
+<script src="js/icommon/index.js"></script>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IRefreshLogMapper">
+
+    <insert id="insertRefreshLog" parameterType="com.axon.market.common.domain.icommon.RefreshLogDomain">
+        insert into market_refresh_log
+        (
+            id,
+            refresh_time,
+            refresh_type,
+            refresh_count,
+            refresh_success_count,
+            refresh_fail_count,
+            refresh_result,
+            refresh_result_reason
+        )
+        values
+        (
+            #{info.id},
+            #{info.refreshTime},
+            #{info.refreshType},
+            #{info.refreshCount},
+            #{info.refreshSuccessCount},
+            #{info.refreshFailCount},
+            #{info.refreshResult},
+            #{info.refreshResultReason}
+        )
+    </insert>
+
+</mapper>

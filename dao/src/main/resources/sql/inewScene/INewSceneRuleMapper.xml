@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.inewScene.INewSceneRuleMapper">
+
+    <select id="queryNewSceneClientTypeOne" resultType="java.util.Map">
+        select distinct t.ct_id1 as id ,t.ct_name1 as name from b_ct_sort t
+        join b_client b on t.ct_id2 = b.client_type_id
+    </select>
+
+    <select id="queryNewSceneClientTypeTwo" resultType="java.util.Map">
+        select distinct ct_id2 as id ,ct_name2 as name  from b_ct_sort
+        where ct_id1 = #{sceneClientType}
+    </select>
+
+    <select id="queryNewSceneClientTotal" resultType="int">
+        select count(1) as count from
+        (
+        select c.client_id as id,c.client_name as name,s.ct_name2 as type2,s.ct_name1 as type1 from b_client c
+        join b_ct_sort s on c.client_type_id = s.ct_id2
+        where 1=1
+        <if test="clientName != ''">
+            and c.client_name like concat('%',#{clientName},'%')
+        </if>
+        <if test="clientType != '-1'">
+            and s.ct_id1 = #{clientType}
+        </if>
+        <if test="clientType2 != '-1'">
+            and s.ct_id2 = #{clientType2}
+        </if>
+        order by c.client_id
+        ) tab
+    </select>
+
+    <select id="queryNewSceneClientByPage" resultType="com.axon.market.common.domain.iscene.ScenceSmsClientDomain">
+        select c.client_id as id,c.client_name as name,c.client_type_id as typeid2,s.ct_name2 as type2,s.ct_id1 as typeid1, s.ct_name1 as type1 from b_client c
+        join b_ct_sort s on c.client_type_id = s.ct_id2
+        where 1=1
+        <if test="clientName != ''">
+            and c.client_name like concat('%',#{clientName},'%')
+        </if>
+        <if test="clientType != '-1'">
+            and s.ct_id1 = #{clientType}
+        </if>
+        <if test="clientType2 != '-1'">
+            and s.ct_id2 = #{clientType2}
+        </if>
+        order by CONVERT(c.client_name USING gbk)
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryNewSceneClientByID" resultType="String">
+        select c.client_name as clientName from b_client c
+        where 1=1
+        <if test="clientID != ''">
+            and c.client_id = #{clientID}
+        </if>
+        <if test="clientTypeID != '-1'">
+            and c.client_type_id = #{clientTypeID}
+        </if>
+    </select>
+
+    <select id="queryNewSceneRuleTotal" resultType="int">
+        select count(1) as count from
+        (
+        select t.scene_name as sceneName,c.scene_type_name as sceneTypeName,c.code as code,t.state as
+        state,t.update_time as updateTime, t.scene_rule as sceneRule
+        from conf_new_scene t join conf_new_scene_type c on t.scene_type_id = c.id and c.state =1
+        where 1=1 and t.state != -1 and c.state != -1 and c.parent_id is not null
+        <if test="sceneName != ''">
+            and t.scene_name like concat('%',#{sceneName},'%')
+        </if>
+        <if test="sceneStatus != ''">
+            and t.state = #{sceneStatus}
+        </if>
+        <if test="sceneTypeID != ''">
+            and t.scene_type_id = #{sceneTypeID}
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryNewSceneRuleByPage" resultType="java.util.Map">
+        select t.id as id,t.scene_type_id as sceneTypeID,t.start_time as startTime,t.end_time as endTime,t.scene_name as
+        sceneName,c.scene_type_name as sceneTypeName,c.code as code,t.state as state,t.update_time as updateTime,
+        t.scene_rule as sceneRule,t.create_user as createUser from conf_new_scene t join conf_new_scene_type c on t.scene_type_id = c.id and c.state =1
+        where 1=1 and t.state != -1 and c.state != -1 and c.parent_id is not null
+        <if test="sceneName != ''">
+            and t.scene_name like concat('%',#{sceneName},'%')
+        </if>
+        <if test="sceneStatus != ''">
+            and t.state = #{sceneStatus}
+        </if>
+        <if test="sceneTypeID != ''">
+            and t.scene_type_id = #{sceneTypeID}
+        </if>
+        order by t.update_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryNewSceneType" resultType="com.axon.market.common.domain.inewScene.ConfNewSceneTypeDomain">
+        select c.id as id,c.scene_type_name as sceneTypeName,c.code as code
+        from conf_new_scene_type c
+        where 1=1 and c.state = 1 and c.parent_id is not null
+    </select>
+
+    <!-- 插入表信息-->
+    <insert id="createNewSceneRule" parameterType="com.axon.market.common.domain.inewScene.ConfNewSceneDomain">
+        insert into conf_new_scene
+        (
+        scene_name,
+        scene_type_id,
+        scene_rule,
+        start_time,
+        end_time,
+        create_user,
+        create_time,
+        update_time,
+        state
+        )
+        values
+        (
+        #{sceneName},
+        #{sceneTypeID},
+        #{sceneRule},
+        #{startTime},
+        #{endTime},
+        #{createUser},
+        sysdate(),
+        sysdate(),
+        #{state}
+        )
+    </insert>
+
+    <!-- 修改表信息-->
+    <update id="updateNewSceneRule" parameterType="com.axon.market.common.domain.inewScene.ConfNewSceneDomain">
+        update conf_new_scene
+        set
+        scene_name = #{sceneName},
+        scene_type_id = #{sceneTypeID},
+        scene_rule = #{sceneRule},
+        start_time = #{startTime},
+        end_time = #{endTime},
+        remark = #{remark},
+        update_time = sysdate(),
+        state = #{state}
+        where id = #{id}
+
+    </update>
+
+    <update id="deleteNewSceneByID">
+        update conf_new_scene set state = -1, update_time = sysdate()
+        where id = #{id}
+    </update>
+
+    <select id="querySceneNumByName" resultType="int">
+          select count(*) from conf_new_scene t where t.scene_name = #{sceneName}
+    </select>
+</mapper>

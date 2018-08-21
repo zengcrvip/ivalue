@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.istatistics.IMarketAnalysisMapper">
+    <select id="querySmsAnalysisCount" resultType="java.lang.Integer">
+        select count(1) as count from pdc.sms_marketing_statis_result
+        where 1=1
+        <if test="startTime != '' and startTime != null ">
+            and exe_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != '' and endTime != null ">
+            and exe_time &lt;= #{endTime}
+        </if>
+        <if test="taskName != '' and taskName != null ">
+            and task_name like concat('%',#{taskName},'%')
+        </if>
+    </select>
+
+    <select id="queryAllSmsAnalysisByPage" resultType="java.util.Map">
+        select
+        id,
+        task_id as taskId,
+        task_name as taskName,
+        market_submitter as marketSubmitter,
+        market_content as marketContent,
+        from_unixtime(exe_time) as exeTime,
+        market_user_target_numbers as marketUserTargetNumbers,
+        market_user_send_success_numbers as marketUserSendSuccessNumbers,
+        market_user_send_fail_numbers as marketUserSendFailNumbers,
+        market_user_arrive_numbers as marketUserArriveNumbers,
+        market_user_feedback_counts as marketUserFeedbackCounts,
+        market_user_feedback_phone_numbers as marketUserFeedbackPhoneNumbers,
+        case when market_user_arrive_numbers != 0 and market_user_feedback_phone_numbers != 0
+        then concat(round(market_user_feedback_phone_numbers*100/market_user_arrive_numbers,2),'%')
+        ELSE  0  END  as marketUserFeedbackRate
+        from pdc.sms_marketing_statis_result
+        where 1=1
+        <if test="startTime != '' and startTime != null ">
+            and exe_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != '' and endTime != null ">
+            and exe_time &lt;= #{endTime}
+        </if>
+        <if test="taskName != '' and taskName != null ">
+            and task_name like concat('%',#{taskName},'%')
+        </if>
+        order by exe_time DESC
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="queryAllMarketUserDetailsCounts" resultType="java.lang.Integer">
+        select count(distinct phone) as count
+        from pdc.pdr_send a,pdc.sms_recv b
+        where a.phone=b.mob
+        <if test="taskId !='' and taskId != null">
+            and taskid = #{taskId}
+        </if>
+    </select>
+
+    <select id ="queryMarketUserDetailsByPage" resultType="java.util.Map">
+        select
+            a.phone                                    as phone,
+            ifnull(from_unixtime(a.send_time),'--')    as send_time,
+            ifnull(a.message,'--')                     as message,
+            ifnull(FROM_UNIXTIME(b.time),'--')         as feed_time,
+            ifnull(b.message,'--')                     as feed_content
+        from pdc.pdr_send a,pdc.sms_recv b
+        where  a.phone=b.mob  and date(from_unixtime(b.time)) &gt;= DATE(from_unixtime(a.send_time))
+        and  date(from_unixtime(b.time)) &lt;= DATE(date_sub(from_unixtime(a.send_time),interval -3 day))
+        <if test="taskId !='' and taskId != null">
+            and taskid = #{taskId}
+        </if>
+        GROUP BY phone
+        order by send_time DESC
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+
+</mapper>

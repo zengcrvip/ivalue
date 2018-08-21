@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.ISyncConfigMapper">
+
+    <select id="querySyncConfigCounts" resultType="java.lang.Integer">
+        select count(0) from conf_syncinfo
+        <if test="queryType != null and queryType !=''">
+            where sync_type=#{queryType}
+        </if>
+    </select>
+
+    <select id="querySyncConfig" resultType="com.axon.market.common.domain.isystem.SyncConfigDomain">
+        SELECT
+        id,
+        mysql_db_name AS mysqlDbName,
+        mysql_table_name AS mysqlTableName,
+        gp_db_name AS gpDbName,
+        frequency,
+        gp_table_name AS gpTableName,
+        sync_type AS syncType,
+        sync_field AS syncField,
+        sync_field_str AS syncFieldStr,
+        ftpName,
+        delimit
+        FROM
+        conf_syncinfo
+        <if test="queryType != null and queryType !=''">
+            where sync_type=#{queryType}
+        </if>
+        order by id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="querySyncById" resultType="com.axon.market.common.domain.isystem.SyncConfigDomain">
+        SELECT
+        id,
+        mysql_db_name AS mysqlDbName,
+        mysql_table_name AS mysqlTableName,
+        gp_db_name AS gpDbName,
+        frequency,
+        gp_table_name AS gpTableName,
+        sync_type AS syncType,
+        sync_field AS syncField,
+        sync_field_str AS syncFieldStr,
+        ftpName,
+        delimit
+        FROM
+        conf_syncinfo
+        <if test="id != null and id !=''">
+            where id=#{id}
+        </if>
+    </select>
+
+    <insert id="addSync" parameterType="com.axon.market.common.domain.isystem.SyncConfigDomain">
+        insert into conf_syncinfo
+        (
+        mysql_db_name,
+        mysql_table_name,
+        gp_db_name,
+        frequency,
+        gp_table_name,
+        sync_type,
+        sync_field,
+        sync_field_str,
+        ftpName,
+        delimit
+        )
+        values
+        (
+        #{info.mysqlDbName},
+        #{info.mysqlTableName},
+        #{info.gpDbName},
+        #{info.frequency},
+        #{info.gpTableName},
+        #{info.syncType},
+        #{info.syncField},
+        #{info.syncFieldStr},
+        #{info.ftpName},
+        #{info.delimit}
+        )
+    </insert>
+
+    <update id="editSync" parameterType="com.axon.market.common.domain.isystem.SyncConfigDomain">
+        update conf_syncinfo set
+        <if test="info.mysqlDbName != null">
+            mysql_db_name = #{info.mysqlDbName},
+        </if>
+        <if test="info.mysqlTableName != null">
+            mysql_table_name = #{info.mysqlTableName},
+        </if>
+        <if test="info.gpDbName != null">
+            gp_db_name = #{info.gpDbName},
+        </if>
+        <if test="info.frequency != null">
+            frequency = #{info.frequency},
+        </if>
+        <if test="info.gpTableName != null">
+            gp_table_name = #{info.gpTableName},
+        </if>
+        <if test="info.syncType != null">
+            sync_type = #{info.syncType},
+        </if>
+        <if test="info.syncField != null">
+            sync_field = #{info.syncField},
+        </if>
+        <if test="info.syncFieldStr != null">
+            sync_field_str = #{info.syncFieldStr},
+        </if>
+        <if test="info.ftpName != null">
+            ftpName = #{info.ftpName},
+        </if>
+        <if test="info.delimit != null">
+            delimit = #{info.delimit},
+        </if>
+        id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteSync">
+        delete from  conf_syncinfo
+        where id = #{id}
+    </update>
+
+</mapper>

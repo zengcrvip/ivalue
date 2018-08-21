@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IPositionSceneMapper">
+
+    <select id="queryPositionSceneTotal" resultType="int">
+        select count(1) as count from
+        (
+        select m.id as id,m.scence_name as scenceName,m.scence_type as scenceType,t.scence_type_name as scenceTypeName,
+        m.begin_time as beginTime,m.end_time as endTime,m.status
+        from market_position_scence m LEFT JOIN market_position_scence_type t on m.scence_type = t.scence_type_id
+        where 1=1 and  status != 2
+        <if test="positionScenName != ''"  >
+            and  m.scence_name like  concat('%',#{positionScenName},'%')
+        </if>
+        <if test="positionScenStau != ''"  >
+            and  m.status = #{positionScenStau}
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryPositionSceneByPage" resultType="com.axon.market.common.domain.iscene.PositionSceneDomain">
+        select m.id as id,m.scence_name as scenceName,m.scence_type as scenceType,t.scence_type_name as scenceTypeName,
+        m.begin_time as beginTime,m.end_time as endTime,c.base_name as baseName,m.status
+        from market_position_scence m LEFT JOIN market_position_scence_type t on m.scence_type = t.scence_type_id
+        LEFT JOIN conf_baseinfo c on m.base_id = c.base_id
+        where 1=1 and  m.status != 2
+        <if test="positionScenName != ''"  >
+            and  m.scence_name like  concat('%',#{positionScenName},'%')
+        </if>
+        <if test="positionScenStau != ''"  >
+            and  m.status = #{positionScenStau}
+        </if>
+        order by m.create_time DESC
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryPositonSenceType" resultType="java.util.Map">
+        select scence_type_id as id,scence_type_name as name from market_position_scence_type ORDER BY scence_type_id
+    </select>
+
+    <select id="queryBaseAreaType"  resultType="java.util.Map">
+        select location_type_id as id,location_type as name from conf_baseinfo_type ORDER BY location_type_id
+    </select>
+
+    <select id="queryBaseAreas" resultType="java.util.Map" parameterType="java.util.Map">
+        select distinct a.code as id,a.name as name  from market_area a
+        where 1=1
+
+               and a.code = #{areaCode}
+
+        order by a.code
+    </select>
+
+    <select id="queryBasesTotal" resultType="int" parameterType="java.util.Map">
+        select count(1) as count from
+        (
+        select c.base_id as id,c.base_name as name from conf_baseinfo c
+        where c.city_code =  #{baseAreaId}
+        and c.status != -1
+        <if test="status == null">
+            and c.status = 1
+        </if>
+        <if test="baseTypeId != null">
+            and FIND_IN_SET(c.location_type_id,#{baseTypeId})
+        </if>
+        <if test="baseName != '' and baseName != null"  >
+            and  c.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != '' and baseId != null"  >
+            and  c.business_hall_coding  = #{baseId}
+        </if>
+        <if test="businessCodes != '' and businessCodes != null">
+            and c.base_id in (${businessCodes})
+        </if>
+        <if test="editUserType == 'edit'">
+            and 0 >= find_in_set(c.base_id,(select group_concat(u.business_hall_Ids) from market_user u where u.business_hall_Ids != '' and u.id != #{editUserId}))
+        </if>
+        <if test="editUserType == 'create'">
+            and 0 >= find_in_set(c.base_id,(select group_concat(u.business_hall_Ids) from market_user u where u.business_hall_Ids != ''))
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryBasesByPage" resultType="java.util.Map" parameterType="java.util.Map">
+        select c.base_id as id,c.base_name as name,c.business_hall_coding as code,c.location_type_id as locationTypeId from conf_baseinfo c
+        where c.city_code =  #{baseAreaId}
+        and c.status != -1
+        <if test="status == null">
+            and c.status = 1
+        </if>
+        <if test="baseTypeId != null">
+            and FIND_IN_SET(c.location_type_id,#{baseTypeId})
+        </if>
+        <if test="baseName != '' and baseName != null"  >
+            and  c.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != '' and baseId != null"  >
+            and  c.business_hall_coding  = #{baseId}
+        </if>
+        <if test="businessCodes != '' and businessCodes != null">
+            and c.base_id in (${businessCodes})
+        </if>
+        <if test="editUserType == 'edit'">
+            and 0 >= find_in_set(c.base_id,(select group_concat(u.business_hall_Ids) from market_user u where u.business_hall_Ids != '' and u.id != #{editUserId}))
+        </if>
+        <if test="editUserType == 'create'">
+            and 0 >= find_in_set(c.base_id,(select group_concat(u.business_hall_Ids) from market_user u where u.business_hall_Ids != ''))
+        </if>
+        order by c.base_id
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryBases" resultType="java.util.Map" parameterType="java.util.Map">
+        select c.base_id as id,c.base_name as name,c.business_hall_coding as code,c.location_type_id as locationTypeId from conf_baseinfo c
+        where c.city_code =  #{baseAreaId}
+        and c.status = 1
+        <if test="baseTypeId !='' and baseTypeId != null">
+            and c.location_type_id =  #{baseTypeId}
+        </if>
+        <if test="baseName != '' and baseName != null"  >
+            and  c.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != '' and baseId != null"  >
+            and  c.business_hall_coding  = #{baseId}
+        </if>
+        <if test="businessCodes != '' and businessCodes != null">
+            and c.base_id in (${businessCodes})
+        </if>
+        order by c.base_id
+    </select>
+
+    <select id="queryAllBusinessHallsUnderArea" resultType="java.util.Map">
+      select
+          c.base_id                                                     as id,
+          c.base_name                                                   as name,
+          c.location_type_id                                            as locationTypeId,
+          if(
+              ((#{businessHallIds} is null and find_in_set(c.base_id,k.businessHallIds) != 0 and find_in_set(c.base_id,k.businessHallIds) is not null)
+              or (#{businessHallIds} is not null and find_in_set(c.base_id,#{businessHallIds}) != 0 and find_in_set(c.base_id,#{businessHallIds}) is not null)),
+              'on','un')                                               as status,
+          u.marketing_audit_users                                       as marketingAuditUsers
+        from conf_baseinfo c
+        left join market_user u on find_in_set(c.base_id, u.business_hall_Ids),
+        (
+            select
+                group_concat(u1.business_hall_Ids) as businessHallIds
+            from market_user u1
+            where u1.marketing_audit_users like concat('%"auditUser":"',#{targetUser},'","auditUserName"%')
+            <if test="targetUser == null or targetUser == '' or targetUser == -1">
+                and false
+            </if>
+        ) as k
+        where c.status != -1 and c.city_code = #{areaCode}
+    </select>
+
+    <select id="queryPositionBaseAreas" resultType="com.axon.market.common.domain.iscene.MarketAreaDomain">
+        select
+            a.code                                                       as id,
+            a.name                                                       as name,
+            a.parent_id                                                  as pId,
+            a.code                                                       as value,
+            if(find_in_set(a.code,#{areaIds}) >0,'true','false')         as checked,
+            if (a.parent_id = 0,'true','false')                          as isParent,
+            if (a.parent_id = 0,'true','false')                          as open
+        from market_area as a
+        where (a.parent_id = 0 or a.parent_id = 99999)
+        <if test="areaCode != '99999'">
+            and  a.code = #{areaCode}
+        </if>
+        order by a.code desc
+    </select>
+
+    <insert id="createPositionScene" parameterType="com.axon.market.common.domain.iscene.PositionSceneDomain">
+        insert into market_position_scence(
+                                            scence_name
+                                            ,scence_type
+                                            ,monitor_interval
+                                            ,begin_time
+                                            ,end_time
+                                            ,monitor_area
+                                            ,channel_id
+                                            ,monitor_type
+                                            ,base_area_id
+                                            ,base_area_type
+                                            ,base_id
+                                            ,task_weight
+                                            ,trigger_channel_id
+                                            ,is_send_report
+                                            ,report_phone
+                                            ,send_interval
+                                            ,white_users
+                                            ,white_users_name
+                                            ,black_users
+                                            ,black_users_name
+                                            ,white_areas
+                                            ,white_areas_name
+                                            ,black_areas
+                                            ,black_areas_name
+                                            ,status
+                                            ,create_time
+                                            )
+                                            values(
+                                            #{scenceName},
+                                            #{scenceType},
+                                            #{monitorInvartal},
+                                            #{beginTime},
+                                            #{endTime},
+                                            #{monitorArea},
+                                            #{channelId},
+                                            #{monitorType},
+                                            #{baseAreaId},
+                                            #{baseAreaType},
+                                            #{baseId},
+                                            #{taskWeight},
+                                            #{triggerChannelId},
+                                            #{isSengReport},
+                                            #{reportPhone},
+                                            #{sendInterval},
+                                            #{whiteUsers},
+                                            #{whiteUserNames},
+                                            #{blackUsers},
+                                            #{blackUserNames},
+                                            #{whiteAreas},
+                                            #{whiteAreaNames},
+                                            #{blackAreas},
+                                            #{blackAreaNames},
+                                            #{status},
+                                            now()
+                                            )
+    </insert>
+
+    <update id="updatePositionScene" parameterType="com.axon.market.common.domain.iscene.PositionSceneDomain">
+        update  market_position_scence set
+                                             scence_name = #{scenceName}
+                                            ,scence_type = #{scenceType}
+                                            ,monitor_interval = #{monitorInvartal}
+                                            ,begin_time = #{beginTime}
+                                            ,end_time = #{endTime}
+                                            ,monitor_area = #{monitorArea}
+                                            ,channel_id = #{channelId}
+                                            ,monitor_type = #{monitorType}
+                                            ,base_area_id = #{baseAreaId}
+                                            ,base_area_type = #{baseAreaType}
+                                            ,base_id = #{baseId}
+                                            ,task_weight = #{taskWeight}
+                                            ,trigger_channel_id = #{triggerChannelId}
+                                            ,is_send_report = #{isSengReport}
+                                            ,report_phone = #{reportPhone}
+                                            ,send_interval = #{sendInterval}
+                                            ,white_users = #{whiteUsers}
+                                            ,white_users_name = #{whiteUserNames}
+                                            ,black_users = #{blackUsers}
+                                            ,black_users_name = #{blackUserNames}
+                                            ,white_areas = #{whiteAreas}
+                                            ,white_areas_name = #{whiteAreaNames}
+                                            ,black_areas = #{blackAreas}
+                                            ,black_areas_name = #{blackAreaNames}
+                                            ,status = #{status}
+                                            ,create_time = now()
+                                            where id = #{id}
+    </update>
+
+    <update id="deletePositionSceneById" >
+        update market_position_scence set status = 2 where id = #{id}
+    </update>
+
+    <select id="queryPositionSceneById" resultType="com.axon.market.common.domain.iscene.PositionSceneDomain">
+           select m.id as id,
+                   m.scence_name as scenceName,
+                   m.scence_type as scenceType,
+                   t.scence_type_name as scenceTypeName,
+                   m.monitor_interval as monitorInvartal,
+                   m.begin_time  as beginTime,
+                   m.end_time    as endTime,
+                   m.monitor_area as monitorArea,
+                   m.channel_id  as channelId,
+                   m.monitor_type as monitorType,
+                   m.base_area_id as baseAreaId,
+                   m.base_area_type as baseAreaType,
+                   m.base_id as baseId,
+                   c.base_name as baseName,
+                   m.task_weight as taskWeight,
+                   m.trigger_channel_id as triggerChannelId,
+                   m.is_send_report as isSengReport,
+                   m.report_phone as reportPhone,
+                   m.send_interval as sendInterval,
+                   m.white_users as whiteUsers,
+                   m.white_users_name as whiteUserNames,
+                   m.black_users as blackUsers,
+                   m.black_users_name as blackUserNames,
+                   m.white_areas as whiteAreas,
+                   m.white_areas_name as whiteAreaNames,
+                   m.black_areas as blackAreas,
+                   m.black_areas_name as blackAreaNames,
+                   m.status as status
+            from market_position_scence m
+            LEFT JOIN conf_baseinfo c on m.base_id = c.base_id
+            left join market_position_scence_type t on t.scence_type_id = m.scence_type
+            where m.id = #{positionSceneId}
+    </select>
+
+    <select id="queryPositionSceneType" resultType="java.util.Map">
+        select m.id as id,m.scence_name as name from market_position_scence m where m.status = 1
+    </select>
+
+    <select id="queryScenePilotType" resultType="java.util.Map">
+        select m.id as id,m.name as name from market_scene_pilot m where isDelete = 0
+    </select>
+
+    <select id="queryPriorityLevel" resultType="int">
+        select scene_pilot_sort as level FROM  market_jobs where status != -1 and market_type = 'scenePilot'
+    </select>
+
+    <select id="queryPriorityLevelById" resultType="int">
+        SELECT  scene_pilot_sort as level FROM  market_jobs WHERE  status != -1 and market_type = 'scenePilot' and id = #{tid}
+    </select>
+
+
+</mapper>

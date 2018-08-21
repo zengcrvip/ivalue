@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IDirectionalCustomerMapper">
+
+    <select id="queryUserManageJurisdiction" resultType="java.lang.Integer">
+        SELECT
+          k.is_can_manage
+        FROM
+          market.market_user m JOIN keeper.keeper_user k ON  m.id = k.user_id and k.status not in (3,-1)
+        WHERE  m.id = #{userId}
+    </select>
+
+
+    <select id="queryDirectonalCustomerBase" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+	      k.id,
+	      k.user_name as userName,
+	      k.user_phone as userPhone,
+	      k.user_area_code as userAreaCode,
+          a.name as areaName,
+	      k.maintain_user_id as maintainUserId,
+	      m.name as maintainUserName,
+          m.telephone as maintainUserPhone,
+	      k.user_weixin as userWeiXin,
+	      k.user_weibo as userWeiBo,
+	      k.user_qq as userQQ,
+	      k.user_wangwang as userWangWang
+        from keeper.keeper_user_maintain k
+        join market.market_user m on m.id = k.maintain_user_id
+        JOIN market.market_area a on k.user_area_code = a.code
+        where k.status = 1
+        <if test='isManage == "1" and maintainUserAreaId != "99999" '>
+          and m.area_id = #{maintainUserAreaId}
+        </if>
+        <if test='isManage == "0" '>
+          and m.id = #{maintainUserId}
+        </if>
+        <if test="areaCode != '' and areaCode!= null and areaCode != 99999">
+            and k.user_area_code = #{areaCode}
+        </if>
+        <if test="userPhone != null and userPhone != ''">
+          and k.user_phone = #{userPhone}
+        </if>
+        <if test="maintainUserPhone != null and maintainUserPhone != ''">
+          and m.telephone like concat('%',#{maintainUserPhone},'%')
+        </if>
+        order by k.create_time desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryDirectonalCustomerBaseCount" parameterType="java.util.Map" resultType="int">
+        SELECT
+            count(*)
+        from keeper.keeper_user_maintain k
+        join market.market_user m on m.id = k.maintain_user_id
+        JOIN market.market_area a on k.user_area_code = a.code
+        where k.status = 1
+        <if test='isManage == "1" and maintainUserAreaId != "99999" '>
+            and m.area_id = #{maintainUserAreaId}
+        </if>
+        <if test='isManage == "0" '>
+            and m.id = #{maintainUserId}
+        </if>
+        <if test="areaCode != '' and areaCode!= null and areaCode != 99999">
+            and k.user_area_code = #{areaCode}
+        </if>
+        <if test="userPhone != null and userPhone != ''">
+            and k.user_phone = #{userPhone}
+        </if>
+        <if test="maintainUserPhone != null and maintainUserPhone != ''">
+            and m.telephone like concat('%',#{maintainUserPhone},'%')
+        </if>
+    </select>
+
+
+    <select id="checkUserIsExist" resultType="java.lang.Integer">
+        SELECT  id  FROM keeper.keeper_user_maintain  WHERE status = 1 AND user_phone = #{userPhone}
+    </select>
+
+    <update id="delExistUser">
+        UPDATE  keeper.keeper_user_maintain k SET  k.status = -1 , k.update_user = #{updateUserId} , k.update_time = now() , k.desc = #{delDesc} WHERE k.id = #{userId}
+    </update>
+
+    <insert id="createUserMaintain" parameterType="java.util.Map">
+        INSERT  into keeper.keeper_user_maintain
+        (
+          user_name,
+          user_phone,
+          user_code,
+          user_area_code,
+          maintain_user_id,
+          user_weixin,
+          user_weibo,
+          user_qq,
+          user_wangwang,
+          status,
+          create_time,
+          create_user
+        )
+        VALUES
+        (
+          #{userName},
+          #{userPhone},
+          #{userCode},
+          #{userAreaCode},
+          #{maintainUserId},
+          #{userWeiXin},
+          #{userWeiBo},
+          #{userQQ},
+          #{userWangWang},
+          #{status},
+          now(),
+          #{createUser}
+        )
+    </insert>
+
+
+    <select id="queryUserMaintainDetail" resultType="com.axon.market.common.domain.ikeeper.UserMaintainDomain">
+        SELECT
+            k.id,
+            k.user_name as userName,
+            k.user_phone as userPhone,
+            k.user_code as userCode,
+            k.user_area_code as userAreaCode,
+            a.name as areaName,
+            k.maintain_user_id as maintainUserId,
+            m.name as maintainUserName,
+            m.telephone as maintainUserPhone,
+            k.user_weixin as userWeiXin,
+            k.user_weibo as userWeiBo,
+            k.user_qq as userQQ,
+            k.user_wangwang as userWangWang
+        from keeper.keeper_user_maintain k
+        join market.market_user m on m.id = k.maintain_user_id
+        JOIN market.market_area a on k.user_area_code = a.code
+        where k.status = 1 AND k.id = #{userId}
+    </select>
+
+    <update id="updateUserMaintain" parameterType="java.util.Map">
+        UPDATE
+          keeper.keeper_user_maintain
+        SET
+          user_name = #{userName},
+          user_area_code = #{userAreaCode},
+          user_weixin = #{userWeiXin},
+          user_weibo = #{userWeiBo},
+          user_qq = #{userQQ},
+          user_wangwang = #{userWangWang},
+          update_time = now(),
+          update_user = #{updateUser}
+        WHERE
+          id = #{id}
+    </update>
+
+    <update id="deleteUserMaintain">
+        UPDATE
+          keeper.keeper_user_maintain
+        SET
+          status = -1,
+          update_time = now()
+        where id = #{userId}
+    </update>
+
+    <select id="queryCurrentKeeperUser" resultType="java.util.Map">
+        SELECT
+          m.telephone as telephone,
+          m.area_id as areaId,
+          k.is_can_manage as isCanManage
+        FROM
+         market.market_user m LEFT JOIN keeper.keeper_user k ON  m.id = k.user_id and  k.status not in (3,-1)
+        where  m.id = #{loginUserId}
+    </select>
+    
+    <select id="queryUserCustPhoneNumberList" resultType="java.util.Map">
+        SELECT
+          m.user_phone,
+          m.user_name
+        FROM  keeper.keeper_user_maintain m
+        where  m.maintain_user_id = #{maintainUserId} AND status = 1
+    </select>
+
+    <insert id="importFailedDirectionCustomer" parameterType="java.util.Map">
+        insert  into keeper.keeper_import_data(
+            file_id
+            ,row_no
+            ,row_data
+            ,operate_status
+            ,operate_result
+        )values (
+            #{fileId},
+            #{rowNo},
+            #{rowData},
+            #{status},
+            #{result}
+        )
+    </insert>
+
+    <insert id="importDirectionCustomerToTemple" parameterType="java.util.Map">
+        insert  into keeper.keeper_import_user_maintain(
+            file_id
+            ,row_no
+            ,row_user_name
+            ,row_user_phone
+            ,row_user_code
+            ,row_area_code
+            ,row_maintain_user_name
+            ,row_maintain_user_phone
+            ,row_user_qq
+            ,row_user_weixin
+            ,row_user_wangwang
+            ,row_user_weibo
+            ,operate_status
+            ,operate_result
+        )values (
+            #{fileId},
+            #{rowNo},
+            #{rowData.userName},
+            #{rowData.userPhone},
+            #{rowData.userCode},
+            #{rowData.userAreaCode},
+            #{rowData.maintainUserName},
+            #{rowData.maintainUserPhone},
+            #{rowData.userQQ},
+            #{rowData.userWeiXin},
+            #{rowData.userWangWang},
+            #{rowData.userWeiBo},
+            #{status},
+            #{result}
+        )
+    </insert>
+
+    <insert id="insertFileMessage" parameterType="java.util.Map">
+        insert into keeper.keeper_import_file(
+        file_id
+        ,file_name
+        ,file_size
+        ,task_type
+        ,create_user
+        ,create_date
+        ,target_table
+        ,status
+        ,result
+        )
+        values(#{fileId},#{fileName},#{fileSize},#{taskType},#{createUser},now(),#{targetTable},#{status},#{result})
+    </insert>
+
+
+    <select id="queryAllMaintainUser" resultType="java.lang.String">
+        select
+          m.telephone
+        from market.market_user m join keeper.keeper_user k on m.id = k.user_id
+        where m.area_id != 99999 and m.status = 0
+    </select>
+
+
+    <insert id="saveDirectionCustomer">
+        insert into keeper.keeper_user_maintain(
+          user_phone,
+          user_name,
+          user_code,
+          user_area_code,
+          maintain_user_id,
+          user_weixin,
+          user_weibo,
+          user_qq,
+          user_wangwang,
+          status,
+          create_time,
+          create_user
+        )
+         select
+            DISTINCT
+            m.row_user_phone,
+            m.row_user_name,
+            m.row_user_code,
+			m.row_area_code,
+            k.user_id,
+            m.row_user_weixin,
+            m.row_user_weibo,
+            m.row_user_qq,
+            m.row_user_wangwang,
+            1,
+            now(),
+            #{createUserId}
+        from keeper.keeper_import_user_maintain m left join market.market_user u on m.row_maintain_user_phone = u.telephone
+        left join keeper.keeper_user k on k.user_id = u.id
+        where m.file_id = #{fileId}
+    </insert>
+
+
+    <select id="queryIsExist" resultType="java.lang.String">
+        select
+          GROUP_CONCAT(a.id)
+        from keeper.keeper_user_maintain a
+        join keeper.keeper_import_user_maintain b on b.row_user_phone = a.user_phone
+        where a.status = 1 and b.file_id = #{fileId}
+    </select>
+
+
+    <update id="coverIsExistData">
+          update
+            keeper.keeper_user_maintain a
+          set
+            a.status = -1 ,
+            a.desc = '导入覆盖',
+            a.update_time = now(),
+            a.update_user = #{updateUserId}
+          where  find_in_set(a.id,#{ids})
+    </update>
+
+</mapper>

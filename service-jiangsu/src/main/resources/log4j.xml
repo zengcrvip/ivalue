@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- 输出日志到控制台 ConsoleAppender -->
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<param name="Threshold" value="info"></param>
+		<layout class="org.apache.log4j.TTCCLayout">
+			<param name="ConversionPattern" value="TTCCLayout"></param>
+		</layout>
+	</appender>
+
+	<!-- 按不同级别生成不同的日志文件 -->
+	<appender name="info" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/info.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="INFO" />
+			<param name="LevelMax" value="WARN" />
+		</filter>
+	</appender>
+
+	<appender name="error" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/error.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="ERROR" />
+			<param name="LevelMax" value="FATAL" />
+		</filter>
+	</appender>
+
+	<appender name="debug" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/debug.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %p %c %m%n" />
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="LevelMin" value="DEBUG" />
+			<param name="LevelMax" value="DEBUG" />
+		</filter>
+	</appender>
+
+	<appender name="refreshService" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/refresh.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="gpService" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/gp.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="monitorService" class="com.axon.market.common.log.DatedFileAppender">
+		<param name="File" value="../log/%yyyy%mm/%dd/monitor.log" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Append" value="true" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %p %c %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="com.axon.market.core.service.RefreshDataService">
+		<level value="info" />
+		<appender-ref ref="refreshService" />
+	</logger>
+
+	<logger name="com.axon.market.core.usergroup.db.GreenPlumOperateService">
+		<level value="info" />
+		<appender-ref ref="gpService" />
+	</logger>
+
+	<logger name="com.axon.market.core.monitor.FileMonitorService">
+		<level value="info" />
+		<appender-ref ref="monitorService" />
+	</logger>
+
+	<!-- 根logger设置 -->
+	<root>
+		<!-- <priority value="debug" /> -->
+		<level value="info" />
+		<appender-ref ref="error" />
+		<appender-ref ref="info" />
+		<!--<appender-ref ref="debug" />-->
+		 <appender-ref ref="console" />
+	</root>
+</log4j:configuration>

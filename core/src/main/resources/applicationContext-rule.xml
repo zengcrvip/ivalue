@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--规则解析相关 A -->
+    <bean id="numNodeParse" class="com.axon.market.core.rule.impl.NumNodeParse">
+        <property name="propertyService" ref="propertyService"/>
+        <property name="tagService" ref="tagService"/>
+    </bean>
+
+    <bean id="stringNodeParse" class="com.axon.market.core.rule.impl.StringNodeParse">
+        <property name="propertyService" ref="propertyService"/>
+        <property name="tagService" ref="tagService"/>
+    </bean>
+
+    <bean id="dateNodeParse" class="com.axon.market.core.rule.impl.DateNodeParse">
+        <property name="propertyService" ref="propertyService"/>
+        <property name="tagService" ref="tagService"/>
+    </bean>
+
+    <bean id="modelNodeParse" class="com.axon.market.core.rule.impl.ModelNodeParse">
+        <property name="modelService"  ref="modelService" />
+        <property name="greenPlumOperateService"  ref="greenPlumOperateService" />
+    </bean>
+
+    <bean id="nodeParseMap" class="java.util.HashMap">
+        <constructor-arg>
+            <map>
+                <entry key="num_gt">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="num_ge">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="num_lt">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="num_le">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="num_eq">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="num_neq">
+                    <ref bean="numNodeParse"/>
+                </entry>
+                <entry key="string_eq">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="string_neq">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="string_contain">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="string_notcontain">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="string_null">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="string_notnull">
+                    <ref bean="stringNodeParse"/>
+                </entry>
+                <entry key="date_gt">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="date_lt">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="date_ge">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="date_le">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="date_eq">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="date_neq">
+                    <ref bean="dateNodeParse"/>
+                </entry>
+                <entry key="match">
+                    <ref bean="modelNodeParse"/>
+                </entry>
+            </map>
+        </constructor-arg>
+    </bean>
+
+    <bean id="ruleParse" class="com.axon.market.core.rule.impl.RuleParseImpl">
+        <property name="nodeParseMap" ref="nodeParseMap"/>
+    </bean>
+
+    <bean id="ruleParseImpl" class="com.axon.market.core.rule.RuleParseImpl">
+        <property name="ruleParse" ref="ruleParse"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.itag.IResourcesUserMapper">
+
+    <select id="queryResourcesUsersCount" resultType="java.lang.Integer">
+        select count(1) from market_resource as r
+        where #{areaId} = 99999
+        or r.role_ids is null
+        or r.role_ids = ''
+        or exists (select id from market_role r1 where find_in_set(r1.id, #{roleIds}) and find_in_set(r1.id, r.role_ids))
+    </select>
+
+    <select id="queryResourcesUsersByPage" resultType="com.axon.market.common.domain.itag.ResourcesUserDomain">
+        select
+            r.id                              as id,
+            r.title                           as title,
+            r.file_name                       as fileName,
+            r.refresh_result                  as refreshResult,
+            r.last_refresh_total_count        as totalCount,
+            r.last_refresh_success_count      as successCount,
+            r.last_refresh_fail_count         as failCount,
+            r.last_refresh_time               as refreshTime,
+            r.data_date                       as dataDate,
+            r.remarks                         as remarks
+        from market_resource as r
+        where #{areaId} = 99999
+        or r.role_ids is null
+        or r.role_ids = ''
+        or exists (select id from market_role r1 where find_in_set(r1.id, #{roleIds}) and find_in_set(r1.id, r.role_ids))
+        order by r.create_time desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryResourceUserModelById" resultType="com.axon.market.common.domain.itag.ResourcesUserDomain">
+        select
+            r.id                              as id,
+            r.title                           as title,
+            r.file_name                       as fileName,
+            r.refresh_result                  as refreshResult,
+            r.last_refresh_total_count        as totalCount,
+            r.last_refresh_success_count      as successCount,
+            r.last_refresh_fail_count         as failCount,
+            r.last_refresh_time               as refreshTime,
+            r.role_ids                        as roleIds,
+            group_concat(ro.name)             as roleNames,
+            r.remarks                         as remarks
+        from market_resource as r
+        left join market_role ro on find_in_set(ro.id, r.role_ids)
+        where r.id = #{resourceId}
+        group by r.id
+    </select>
+
+    <select id="queryTableColumnsById" resultType="java.lang.String">
+        select r.columns from market_resource as r where r.id = #{resourceId}
+    </select>
+
+    <insert id="insertResourcesUserModel" parameterType="com.axon.market.common.domain.itag.ResourcesUserDomain" useGeneratedKeys="true" keyProperty="id">
+        insert into market_resource
+        (
+            title,
+            file_name,
+            refresh_result,
+            create_time,
+            create_user,
+            data_date,
+            role_ids,
+            remarks
+        )
+        values
+        (
+            #{title},
+            #{fileName},
+            'refreshing',
+            sysdate(),
+            #{createUser},
+            #{dataDate},
+            #{roleIds},
+            #{remarks}
+        )
+    </insert>
+
+    <update id="updateResourceRefreshInfo">
+         update market_resource set
+            columns                     = #{columns},
+            last_refresh_time           = #{refreshTime},
+            refresh_result              = #{result},
+            last_refresh_total_count    = #{totalCount},
+            last_refresh_success_count  = #{successCount},
+            last_refresh_fail_count     = #{failCount}
+        where id = #{resourceId}
+    </update>
+
+    <update id="editResourceModel">
+        update market_resource set
+            title                     = #{title},
+            role_ids                  = #{roleIds},
+            remarks                   = #{remarks},
+            update_time               = sysdate(),
+            update_user               = #{updateUser}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteResourceModel">
+        delete from market_resource where id = #{resourceId}
+    </delete>
+</mapper>

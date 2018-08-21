@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperWelfareRecordMapper">
+
+    <insert id="addWelfareRecord" parameterType="com.axon.market.common.domain.ikeeper.KeepWelfareRecordDomain" useGeneratedKeys="true" keyProperty="recordId">
+        insert into keeper.keeper_welfare_record
+        (
+        welfare_type,
+        task_id,
+        welfare_ids,
+        eff_time,
+        exp_time,
+        create_user_id,
+        state
+        )
+        values
+        (
+        #{welfareType},
+        #{taskid},
+        #{welfareIds},
+        #{effTime},
+        #{expTime},
+        #{userId},
+        #{state}
+        )
+    </insert>
+
+    <select id="queryPhoneListByWelfareId" resultType="Map">
+        select
+        a.phone as phone,
+        a.ORDER_TIME as createdate,
+        a.STATE as state,
+        ifnull((select c.name from market.market_user c where c.id = b.create_user_id), "") as userName,
+        ifnull((select d.welfare_name from keeper.keeper_welfare d where d.welfare_id = #{welfareId}), "") as welfareName
+        from keeper.KEEPER_WELFARE_RECORD_CUSTOMER a join keeper.KEEPER_WELFARE_RECORD b on a.RECORD_ID = b.RECORD_ID
+        where b.WELFARE_TYPE = 1 and b.state = 3 and b.WELFARE_IDS = #{welfareId}
+        <if test="userId != null">
+            and b.CREATE_USER_ID = #{userId}
+        </if>
+    </select>
+
+    <select id="queryProductByWelfareId" resultType="java.util.HashMap">
+          select d.product_code as productCode ,
+                  d.net_type as netType
+            from  keeper.keeper_product d ,
+                   keeper.keeper_welfare w
+            where FIND_IN_SET(d.product_id,w.product_ids)
+            and   find_in_set(w.welfare_id,#{welfareIds})
+    </select>
+
+    <!--
+       根据日期及状态查询待处理的福利记录
+       3：执行成功  4：中断   5：失败  6:失效到期
+    -->
+    <select id="queryRecordsByState" resultType="java.util.HashMap">
+          select t.task_inst_id as taskInstId,
+                  t.type_id as typeId,
+                  r.record_id as recordId,
+                  r.create_user_id as executeUserId,
+                  (select group_concat(c.channel_type)  from keeper.keeper_task_channel c where c.task_id = t.task_id) as channelTypes
+          from   keeper.keeper_welfare_record r
+          join   keeper.keeper_task_inst t
+            on   r.task_id = t.task_id
+           and   r.create_user_id = t.exec_user_id
+          where t.exec_date = #{date}
+           and  r.state in (3,6)
+           and t.type_id = 1
+    </select>
+
+    <update id="updateRecordById">
+        update  keeper.keeper_welfare_record r set r.state = 7 where record_id = #{recordId}
+    </update>
+
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperTaskInstDetailMapper">
+
+    <!-- 根据productId查找赠送记录-->
+    <select id="queryTaskInstDetailByProductId" resultType="Map">
+        SELECT
+        d.telephone as phone,
+        i.product_names as productname,
+        i.user_id as userid,
+        i.create_date as createdate
+        FROM
+        keeper.keeper_task_inst_detail d
+        JOIN keeper.keeper_task_inst i ON d.task_inst_id = i.task_inst_id
+        where i.product_ids = #{productId} and d.state = 3
+    </select>
+
+    <!--
+       批量执行掌柜任务实例详情
+    -->
+    <insert id="batchInsertTaskInstDetail" parameterType="java.util.List">
+        insert into keeper.keeper_task_inst_detail (
+        type_id,
+        task_inst_id,
+        cust_name,
+        telephone,
+        call_times,
+        it_times,
+        exp_time,
+        state,
+        sms_result,
+        call_result
+        )
+        values
+        <foreach collection="taskInstDetailDomainList" item="item"  separator=",">
+            (#{item.typeId},#{item.taskInstId},#{item.customerName},#{item.telephone},#{item.callTimes},#{item.itTimes},#{item.expTime},#{item.state},#{item.smsResult},#{item.callResult})
+        </foreach>
+    </insert>
+
+    <insert id="insertTaskInstDetail" parameterType="com.axon.market.common.domain.ikeeper.TaskInstDetailDomain">
+        insert into keeper.keeper_task_inst_detail (
+            type_id,
+            task_inst_id,
+            cust_name,
+            telephone,
+            call_times,
+            it_times,
+            exp_time,
+            state
+        )
+        values (#{typeId},#{taskInstId},#{customerName},#{telephone},#{callTimes},#{itTimes},#{expTime},#{state})
+    </insert>
+</mapper>

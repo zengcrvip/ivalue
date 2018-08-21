@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperProductMapper">
+
+    <select id="queryProductCount" resultType="int">
+        select count(1)
+        from keeper.keeper_product
+        where state = 1
+        and exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        <if test="areaId != null and areaId !=99999">
+            and (find_in_set(#{areaId},a.area_ids) or a.area_ids = "99999")
+        </if>
+        <if test="netType != null and netType !='' ">
+            and net_type = #{netType}
+        </if>
+        <if test="productId != null">
+            and product_id = #{productId}
+        </if>
+        <if test="productName != null and productName != '' ">
+            and product_name like concat('%',#{productName},'%')
+        </if>
+        <if test="productCode != null and productCode != '' ">
+            and product_code like concat('%',#{productCode},'%')
+        </if>
+    </select>
+
+    <select id="queryProduct" resultType="com.axon.market.common.domain.ishopKeeper.ShopKeeperProductDomain" parameterType="Map">
+        select
+                a.product_id          as productId,
+                a.product_type        as productType,
+                a.type_id             as typeId,
+                a.net_type            as netType,
+                a.product_name        as productName,
+                a.product_code        as productCode,
+                a.comments            as comments,
+                a.eff_date            as effDate,
+                a.exp_date            as expDate,
+                a.area_ids            as areaIds,
+                a.create_time         as createTime,
+                d.type_name           as typeName,
+                ifnull((
+                    select group_concat(c.name)
+                    from market.market_area c
+                    where find_in_set(c.id,a.area_ids)),"") AS areaNames
+        from keeper.KEEPER_PRODUCT a left join keeper.keeper_type d on a.type_id = d.type_id and d.type_classify = 2
+        where state = 1
+        and a.exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        <if test="areaId != null and areaId !=99999">
+            and (find_in_set(#{areaId},a.area_ids) or a.area_ids = "99999")
+        </if>
+        <if test="netType != null and netType !='' ">
+            and net_type = #{netType}
+        </if>
+        <if test="productId != null">
+            and product_id = #{productId}
+        </if>
+        <if test="productName != null and productName != '' ">
+            and product_name like concat('%',#{productName},'%')
+        </if>
+        <if test="productCode != null and productCode != '' ">
+            and product_code like concat('%',#{productCode},'%')
+        </if>
+        order by a.create_time desc
+        <if test="limit != null and offset != null">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <select id="queryProductListByCompositId" resultType="com.axon.market.common.domain.ishopKeeper.ShopKeeperProductDomain">
+        SELECT
+                a.product_id          as productId,
+                a.product_type        as productType,
+                a.type_id             as typeId,
+                a.product_name        as productName,
+                a.product_code        as productCode,
+                a.comments            as comments,
+                a.eff_date            as effDate,
+                a.exp_date            as expDate,
+                a.area_ids            as areaIds,
+                a.create_time         as createTime,
+                d.type_name           as typeName,
+                ifnull((
+                    select group_concat(c.name)
+                    from market.market_area c
+                    where find_in_set(c.id,a.area_ids)),"") AS areaNames
+        FROM KEEPER.KEEPER_PRODUCT A left join keeper.keeper_type d on a.type_id = d.type_id and d.type_classify = 2
+        where state = 1
+        and Find_IN_SET(product_id ,(SELECT product_ids FROM KEEPER.KEEPER_WELFARE where welfare_id = #{welfareId}))
+        and a.exp_date >= (SELECT DATE_FORMAT(now(), '%Y-%m-%d'))
+        order by a.create_time desc
+    </select>
+
+    <insert id="addProduct" parameterType="com.axon.market.common.domain.ishopKeeper.ShopKeeperProductDomain">
+        INSERT  INTO KEEPER.KEEPER_PRODUCT
+        (
+           product_type,
+           type_id,
+           product_name,
+           product_code,
+           eff_date,
+           exp_date,
+           area_ids,
+           create_user_id,
+           create_time,
+           state,
+           comments,
+           net_type
+        )
+        VALUES (
+        #{shopKeeperProductDomain.productType},
+        #{shopKeeperProductDomain.typeId},
+        #{shopKeeperProductDomain.productName},
+        #{shopKeeperProductDomain.productCode},
+        #{shopKeeperProductDomain.effDate},
+        #{shopKeeperProductDomain.expDate},
+        #{shopKeeperProductDomain.areaIds},
+        #{shopKeeperProductDomain.userId},
+        now(),
+        1,
+        #{shopKeeperProductDomain.comments},
+        #{shopKeeperProductDomain.netType}
+        )
+    </insert>
+
+    <update id="updateProduct" parameterType="com.axon.market.common.domain.ishopKeeper.ShopKeeperProductDomain">
+        UPDATE KEEPER.KEEPER_PRODUCT
+        <trim prefix="set" suffixOverrides=",">
+            <if test="productDomain.productType != null">product_type = #{productDomain.productType},</if>
+            <if test="productDomain.typeId != null">type_id = #{productDomain.typeId},</if>
+            <if test="productDomain.productName != null">product_name = #{productDomain.productName},</if>
+            <if test="productDomain.productCode != null">product_code = #{productDomain.productCode},</if>
+            <if test="productDomain.effDate != null">eff_date = #{productDomain.effDate},</if>
+            <if test="productDomain.expDate != null">exp_date = #{productDomain.expDate},</if>
+            <if test="productDomain.areaIds != null">area_ids = #{productDomain.areaIds},</if>
+            <if test="productDomain.comments != null">comments = #{productDomain.comments},</if>
+            <if test="productDomain.netType != null">net_type = #{productDomain.netType},</if>
+        </trim>
+        WHERE product_id = #{productDomain.productId}
+    </update>
+
+    <update id="deleteProduct">
+        UPDATE KEEPER.KEEPER_PRODUCT
+        set state =-1
+        WHERE product_id = #{productId}
+    </update>
+
+    <select id="queryProductGroupOfShopKeeper" resultType="com.axon.market.common.domain.ishopKeeper.ShopKeeperProductDomain">
+        SELECT
+        a.product_id          as productId,
+        a.product_type        as productType,
+        a.type_id             as typeId,
+        a.net_type            as netType,
+        a.product_name        as productName,
+        a.product_code        as productCode,
+        a.comments            as comments,
+        a.eff_date            as effDate,
+        a.exp_date            as expDate,
+        a.area_ids            as areaIds,
+        a.create_time         as createTime,
+        d.type_name           as typeName,
+        ifnull((
+        select group_concat(c.name)
+        from market.market_area c
+        where find_in_set(c.id,a.area_ids)),"") AS areaNames
+        FROM KEEPER.KEEPER_PRODUCT A left join keeper.keeper_type d on a.type_id = d.type_id and d.type_classify = 2
+        where state = 1 and a.exp_date >= (SELECT DATE_FORMAT(now(), '%Y-%m-%d'))
+        <if test="typeId != null">
+            and a.type_id = #{typeId}
+        </if>
+        <if test="areaId != null and areaId !=99999">
+            and (find_in_set(#{areaId},a.area_ids) or a.area_ids = "99999")
+        </if>
+        <if test="netType != null and netType !='' ">
+            and a.net_type = #{netType}
+        </if>
+        <if test="productType != null">
+            and a.product_type = #{productType}
+        </if>
+        <if test="productName != null and productName != '' ">
+            and a.product_name like concat('%',#{productName},'%')
+        </if>
+        order by a.create_time desc
+    </select>
+
+    <select id="queryProductCountwithoutId" resultType="int">
+        select count(1)
+        from keeper.keeper_product
+        where state = 1
+        and exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        and product_code = #{productCode}
+        <if test="productId != null">
+          and product_id != #{productId}
+        </if>
+    </select>
+
+</mapper>

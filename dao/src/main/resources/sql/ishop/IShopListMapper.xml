@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopListMapper">
+
+    <!--查询待审核的总条数 start-->
+    <select id="selectBaseInfoByPageStatusTotal" resultType="int">
+        select count(0) as count from
+        (
+        select 0
+        from conf_baseinfo c
+        where c.reviewUserId=#{reviewUserId}
+        and c.status=2
+        <if test="baseName != ''">
+            and c.base_name like concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''">
+            and c.base_id = #{baseId}
+        </if>
+        ) tab
+    </select>
+    <!--查询待审核的总条数 end-->
+
+    <!--分页查询待审核的数据 start-->
+    <select id="selectBaseInfoByPageStatus" resultType="com.axon.market.common.domain.ishop.ShopListDomain">
+        select
+        ca.name as cityName,
+        cbt.location_type as locationTypeNames,
+        c.base_id as baseId,
+        c.base_name as baseName,
+        c.address,
+        c.fixed_telephone as fixedTelePhone,
+        c.business_hall_coding as businessHallCode,
+        c.city_code as cityCode,
+        c.cityAreaCode,
+        c.district_code as districtCode,
+        c.location_type_id as locationTypeId,
+        c.lng,
+        c.lat,
+        c.radius,
+        c.quota_number as quotaNumber,
+        c.status,
+        c.reviewUserId,
+        c.reviewUserIdFrom,
+        date_format(c.update_date,'%Y-%c-%d %h:%i:%s') as updateDate,
+        c.messageAutograph
+        from conf_baseinfo c left join conf_area ca on c.city_code=ca.id
+        left join conf_baseinfo_type cbt on c.location_type_id=cbt.location_type_id
+        where c.reviewUserId=#{reviewUserId}
+        and c.status=2
+        <if test="baseName != ''">
+            and c.base_name like concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''">
+            and c.base_id = #{baseId}
+        </if>
+        order by c.update_date desc
+        limit #{limit} , #{offset}
+    </select>
+    <!--分页查询待审核的数据 end-->
+
+    <!--查询总条数 start-->
+    <select id="selectPositionBaseTotal" resultType="int">
+        select count(0) as count from
+        (
+        select 0
+        from conf_baseinfo c
+        where (c.create_userid=#{createUserId}
+        <if test="baseIdArray != ''">
+            or FIND_IN_SET(c.base_id,(select business_hall_Ids from market_user where id=#{createUserId})))
+        </if>
+        <if test="cityCode != ''">
+            or (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{cityCode})) or c.city_code=#{cityCode}) )
+        </if>
+        and c.status!=-1 and c.location_type_id !=3
+        <if test="baseName != ''">
+            and c.base_name like concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''">
+            and c.base_id = #{baseId}
+        </if>
+        <if test="baseArea != '' and baseArea != 0">
+            and (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{baseArea})) or c.city_code=#{baseArea})
+        </if>
+        <if test="busCoding!=''">
+            and c.business_hall_coding like concat('%',#{busCoding},'%')
+        </if>
+        ) tab
+    </select>
+    <!--查询总条数 end-->
+
+    <!--根据ID及审核人ID查询数据 start-->
+    <select id="selectShopByBaseId" resultType="com.axon.market.common.domain.ishop.ShopReviewDomain">
+        select c.reviewUserId,c.reviewUserIdFrom,u.marketing_audit_users as marketingAuditUsers from conf_baseinfo c left join market_user u on c.reviewUserIdFrom=u.id where c.base_id=#{baseId} and c.reviewUserId=#{reviewUserId}
+    </select>
+    <!--根据ID及审核人ID查询数据 start-->
+
+    <!--分页查询 start-->
+    <select id="selectPositionBaseByPage" resultType="com.axon.market.common.domain.ishop.ShopListDomain">
+        select
+        ca.name as cityName,
+        cbt.location_type as locationTypeNames,
+        c.base_id as baseId,
+        c.base_name as baseName,
+        c.address,
+        c.fixed_telephone as fixedTelePhone,
+        c.business_hall_coding as businessHallCode,
+        c.city_code as cityCode,
+        c.cityAreaCode,
+        c.district_code as districtCode,
+        c.location_type_id as locationTypeId,
+        c.lng,
+        c.lat,
+        c.radius,
+        c.quota_number as quotaNumber,
+        c.status,
+        c.reviewUserId,
+        c.reviewUserIdFrom,
+        case c.create_userid when #{createUserId} then 1 when 0 then 1 else 0 end isUpdate,
+        date_format(c.update_date,'%Y-%c-%d %h:%i:%s') as updateDate,
+        c.messageAutograph
+        from conf_baseinfo c left join conf_area ca on c.city_code=ca.id
+        left join conf_baseinfo_type cbt on c.location_type_id=cbt.location_type_id
+        where (c.create_userid=#{createUserId}
+        <if test="baseIdArray != ''">
+            or FIND_IN_SET(c.base_id,(select business_hall_Ids from market_user where id=#{createUserId})))
+        </if>
+        <if test="cityCode != ''">
+            or (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{cityCode})) or c.city_code=#{cityCode}))
+        </if>
+        and c.status!=-1 and c.location_type_id != 3
+        <if test="baseName != ''">
+            and c.base_name like concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''">
+            and c.base_id = #{baseId}
+        </if>
+        <if test="baseArea != '' and baseArea != 0">
+            and (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{baseArea})) or c.city_code=#{baseArea})
+        </if>
+        <if test="busCoding!=''">
+            and c.business_hall_coding like concat('%',#{busCoding},'%')
+        </if>
+        order by c.update_date desc
+        limit #{limit},#{offset}
+    </select>
+    <!--分页查询 start-->
+
+    <!--根据店面主键查询该店面审核人员手机号码 start-->
+    <select id="selectReviewUserPhoneByBaseId" resultType="com.axon.market.common.domain.isystem.UserDomain">
+        select name,telephone from market_user where id=(select reviewUserId from conf_baseinfo c where
+        (c.create_userid=#{createUserId}
+        <if test="baseIdArray != ''">
+            or FIND_IN_SET(c.base_id,(select business_hall_Ids from market_user where id=#{createUserId})))
+        </if>
+        <if test="cityCode != ''">
+            or (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{cityCode})) or c.city_code=#{cityCode}))
+        </if>
+        and c.status=2
+        and c.base_id=#{baseId}
+        limit 1)
+    </select>
+    <!--根据店面主键查询该店面审核人员手机号码 end-->
+
+    <!--查询我的炒店 end-->
+    <select id="selectMyShopList" resultType="com.axon.market.common.domain.ishop.ShopListDomain">
+        select
+            base_id as baseId,
+            base_name as baseName,
+            address,
+            fixed_telephone as fixedTelePhone,
+            business_hall_coding as businessHallCode,
+            city_code as cityCode,
+            cityAreaCode,
+            district_code as districtCode,
+            location_type_id as locationTypeId,
+            lng,
+            lat,
+            radius,
+            quota_number as quotaNumber,
+            status,
+            update_date as updateDate,
+            messageAutograph
+        from conf_baseinfo
+        order by update_date desc,base_id desc
+        limit 0,10;
+    </select>
+    <!--查询我的炒店 end-->
+
+    <!--增加我的炒店 start-->
+    <insert id="insertMyShopList" keyProperty="info.baseId" useGeneratedKeys="true">
+        insert into conf_baseinfo
+        (
+            base_name,
+            lng,
+            lat,
+            radius,
+            address,
+            city_code,
+            location_type_id,
+            status,
+            add_date,
+            business_hall_coding,
+            quota_number,
+            district_code,
+            fixed_telephone,
+            update_date,
+            cityAreaCode,
+            create_userid,
+            reviewUserId,
+            reviewUserIdFrom,
+            messageAutograph,
+            city_name
+        )
+        values
+        (
+            #{info.baseName},
+            #{info.lng},
+            #{info.lat},
+            #{info.radius},
+            #{info.address},
+            #{info.cityCode},
+            #{info.locationTypeId},
+            #{info.status},
+            sysdate(),
+            #{info.businessHallCode},
+            #{info.quotaNumber},
+            #{info.districtCode},
+            #{info.fixedTelePhone},
+            sysdate(),
+            #{info.cityAreaCode},
+            #{createUserId},
+            #{info.reviewUserId},
+            #{info.reviewUserIdFrom},
+            #{info.messageAutograph},
+            (select name from market_area where code=#{info.cityCode} limit 1)
+        )
+    </insert>
+    <!--增加我的炒店 end-->
+
+    <!--修改我的炒店 start-->
+    <update id="updateMyShopList" parameterType="com.axon.market.common.domain.ishop.ShopListDomain">
+        update conf_baseinfo set
+        base_name = #{info.baseName},
+        lng = #{info.lng},
+        lat = #{info.lat},
+        radius = #{info.radius},
+        address = #{info.address},
+        city_code = #{info.cityCode},
+        city_name=(select name from market_area where code=#{info.cityCode} limit 1),
+        location_type_id = #{info.locationTypeId},
+        status = #{info.status},
+        business_hall_coding = #{info.businessHallCode},
+        quota_number = #{info.quotaNumber},
+        district_code = #{info.districtCode},
+        fixed_telephone=#{info.fixedTelePhone},
+        update_date = sysdate(),
+        cityAreaCode=#{info.cityAreaCode},
+        reviewUserId=#{info.reviewUserId},
+        reviewUserIdFrom=#{info.reviewUserIdFrom},
+        messageAutograph=#{info.messageAutograph}
+        where (create_userid=#{createUserId}
+        <if test="baseIdArray != ''">
+            or FIND_IN_SET(base_id,(select business_hall_Ids from market_user where id=#{createUserId}))
+        </if>
+        <if test="cityCode != ''">
+            or (city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{cityCode})) or city_code=#{cityCode})
+        </if>
+        )
+        and base_id = #{info.baseId};
+    </update>
+    <!--修改我的炒店 end-->
+
+    <!--查询城市营业厅id start-->
+    <select id="queryBaseIdByCityCode" resultType="java.lang.Integer">
+        select
+            base_id
+        from conf_baseinfo
+        where city_code = #{cityCode} and status = 1
+    </select>
+    <!--查询城市营业厅id end-->
+
+    <select id="queryBaseInfoById" resultType="com.axon.market.common.domain.ishop.ShopListDomain">
+        select
+        base_id as baseId,base_name as baseName,city_code as cityCode,location_type_id as locationTypeId
+        from conf_baseinfo
+        where base_id = #{baseId}
+    </select>
+
+
+    <!--审核状态修正 start-->
+    <update id="updateShopStatusByBaseId">
+        UPDATE conf_baseinfo SET status=#{status},reviewUserId=#{updateReviewUserId},reviewUserIdFrom=#{updateReviewFrom}
+        where  reviewUserId=#{reviewUserId}
+        and base_id=#{baseId};
+    </update>
+    <!--审核状态修正 end-->
+
+    <!--炒店审核说明 start-->
+    <insert id="insertShopAuditThrough">
+INSERT INTO `market_shop_auditthrough` (`shop_Id`, `remark`, `create_userid`, `add_update`) VALUES (#{shopId},#{remark},#{loginUserId},sysdate());
+    </insert>
+    <!--炒店审核说明 end-->
+
+    <!--新增炒店将炒店分配给用户 start-->
+    <update id="updateUserBusinessHallIds">
+        update market_user set business_hall_Ids=concat(business_hall_Ids,#{businessIdStr}) where id=#{userId} and length(ifnull(business_hall_Ids,''))>0;
+    </update>
+    <!--新增炒店将炒店分配给用户 end-->
+
+    <!--根据用户主键查询用户号码 start-->
+    <select id="selectPhoneByUserId" resultType="java.lang.String">
+        select telephone from market_user where id=(select reviewUserIdFrom from conf_baseinfo where base_id=#{id}) limit 1;
+    </select>
+    <!--根据用户主键查询用户号码 end-->
+
+    <select id="queryBusinessHallPortraitById" resultType="com.axon.market.common.domain.ishop.BusinessHallPortraitDomain">
+        select
+          name ,
+          address,
+          business_hall_coding as businessHallCoding,
+          location_type as locationType,
+          month_traffic as monthTraffic,
+          open_date as openDate,
+          decorate_time as decorateTime,
+          area_size as areaSize,
+          internet_speed as internetSpeed,
+          wifi_number as wifiNumber,
+          wifi_user_number as wifiUserNumber,
+          lightbox_number as lightboxNumber,
+          taixi_number as taixiNumber,
+          desktop_pc_number as desktopPCNumber,
+          cloudterminal_eqpt_number as cloudterminalEqptNumber,
+          paperless_eqpt_number as paperlessEqptNumber,
+          paperless_month_business_num as paperlessMonthBusinessNum,
+          business_type1 as businessType1,
+          business_type2 as businessType2,
+          personal_service_items as personalServiceItems,
+          hallpeople_number as hallpeopleNumber,
+          average_age as averageAge,
+          service_satisfaction as serviceSatisfaction,
+          kuandai_business_num as kuandaiBusinessNum,
+          terminal_store_status as terminalStoreStatus,
+          create_time as createTime,
+          create_user_id as createUserId,
+          update_time as updateTime,
+          update_user_id as updateUserId
+        from business_hall_portrait
+        where business_hall_coding = #{businessHallCoding}
+    </select>
+
+
+</mapper>

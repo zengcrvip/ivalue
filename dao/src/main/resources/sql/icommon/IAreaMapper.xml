@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IAreaMapper">
+
+    <select id="queryUserAreas" resultType="com.axon.market.common.domain.icommon.AreaDomain">
+        select
+            a.id              as id,
+            a.name            as name,
+            a.code            as code,
+            a.parent_id       as parentId
+        from market_area a
+    </select>
+
+    <select id="queryUserAreasCode" resultType="com.axon.market.common.domain.icommon.AreaDomain">
+        select
+        a.code              as code,
+        a.name            as name,
+        a.parent_id       as parentId
+        from market_area a
+    </select>
+
+    <select id="queryAreaByToken" resultType="java.util.Map">
+        select
+            concat(a.code,'')              as value,
+            a.name                         as name
+        from market_area a
+        where a.id != 99999
+        and #{areaCode} = 99999
+    </select>
+
+    <select id="queryChannelByToken" resultType="java.util.Map">
+        select
+            bi.channel_code      as value,
+            bi.channel_name      as name
+        from shop_keeper.shop_keeper_channel bi
+        where bi.status = 1
+        <if test="businessHallIds == null or businessHallIds == ''">
+            and false
+        </if>
+        and find_in_set(bi.channel_code,#{businessHallIds})
+    </select>
+
+    <select id="queryAreaByProvince" resultType="java.lang.Integer">
+        select count(*)
+        from market_area
+        where parent_id = #{province} and code =#{city}
+    </select>
+</mapper>

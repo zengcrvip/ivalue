@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.IMonitorConfigMapper">
+
+    <select id="queryMonitorConfigCounts" resultType="java.lang.Integer">
+        select
+        count(1)
+        from monitor_syncinfo where isDelete=0
+        <if test="serverIp != null and serverIp !=''">
+            and serverIp=#{serverIp}
+        </if>
+    </select>
+
+    <select id="queryMonitorById" resultType="com.axon.market.common.domain.isystem.MonitorConfigDomain">
+        select id,serverIp,port,server_account as serverAccount,server_passWord as serverPassWord,format,
+        type,expected,timeTick,dataBaseName,messageContent,isDelete,create_user_id as createUserId,
+        create_time as createTime,update_user_id as updateUserId,update_time as updateTime
+        from monitor_syncinfo where isDelete=0
+        <if test="id != null and id !=''">
+            and id=#{id}
+        </if>
+    </select>
+
+    <select id="queryMonitorConfig" resultType="com.axon.market.common.domain.isystem.MonitorConfigDomain">
+        select id,serverIp,port,server_account as serverAccount,server_passWord as serverPassWord,format,
+        type,expected,timeTick,dataBaseName,messageContent,isDelete,create_user_id as createUserId,
+        create_time as createTime,update_user_id as updateUserId,update_time as updateTime
+        from monitor_syncinfo where isDelete=0
+        <if test="serverIp != null and serverIp !=''">
+            and serverIp=#{serverIp}
+        </if>
+        order by id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!--批量上传email-->
+    <select id="batchUploadEmail">
+        load data LOCAL infile
+        #{path}
+        into table monitor_syncinfo_email_account
+        fields terminated by
+        ','
+        lines terminated by
+        '\n'
+        (email)
+    </select>
+    <!--查询Email条数-->
+    <select id="queryEmailCount" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM monitor_syncinfo_email_account
+        WHERE
+        monitor_syncinfo_id = #{id}
+    </select>
+
+    <!--查询Email条数-->
+    <select id="queryPhoneCount" resultType="int">
+        SELECT
+        COUNT(1)
+        FROM monitor_syncinfo_message_phone
+        WHERE
+        monitor_syncinfo_id = #{id}
+    </select>
+
+    <update id="UpdateEmail">
+        update monitor_syncinfo_email_account set
+        monitor_syncinfo_id = #{id}
+        where monitor_syncinfo_id = 0
+    </update>
+
+    <!--批量上传phone-->
+    <select id="batchUploadPhone">
+        load data LOCAL infile
+        #{path}
+        into table monitor_syncinfo_message_phone
+        fields terminated by
+        ','
+        lines terminated by
+        '\n'
+        (phone)
+    </select>
+
+    <update id="UpdatePhone">
+        update monitor_syncinfo_message_phone set
+        monitor_syncinfo_id = #{id}
+        where monitor_syncinfo_id = 0
+    </update>
+
+    <insert id="addMonitor" parameterType="com.axon.market.common.domain.isystem.MonitorConfigDomain">
+        insert into monitor_syncinfo
+        (
+        serverIp,
+        port,
+        server_account,
+        server_passWord,
+        type,
+        expected,
+        format,
+        timeTick,
+        dataBaseName,
+        messageContent,
+        create_user_id,
+        create_time,
+        update_user_id,
+        update_time
+        )
+        values
+        (
+        #{info.serverIp},
+        #{info.port},
+        #{info.serverAccount},
+        #{info.serverPassWord},
+        #{info.type},
+        #{info.expected},
+        #{info.format},
+        #{info.timeTick},
+        #{info.dataBaseName},
+        #{info.messageContent},
+        #{info.createUserId},
+        sysdate(),
+        #{info.updateUserId},
+        sysdate()
+        )
+    </insert>
+
+    <select id="selectMaxId" resultType="int">
+        SELECT max(id) from monitor_syncinfo
+    </select>
+
+    <update id="editMonitor" parameterType="com.axon.market.common.domain.isystem.MonitorConfigDomain">
+        update monitor_syncinfo set
+        <if test="info.serverIp != null">
+            serverIp = #{info.serverIp},
+        </if>
+        <if test="info.port != null">
+            port = #{info.port},
+        </if>
+        <if test="info.serverAccount != null">
+            server_account = #{info.serverAccount},
+        </if>
+        <if test="info.serverPassWord != ''" >
+            server_passWord = #{info.serverPassWord},
+        </if>
+        <if test="info.type != null">
+            type = #{info.type},
+        </if>
+        <if test="info.expected != null">
+            expected = #{info.expected},
+        </if>
+        <if test="info.format != null">
+            format = #{info.format},
+        </if>
+        <if test="info.timeTick != null">
+            timeTick = #{info.timeTick},
+        </if>
+        <if test="info.dataBaseName != null">
+            dataBaseName = #{info.dataBaseName},
+        </if>
+        <if test="info.messageContent != null">
+            messageContent = #{info.messageContent},
+        </if>
+        <if test="info.updateUserId != null">
+            update_user_id = #{info.updateUserId},
+        </if>
+        update_time = sysdate(),
+        id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteMonitor">
+        update monitor_syncinfo set
+        isDelete = '1'
+        where id = #{id}
+    </update>
+
+    <update id="deleteEmailAccount">
+        delete from monitor_syncinfo_email_account
+        where monitor_syncinfo_id = #{id}
+    </update>
+
+    <update id="deleteMessagePhone">
+        delete from monitor_syncinfo_message_phone
+        where monitor_syncinfo_id = #{id}
+    </update>
+    <select id="queryEmailListCounts" resultType="java.lang.Integer">
+        select
+        count(1)
+        from monitor_syncinfo_email_account
+        where monitor_syncinfo_id = #{id}
+    </select>
+
+    <select id="queryEmailList" resultType="com.axon.market.common.domain.isystem.MonitorConfigEmailDomain">
+        select id,email,monitor_syncinfo_id as monitorSyncinfoId
+        from monitor_syncinfo_email_account
+        where monitor_syncinfo_id = #{id}
+        order by id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryPhoneListCounts" resultType="java.lang.Integer">
+        select
+        count(1)
+        from monitor_syncinfo_message_phone
+        where monitor_syncinfo_id = #{id}
+    </select>
+
+    <select id="queryPhoneList" resultType="com.axon.market.common.domain.isystem.MonitorConfigPhoneDomain">
+        select id,phone,monitor_syncinfo_id as monitorSyncinfoId
+        from monitor_syncinfo_message_phone
+        where monitor_syncinfo_id = #{id}
+        order by id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <update id="deleteEmail">
+        delete from monitor_syncinfo_email_account
+        where id = #{id}
+    </update>
+
+    <update id="deletePhone">
+        delete from monitor_syncinfo_message_phone
+        where id = #{id}
+    </update>
+
+    <insert id="addEmail" parameterType="com.axon.market.common.domain.isystem.MonitorConfigEmailDomain">
+        insert into monitor_syncinfo_email_account
+        (
+        email,
+        monitor_syncinfo_id
+        )
+        values
+        (
+        #{info.email},
+        #{info.monitorSyncinfoId}
+        )
+    </insert>
+
+    <update id="editEmail" parameterType="com.axon.market.common.domain.isystem.MonitorConfigEmailDomain">
+        update monitor_syncinfo_email_account set
+        <if test="info.email != null">
+            email = #{info.email},
+        </if>
+        <if test="info.monitorSyncinfoId != null">
+            monitor_syncinfo_id = #{info.monitorSyncinfoId}
+        </if>
+        where id = #{info.id}
+    </update>
+
+
+    <insert id="addPhone" parameterType="com.axon.market.common.domain.isystem.MonitorConfigPhoneDomain">
+        insert into monitor_syncinfo_message_phone
+        (
+        phone,
+        monitor_syncinfo_id
+        )
+        values
+        (
+        #{info.phone},
+        #{info.monitorSyncinfoId}
+        )
+    </insert>
+
+    <update id="editPhone" parameterType="com.axon.market.common.domain.isystem.MonitorConfigPhoneDomain">
+        update monitor_syncinfo_message_phone set
+        <if test="info.phone != null">
+            phone = #{info.phone},
+        </if>
+        <if test="info.monitorSyncinfoId != null">
+            monitor_syncinfo_id = #{info.monitorSyncinfoId}
+        </if>
+        where id = #{info.id}
+    </update>
+</mapper>

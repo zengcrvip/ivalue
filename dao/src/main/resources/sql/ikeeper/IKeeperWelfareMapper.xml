@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperWelfareMapper">
+
+    <select id="queryWelfareCount" resultType="int">
+        select count(1)
+        from keeper.keeper_welfare
+        where state = 1
+        and exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        <if test="areaId != null and areaId != 99999">
+            and (area_id = #{areaId} or area_id = 99999)
+        </if>
+        <if test="typeId != null">
+            and type_id = #{typeId}
+        </if>
+        <if test="netType != null and netType !='' ">
+            and net_type = #{netType}
+        </if>
+        <if test="welfareName != null and welfareName != '' ">
+            and welfare_name like concat('%',#{welfareName},'%')
+        </if>
+        <if test="welfareId != null and welfareId != '' ">
+            and welfare_id = #{welfareId}
+        </if>
+    </select>
+
+    <select id="queryWelfare" resultType="com.axon.market.common.domain.ishopKeeper.ShopKeeperWelfareDomain" parameterType="Map">
+        select
+        a.welfare_id          as welfareId,
+        a.welfare_name        as welfareName,
+        a.type_id             as typeId,
+        a.eff_date            as effDate,
+        a.exp_date            as expDate,
+        a.area_id             as areaId,
+        a.org_ids             as orgIds,
+        a.sms_content         as smsContent,
+        a.create_user_id      as createUserId,
+        a.create_time         as createTime,
+        a.comments            as comments,
+        a.product_ids         as productIds,
+        a.net_type            as netType,
+        b.type_name           as typeName,
+        ifnull((
+        select group_concat(c.name)
+        from market.market_area c
+        where find_in_set(c.id,a.area_id) ),"") AS areaNames,
+        ifnull((
+        select group_concat(d.org_name)
+        from keeper.keeper_org d
+        where find_in_set(d.org_id,a.org_ids)),"") AS orgNames,
+        ifnull((
+        select group_concat(e.product_name)
+        from keeper.keeper_product e
+        where find_in_set(e.product_id,a.product_ids)),"") AS productNames,
+        ifnull((
+        select group_concat(f.product_code)
+        from keeper.keeper_product f
+        where find_in_set(f.product_id,a.product_ids)),"") AS productCodes
+        from keeper.keeper_welfare a left join keeper.keeper_type b on a.type_id = b.type_id and b.type_classify = 2
+        where state = 1
+        and a.exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        <if test="areaId != null and areaId != 99999">
+            and (a.area_id = #{areaId} or a.area_id = 99999)
+        </if>
+        <if test="typeId != null">
+            and a.type_id = #{typeId}
+        </if>
+        <if test="netType != null and netType !='' ">
+            and a.net_type = #{netType}
+        </if>
+        <if test="welfareName != null and welfareName != '' ">
+            and a.welfare_name like concat('%',#{welfareName},'%')
+        </if>
+        <if test="welfareId != null and welfareId != '' ">
+            and a.welfare_id = #{welfareId}
+        </if>
+        order by a.create_time desc
+        <if test="limit != null and offset != null">
+            limit #{limit} offset #{offset}
+        </if>
+    </select>
+
+    <insert id="addWelfare" parameterType="com.axon.market.common.domain.ishopKeeper.ShopKeeperWelfareDomain">
+        INSERT  INTO KEEPER.KEEPER_WELFARE
+        (
+        welfare_name,
+        type_id,
+        eff_date,
+        exp_date,
+        area_id,
+        org_ids,
+        sms_content,
+        create_user_id,
+        create_time,
+        state,
+        comments,
+        product_ids,
+        net_type
+        )
+        VALUES (
+        #{welfareName},
+        #{typeId},
+        #{effDate},
+        #{expDate},
+        #{areaId},
+        #{orgIds},
+        #{smsContent},
+        #{createUserId},
+        now(),
+        1,
+        #{comments},
+        #{productIds},
+        #{netType}
+        )
+    </insert>
+
+    <update id="updateWelfare" parameterType="com.axon.market.common.domain.ishopKeeper.ShopKeeperWelfareDomain">
+        UPDATE KEEPER.KEEPER_WELFARE
+        <trim prefix="set" suffixOverrides=",">
+            <if test="welfareDomain.welfareName != null">welfare_name = #{welfareDomain.welfareName},</if>
+            <if test="welfareDomain.typeId != null">type_id = #{welfareDomain.typeId},</if>
+            <if test="welfareDomain.effDate != null">eff_date = #{welfareDomain.effDate},</if>
+            <if test="welfareDomain.expDate != null">exp_date = #{welfareDomain.expDate},</if>
+            <if test="welfareDomain.areaId != null">area_id = #{welfareDomain.areaId},</if>
+            <if test="welfareDomain.orgIds != null">org_ids = #{welfareDomain.orgIds},</if>
+            <if test="welfareDomain.smsContent != null">sms_content = #{welfareDomain.smsContent},</if>
+            <if test="welfareDomain.comments != null">comments = #{welfareDomain.comments},</if>
+            <if test="welfareDomain.productIds != null">product_ids = #{welfareDomain.productIds},</if>
+            <if test="welfareDomain.netType != null">net_type = #{welfareDomain.netType},</if>
+        </trim>
+        WHERE welfare_id = #{welfareDomain.welfareId}
+    </update>
+
+    <update id="deleteWelfare">
+        UPDATE KEEPER.KEEPER_WELFARE
+        set state =-1
+        WHERE welfare_id = #{welfareId}
+    </update>
+
+    <select id="queryWelfareCountByProductId" resultType="int">
+        select count(1)
+        from keeper.keeper_welfare
+        where state = 1
+        and exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        <if test="productId != null and productId != '' ">
+            and FIND_IN_SET(#{productId}, product_ids)
+        </if>
+    </select>
+
+    <select id="queryWelfareForApp" resultType="com.axon.market.common.domain.ishopKeeper.ShopKeeperWelfareDomain">
+        SELECT
+		a.welfare_id          as welfareId,
+        a.welfare_name        as welfareName,
+        a.type_id             as typeId,
+        a.eff_date            as effDate,
+        a.exp_date            as expDate,
+        a.area_id             as areaId,
+        a.org_ids             as orgIds,
+        a.sms_content         as smsContent,
+        a.create_user_id      as createUserId,
+        a.create_time         as createTime,
+        a.comments            as comments,
+        a.product_ids         as productIds,
+        a.net_type            as netType,
+        t.type_name           as typeName,
+        ifnull((
+        select group_concat(c.name)
+        from market.market_area c
+        where find_in_set(c.id,a.area_id) ),"") AS areaNames,
+        ifnull((
+        select group_concat(d.org_name)
+        from keeper.keeper_org d
+        where find_in_set(d.org_id,a.org_ids)),"") AS orgNames,
+        ifnull((
+        select group_concat(e.product_name)
+        from keeper.keeper_product e
+        where find_in_set(e.product_id,a.product_ids)),"") AS productNames,
+        ifnull((
+        select group_concat(f.product_code)
+        from keeper.keeper_product f
+        where find_in_set(f.product_id,a.product_ids)),"") AS productCodes
+        FROM
+				keeper.keeper_welfare a
+        LEFT JOIN keeper.keeper_type t ON a.type_id = t.type_id and t.type_classify = 2
+        where state = 1
+        and a.exp_date >= (select date_format(now(), '%Y-%m-%d'))
+        order by a.create_time desc
+    </select>
+</mapper>

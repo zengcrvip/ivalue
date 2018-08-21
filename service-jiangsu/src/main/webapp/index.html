@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>江苏联通智能营销平台</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="cache-control" content="no-cache,no-store, must-revalidate" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</head>
+<body>
+<nav class="navbar navbar-default top-navbar" role="navigation">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="index.html">
+            <i class="header-icon fa fa-align-right"></i>
+            <span>智能营销平台</span>
+        </a>
+        <div id="sideNav" href=""><i class="fa fa-list-ul"></i></div>
+    </div>
+    <ul class="nav navbar-top-links navbar-right" style="margin-right: 10px;">
+        <li>
+            <span class="dropDown-button">
+                <i class="fa fa-user fa-fw"></i>
+                <b id="loginUser" title="匿名用户">匿名用户</b>
+                <i class="fa fa-caret-down"></i>
+            </span>
+            <ul class="dropDown-content">
+                <li><a id="personalCenter"><i class="fa fa-user fa-fw"></i>个人中心</a></li>
+                <!--  <li><a><i class="fa fa-gear fa-fw"></i> 设置</a></li>-->
+                <li><a id="loginOut"><i class="fa fa-sign-out fa-fw"></i> 退出</a></li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+<nav class="navbar-default navbar-side" role="navigation">
+    <div class="sidebar-collapse">
+        <ul class="nav" id="menuTree"></ul>
+    </div>
+</nav>
+<div id="page-wrapper">
+    <div id="location">
+        <h2 class="page-header">首页</h2>
+        <ol class="breadcrumb"></ol>
+    </div>
+    <div id="coreFrame" class="container-fluid" style="padding: 0 30px;"></div>
+</div>
+<div id="commonPage" style="display: none;"></div>
+<div id="dialogs">
+    <div id="dialogPrimary" style="display: none;" data-autoVerify="true" ></div>
+    <div id="dialogMiddle" style="display: none;"></div>
+    <div id="dialogFinal" style="display: none;"></div>
+    <div id="dialogTreePrimary" style="display: none;">
+        <ul id="treePrimary" class="ztree"></ul>
+    </div>
+    <div id="dialogTreeMiddle" style="display: none;">
+        <ul id="treeMiddle" class="ztree"></ul>
+    </div>
+    <div id="dialogTreeFinal" style="display: none;">
+        <ul id="treeFinal" class="ztree"></ul>
+    </div>
+</div>
+<div class="loading" style="display:none;">
+    <div class="loading-center">
+        <div class="loading-center-absolute">
+            <div class="object object_one"></div>
+            <div class="object object_two"></div>
+            <div class="object object_three"></div>
+            <div class="object object_four"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

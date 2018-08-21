@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ikeeper.IKeeperWelfareRecordCusMapper">
+
+    <insert id="addWelfareRecordCus" parameterType="com.axon.market.common.domain.ikeeper.KeepWelfareRecordCusDomain">
+        insert into keeper.keeper_welfare_record_customer
+        (
+        record_id,
+        product_code,
+        net_type,
+        phone,
+        state,
+        order_desc,
+        order_time,
+        sms_state
+        )
+        values
+        <foreach collection="dataList" item="item" index="index" separator=",">
+        (
+        #{item.recordId},
+        #{item.productCode},
+        #{item.netType},
+        #{item.phone},
+        #{item.state},
+        #{item.orderDesc},
+        #{item.orderTime},
+        #{item.smsState}
+        )
+        </foreach>
+    </insert>
+
+    <select id="queryCustPhoneListByRecordId" resultType="java.lang.String">
+         select t.phone from
+        (
+         select c.phone,SUM(if(c.state = 1,1,-99)) as result from keeper.keeper_welfare_record_customer c where c.record_id = #{recordId}  group by c.phone
+         ) t
+        where t.result > 0
+    </select>
+    
+</mapper>

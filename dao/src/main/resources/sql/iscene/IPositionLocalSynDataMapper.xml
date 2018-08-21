@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IPositionLocalSynDataMapper">
+
+    <update id="createPhoneTable">
+        create table  ${tableName} (phone varchar(20)) ENGINE=InnoDB DEFAULT CHARSET=utf8
+    </update>
+
+    <insert id="syncPhone">
+        insert into ${tableName}(
+        phone
+        )
+        values
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            #{item}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getConfSegmentId" resultType="java.lang.String">
+        select group_concat(id) as id from pdc_location.conf_segment where title_code in (${areaCode})
+    </select>
+
+    <insert id="insertPTask" parameterType="com.axon.market.common.domain.isystem.PositionDataSynDomain" useGeneratedKeys="true" keyProperty="taskId">
+        insert into pdc_location.p_task_scene_location(
+        taskName
+        ,messageType
+        ,taskStartTm
+        ,taskEndTm
+        ,monitorStartTm
+        ,monitorEndTm
+        ,monitoredBsId
+        ,monitorType
+        ,marketContent
+        ,marketUrl
+        ,marketInterval
+        ,userFilterType_black
+        ,userFilterList_black
+        ,execute_status
+        ,areano
+        ,delete_status
+        ,cid
+        ,userFilterType_white
+        ,userFilterList_white
+        ,ctime
+        ,sp_num
+        ,userFilter_black_segment
+        ,userFilter_white_segment
+        ,county
+        ,usergroup_name
+        ,usergroup_id
+        ,triggerLimit
+        ,weights
+        ,channel_id
+        ,content_module_id
+        ,location_type_id
+        ,trigger_channel_id
+        ,validity_date_trigger_type
+        ,validity_date
+        ,sms_report_status
+        ,sms_report_phone
+        )
+        VALUES
+        (
+        #{taskName},#{messageType},UNIX_TIMESTAMP(#{taskStartTm}),UNIX_TIMESTAMP(#{taskEndTm}),
+        #{monitorStartTm},#{monitorEndTm},#{monitoredBsId},#{monitorType},#{marketContent},
+        #{marketUrl},#{marketInterval},#{userFilterTypeBlack},#{userFilterListBlack},
+        #{executeStatus},#{areano},#{deleteStatus},#{cid},
+        #{userFilterTypeWhite},#{userFilterListWhite},now(),#{spNum},
+        #{userFilterBlackSegment},#{userFilterWhiteSegment},#{county},#{usergroupName},
+        #{usergroupId},#{triggerLimit},#{weights},#{channelId},
+        #{contentModuleId},#{locationTypeId},#{triggerChannelId},#{validityDateTriggerType},
+        #{validityDate},#{smsReportStatus},#{smsReportPhone}
+        )
+    </insert>
+
+    <update id="updatePTask" parameterType="com.axon.market.common.domain.isystem.PositionDataSynDomain">
+        update pdc_location.p_task_scene_location
+        set
+        taskName = #{taskName}
+        ,messageType = #{messageType}
+        ,taskStartTm = UNIX_TIMESTAMP(#{taskStartTm})
+        ,taskEndTm   = UNIX_TIMESTAMP(#{taskEndTm})
+        ,monitorStartTm =  #{monitorStartTm}
+        ,monitorEndTm  =   #{monitorEndTm}
+        ,monitoredBsId  =  #{monitoredBsId}
+        ,monitorType    =  #{monitorType}
+        ,marketContent  =  #{marketContent}
+        ,marketUrl      =  #{marketUrl}
+        ,marketInterval =  #{marketInterval}
+        ,userFilterType_black = #{userFilterTypeBlack}
+        ,userFilterList_black = #{userFilterListBlack}
+        ,execute_status  = #{executeStatus}
+        ,areano  = #{areano}
+        ,delete_status = #{deleteStatus}
+        ,cid  = #{cid}
+        ,userFilterType_white = #{userFilterTypeWhite}
+        ,userFilterList_white = #{userFilterListWhite}
+        ,ctime  = now()
+        ,sp_num = #{spNum}
+        ,userFilter_black_segment = #{userFilterBlackSegment}
+        ,userFilter_white_segment = #{userFilterWhiteSegment}
+        ,county = #{county}
+        ,usergroup_name = #{usergroupName}
+        ,usergroup_id = #{usergroupId}
+        ,triggerLimit = #{triggerLimit}
+        ,weights  = #{weights}
+        ,channel_id = #{channelId}
+        ,content_module_id = #{contentModuleId}
+        ,location_type_id  = #{locationTypeId}
+        ,trigger_channel_id = #{triggerChannelId}
+        ,validity_date_trigger_type = #{validityDateTriggerType}
+        ,validity_date = #{validityDate}
+        ,sms_report_status = #{smsReportStatus}
+        ,sms_report_phone  = #{smsReportPhone}
+        where taskId = #{taskId}
+    </update>
+
+    <update id="deleteSynData">
+        update pdc_location.p_task_scene_location
+        set
+        execute_status = 2,
+        messageType = 3,
+        delete_status = 3,
+        ctime = now()
+        where taskId = #{pTaskId}
+    </update>
+
+    <update id="pauseSynData">
+        update pdc_location.p_task_scene_location
+        set
+        execute_status = 2,
+        ctime = now()
+        where taskId = #{pTaskId}
+    </update>
+
+    <update id="resumeSynData">
+        update pdc_location.p_task_scene_location
+        set
+        execute_status = 6,
+        messageType = 3,
+        ctime = now()
+        where taskId = #{pTaskId}
+    </update>
+
+
+
+</mapper>

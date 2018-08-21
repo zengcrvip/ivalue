@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IAttrMapper">
+
+   <!-- <select id="queryAttrValueByAttrCode" resultType="com.axon.market.common.domain.icommon.AttrValueDomain">
+        select
+        a.attr_value_id as attrValueId,
+        a.attr_id as attrId,
+        a.display_value as displayValue,
+        a.inner_value as innerValue
+        from market_attr_value a,market_attr b
+        where a.attr_id = b.attr_id
+        and b.attr_code = #{attrCode}
+    </select>
+
+    <select id="queryAttrValueByAttrId" resultType="java.util.Map">
+        SELECT
+        a.attr_value_id as attrValueId,
+        a.attr_id as attrId,
+        a.display_value as displayValue,
+        a.inner_value as innerValue
+        from market_attr_value a
+        where 1=1
+        <if test="attrId != null and attrId != '' ">
+            and a.attr_id = #{attrId}
+        </if>
+    </select>
+    
+    <select id="queryAttrValueDisplayValue" resultType="string">
+         select a.display_value
+        from market_attr_value a,market_attr b
+        where a.attr_id = b.attr_id
+        and b.attr_code = #{attrCode} AND a.inner_value = #{innerValue}
+        
+    </select>-->
+</mapper>

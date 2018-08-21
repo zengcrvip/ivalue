@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IMenuMapper">
+
+    <select id="queryMenusByLevel" resultType="com.axon.market.common.domain.icommon.MenuDomain">
+        select
+        m.id as id,
+        m.permission as permission,
+        m.title as title,
+        m.icon as icon,
+        m.url as url,
+        m.id_name as idName,
+        m.class_name as className,
+        m.sort_no as sortNo,
+        m.parent_id as parentId,
+        m.level as level
+        from market_menu as m
+        where m.status = 0
+        <if test="level != null and level != ''">
+            and m.level = #{level}
+        </if>
+    </select>
+
+    <select id="queryAllMenus" resultType="com.axon.market.common.domain.icommon.MenuDomain">
+        select
+            m.id as id,
+            m.permission as permission,
+            m.title as title,
+            m.icon as icon,
+            m.url as url,
+            m.id_name as idName,
+            m.class_name as className,
+            m.sort_no as sortNo,
+            m.parent_id as parentId,
+            m.level as level
+        from market_menu as m
+        where m.status = 0
+    </select>
+
+    <select id="queryMenusByUser" resultType="com.axon.market.common.domain.icommon.MenuDomain">
+        select
+            m.id as id,
+            m.permission as permission,
+            m.title as title,
+            m.icon as icon,
+            m.url as url,
+            m.id_name as idName,
+            m.class_name as className,
+            m.sort_no as sortNo,
+            m.parent_id as parentId,
+            m.level as level
+        from market_menu as m
+        where m.status = 0
+        and find_in_set(m.id,
+        (
+            select group_concat(r.permission_menu) from market_user u
+            left join market_role r on find_in_set(r.id,u.role_ids)
+            where u.id = #{userId}
+        ))
+    </select>
+
+    <select id="queryAllMenuCounts" resultType="java.lang.Integer">
+        select
+        count(1)
+        from market_menu as m
+        where m.status = 0
+        <if test="title != null and title != ''">
+            and m.title like concat('%',#{title},'%')
+        </if>
+        <if test="parentId != null and parentId != ''">
+            and m.parent_Id = #{parentId}
+        </if>
+        <if test="level != null and level != ''">
+            and m.level = #{level}
+        </if>
+    </select>
+
+    <select id="queryMenusByPage" resultType="java.util.Map">
+        select
+        m.id as id,
+        m.title as title,
+        m.icon as icon,
+        m.url as url,
+        m.sort_no as sortNo,
+        m.id_name as idName,
+        m.class_name as className,
+        m.permission as permission,
+        m.parent_id as parentId,
+        m.level as level,
+        m.status as status
+        from market_menu as m
+        where m.status = 0
+        <if test="title != null and title != ''">
+            and m.title like concat('%',#{title},'%')
+        </if>
+        <if test="parentId != null and parentId != ''">
+            and m.parent_Id = #{parentId}
+        </if>
+        <if test="level != null and level != ''">
+            and m.level = #{level}
+        </if>
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryMenuById" resultType="com.axon.market.common.domain.icommon.MenuDomain">
+        select
+            m.id as id,
+            m.title as title,
+            m.icon as icon,
+            m.url as url,
+            m.sort_no as sortNo,
+            m.id_name as idName,
+            m.class_name as className,
+            m.permission as permission,
+            m.parent_id as parentId,
+            m.level as level,
+            m.status as status
+        from market_menu as m
+        where m.status = 0 and m.id = #{id}
+    </select>
+
+    <select id="queryMenuByTitle" resultType="com.axon.market.common.domain.icommon.MenuDomain">
+        select
+            m.id as id,
+            m.title as title,
+            m.icon as icon,
+            m.url as url,
+            m.sort_no as sortNo,
+            m.id_name as idName,
+            m.class_name as className,
+            m.permission as permission,
+            m.parent_id as parentId,
+            m.level as level,
+            m.status as status
+        from market_menu as m
+        where m.status = 0 and m.title = #{title}
+    </select>
+
+    <select id="queryMaxSortNumberByParentId" resultType="java.lang.Integer">
+        select
+            max(sort_no)
+        from market_menu as m
+        where m.parent_id = #{parentId}
+    </select>
+
+    <select id="querySortNumberByParentId" resultType="com.axon.market.common.bean.MenuResult">
+        select
+	     m.id,  m.parent_id,  m.rowsort as sort
+        from
+	    (
+		  select
+			  @rownum := @rownum + 1 as rowsort,
+			  market_menu.*
+		  from
+			  (select @rownum := 0) r,
+			  market_menu
+		  where
+			  parent_id = #{parentId}
+          order by id asc
+	    ) as m;
+    </select>
+
+    <insert id="createMenu" parameterType="com.axon.market.common.domain.icommon.MenuDomain">
+        insert into market_menu
+        (
+            id,
+            title,
+            icon,
+            url,
+            sort_no,
+            id_name,
+            class_name,
+            permission,
+            parent_id,
+            level,
+            status
+        )
+        values
+        (
+            #{info.id},
+            #{info.title},
+            #{info.icon},
+            #{info.url},
+            #{info.sortNo},
+            #{info.idName},
+            #{info.className},
+            #{info.permission},
+            #{info.parentId},
+            #{info.level},
+            0
+        )
+    </insert>
+
+    <update id="updateMenu">
+        update market_menu set
+        <if test="info.title != null">
+            title = #{info.title},
+        </if>
+        <if test="info.icon != null">
+            icon = #{info.icon},
+        </if>
+        <if test="info.url != null">
+            url = #{info.url},
+        </if>
+        <if test="info.sortNo != null">
+            sort_no = #{info.sortNo},
+        </if>
+        <if test="info.idName != null">
+            id_name = #{info.idName},
+        </if>
+        <if test="info.className != null">
+            class_name = #{info.className},
+        </if>
+        <if test="info.permission != null">
+            permission = #{info.permission},
+        </if>
+        <if test="info.parentId != null">
+            parent_id = #{info.parentId},
+        </if>
+        <if test="info.level != null">
+            level = #{info.level},
+        </if>
+        id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteMenu" parameterType="java.lang.Integer">
+        update market_menu set
+            status = -1
+        where id = #{id}
+    </update>
+
+    <update id="updateResetSort" parameterType="java.lang.Integer">
+        update market_menu set
+        sort_no = #{sort}
+        where id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.scheduling.IPositionReportMapper">
+
+    <select id="queryPositionReportTotal" resultType="int" parameterType="java.util.Map">
+        select count(1) as count from
+        (
+        select  d.cdate as cdate,d.taskid as taskId,p.taskName,c.title as areaName,d.county,d.usergroup_name as userGroup,
+        d.location_type as locationType,d.send_succ_num as sendNum,
+        d.receive_succ_num as receiveNum,concat(round(d.receive_succ_num/d.send_succ_num,2),'%') as flag
+        from  pdc_location.d_scene_location_day_analyse d
+        JOIN  pdc_location.p_task_scene_location p on d.taskid = p.taskId
+        join  pdc_location.conf_segment c on c.title_code = d.city_code
+        where 1=1
+        <if test="taskName != ''"  >
+            and  p.taskName like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseArea != '' and baseArea != 0"   >
+            and d.city_code = #{baseArea}
+        </if>
+        <if test="startTime != '' and endTime != ''"  >
+            and  d.cdate BETWEEN DATE_FORMAT(#{startTime},'%Y-%c-%d') and DATE_FORMAT(#{endTime},'%Y-%c-%d')
+        </if>
+        ) tab
+    </select>
+
+    <select id="queryPositionReortByPage" resultType="java.util.Map" parameterType="java.util.Map">
+        select  d.cdate as cdate,d.taskid as taskId,p.taskName,c.title as areaName,d.county,d.usergroup_name as userGroup,
+        d.location_type as locationType,d.send_succ_num as sendNum,
+        d.receive_succ_num as receiveNum,IFNULL(concat(round(d.receive_succ_num*100/d.send_succ_num,2),'%'),'0.00%') as flag
+        from  pdc_location.d_scene_location_day_analyse d
+        JOIN  pdc_location.p_task_scene_location p on d.taskid = p.taskId
+        join  pdc_location.conf_segment c on c.title_code = d.city_code
+        where 1=1
+        <if test="taskName != ''"  >
+            and  p.taskName like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseArea != '' and baseArea != 0"   >
+            and d.city_code = #{baseArea}
+        </if>
+        <if test="startTime != '' and endTime != ''"  >
+            and  d.cdate BETWEEN DATE_FORMAT(#{startTime},'%Y-%c-%d') and DATE_FORMAT(#{endTime},'%Y-%c-%d')
+        </if>
+        order by d.cdate DESC
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryPositionReport" resultType="java.util.Map" parameterType="java.util.Map">
+        select  d.cdate as cdate,d.taskid as taskId,p.taskName,c.title as areaName,d.county,d.usergroup_name as userGroup,
+        d.location_type as locationType,d.send_succ_num as sendNum,
+        d.receive_succ_num as receiveNum,IFNULL(concat(round(d.receive_succ_num/d.send_succ_num,2),'%'),'0.00%') as flag
+        from  pdc_location.d_scene_location_day_analyse d
+        JOIN  pdc_location.p_task_scene_location p on d.taskid = p.taskId
+        join  pdc_location.conf_segment c on c.title_code = d.city_code
+        where 1=1
+        <if test="taskName != ''"  >
+            and  p.taskName like  concat('%',#{taskName},'%')
+        </if>
+        <if test="baseArea != '' and baseArea != 0"   >
+            and d.city_code = #{baseArea}
+        </if>
+        <if test="startTime != '' and endTime != ''"  >
+            and  d.cdate BETWEEN DATE_FORMAT(#{startTime},'%Y-%c-%d') and DATE_FORMAT(#{endTime},'%Y-%c-%d')
+        </if>
+        order by d.cdate DESC
+    </select>
+</mapper>

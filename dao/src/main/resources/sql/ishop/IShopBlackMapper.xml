@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopBlackMapper">
+    <!-- 炒店黑名单总数 -->
+    <select id="queryShopBlackPhoneTotal" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        (
+        select
+        DISTINCT
+        t.phone,
+        t.hide_start_time as hideStartTime,
+        t.hide_end_time as hideEndTime,
+        t.hideContent
+        from
+        (
+        <if test="businessCodes != ''">
+            select
+            s.phone,
+            s.hide_start_time,
+            s.hide_end_time,
+            s.create_time,
+            f.base_name as hideContent
+            from shop_black_user s join conf_baseinfo f on s.hide_base = f.base_id
+            where 1=1
+            <if test="phone != ''">
+                and s.phone = #{phone}
+            </if>
+            <if test="baseAreas != ''">
+                and find_in_set(s.hide_base,#{businessCodes})
+            </if>
+        </if>
+        <if test="businessCodes == ''">
+            select
+            s.phone,
+            s.hide_start_time,
+            s.hide_end_time,
+            s.create_time,
+            m.name as hideContent
+            from shop_black_user s join market_area m on s.hide_area = m.code
+            where 1=1
+            <if test="phone != ''">
+                and s.phone = #{phone}
+            </if>
+            <if test="baseAreas != ''">
+                and s.hide_area = #{baseAreas}
+            </if>
+        </if>
+        ) t
+        order by t.create_time desc
+        ) tab
+    </select>
+
+    <!-- 分页炒店黑名单 -->
+    <select id="queryShopBlackPhoneByPage" resultType="com.axon.market.common.domain.ishop.ShopBlackDomain"
+            parameterType="java.util.Map">
+        select
+        DISTINCT
+        t.phone,
+        t.hide_start_time as hideStartTime,
+        t.hide_end_time as hideEndTime,
+        t.hide_area as hideArea,
+        t.hide_base as hideBases,
+        t.hideContent
+        from
+        (
+        <if test="businessCodes != ''">
+            select
+            s.phone,
+            s.hide_start_time,
+            s.hide_end_time,
+            s.hide_area,
+            s.hide_base,
+            s.create_time,
+            f.base_name as hideContent
+            from shop_black_user s join conf_baseinfo f on s.hide_base = f.base_id
+            where 1=1
+            <if test="phone != ''">
+                and s.phone = #{phone}
+            </if>
+            <if test="baseAreas != ''">
+                and find_in_set(s.hide_base,#{businessCodes})
+            </if>
+        </if>
+        <if test="businessCodes == ''">
+            select
+            s.phone,
+            s.hide_start_time,
+            s.hide_end_time,
+            s.hide_area,
+            s.hide_base,
+            s.create_time,
+            m.name as hideContent
+            from shop_black_user s join market_area m on s.hide_area = m.code
+            where 1=1
+            <if test="phone != ''">
+                and s.phone = #{phone}
+            </if>
+            <if test="baseAreas != ''">
+                and s.hide_area=#{baseAreas}
+            </if>
+        </if>
+        ) t
+        order by t.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryShopBlackBaseAreas" resultType="com.axon.market.common.domain.iscene.MarketAreaDomain">
+        select
+        a.code                                                       as id,
+        a.name                                                       as name,
+        a.parent_id                                                  as pId,
+        a.code                                                       as value,
+        if(find_in_set(a.code,#{areaIds}) >0,'true','false')         as checked,
+        if (a.parent_id = 0,'true','false')                          as isParent,
+        if (a.parent_id = 0,'true','false')                          as open
+        from market_area as a
+        where (a.parent_id = 0 or a.parent_id = 99999)
+        order by a.code desc
+    </select>
+
+    <select id="queryShopBlockBases" resultType="java.util.Map" parameterType="java.util.Map">
+        select
+        c.base_id as id,
+        c.base_name as name,
+        c.business_hall_coding as code,
+        c.location_type_id as locationTypeId
+        from conf_baseinfo c
+        where c.city_code = #{baseAreaId}
+        and c.status = 1
+        and c.location_type_id in(1,7)
+        <if test="baseName != '' and baseName != null">
+            and c.base_name like concat('%',#{baseName},'%')
+        </if>
+        <if test="businessCodes != '' and businessCodes != null">
+            and c.base_id in (${businessCodes})
+        </if>
+        order by c.base_id
+    </select>
+
+    <select id="queryShopUserBlackListPhoneByFileId" resultType="java.util.Map">
+        select
+        row_data as phone
+        from market_import_data
+        where  file_id = #{fileId}  and operate_status = 'success'
+        order by row_no
+    </select>
+
+    <insert id="createShopUserBlackList" parameterType="com.axon.market.common.domain.ishop.ShopBlackDomain">
+        insert into shop_black_user
+        (
+        phone,
+        hide_start_time,
+        hide_end_time,
+        hide_area,
+        hide_base,
+        create_user,
+        create_time
+        )
+        VALUES
+        (
+        #{info.phone},
+        #{info.hideStartTime},
+        #{info.hideEndTime},
+        #{info.hideArea},
+        #{info.hideBases},
+        #{info.createUser},
+        sysdate()
+        )
+    </insert>
+
+    <insert id="insertShopBlackUserBatch" parameterType="java.util.List">
+        insert into shop_black_user
+        (
+            phone,
+            hide_start_time,
+            hide_end_time,
+            hide_area,
+            hide_base,
+            create_user,
+            create_time
+        )
+        values
+        <foreach collection ="list" item="item" index= "index" separator =",">
+        (
+            #{item.phone},
+            #{item.hideStartTime},
+            #{item.hideEndTime},
+            #{item.hideArea},
+            #{item.hideBases},
+            #{item.createUser},
+            sysdate()
+        )
+        </foreach>
+    </insert>
+
+    <delete id="deleteShopBlackUserBatch">
+        delete from shop_black_user where find_in_set(phone, #{shopBlackUserPhones})
+    </delete>
+
+    <delete id="deleteShopUserBlackList">
+        delete from shop_black_user where phone = #{phone}
+        <if test="businessCodes != '' and  businessCodes != null">
+            and find_in_set(hide_base,(${businessCodes}))
+        </if>
+        <if test="businessCodes == '' and areaCode != '99999'">
+            and hide_area=#{areaCode}
+        </if>
+    </delete>
+
+    <delete id="deleteAllShopUserBlackList">
+        <if test="businessCodes != ''">
+            delete from shop_black_user
+            where 1=1 and find_in_set(hide_base,#{businessCodes})
+        </if>
+
+        <if test="businessCodes == ''">
+            delete from shop_black_user
+            where 1=1 and hide_area=#{areaCode}
+        </if>
+    </delete>
+
+    <select id="queryShopBlackPhone" resultType="com.axon.market.common.domain.ishop.ShopBlackDomain">
+        SELECT DISTINCT phone,
+        hide_start_time  as hideStartTime,
+        hide_end_time as hideEndTime,
+        hide_area as hideArea,
+        hide_base as hideBases,
+        create_user as createUser
+        from shop_black_user
+    </select>
+
+    <select id="queryShopUserBlackListByPhone" resultType="java.lang.Integer">
+        SELECT count(1)
+        from shop_black_user
+        where 1=1
+        <if test="phone != ''">
+            and phone = #{phone}
+        </if>
+    </select>
+
+</mapper>

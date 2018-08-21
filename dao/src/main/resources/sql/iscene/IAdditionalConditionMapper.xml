@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IAdditionalConditionMapper">
+
+    <select id="queryAdditionalCondition" resultType="com.axon.market.common.domain.iscene.AdditionalConditionDomain">
+        SELECT
+            Id                    as  Id ,
+            Name                 as  Name ,
+            Description           as  Description ,
+            Type                  as  Type ,
+            IsDelete              as  IsDelete ,
+            EditTime              as  EditTime ,
+            EditUserName          as  EditUserName ,
+            EditUserId            as  EditUserId
+        FROM extstopcondconfig
+        WHERE IsDelete = 0
+            <if test="name != null">
+               AND Name LIKE concat('%',#{name},'%')
+            </if>
+        ORDER BY Id
+        limit ${limit} offset ${offset}
+    </select>
+
+    <insert id="addAdditionalCondition">
+        INSERT  INTO  extstopcondconfig(
+          Name,
+          Description,
+          Type,
+          IsDelete,
+          EditTime,
+          EditUserName,
+          EditUserId
+        )VALUES (
+          #{domain.Name},
+          #{domain.Description},
+          #{domain.Type},
+          #{domain.IsDelete},
+          SYSDATE(),
+          #{domain.EditUserName},
+          #{domain.EditUserId}
+        )
+    </insert>
+
+    <update id="editAdditionalCondition">
+        UPDATE extstopcondconfig
+        SET
+          Name = #{domain.Name},
+          Description = #{domain.Description},
+          Type = #{domain.Type},
+          EditTime = SYSDATE(),
+          EditUserName = #{domain.EditUserName},
+          EditUserId = #{domain.EditUserId}
+        WHERE
+          Id = #{domain.Id}
+    </update>
+
+    <delete id="deleteAdditionCondition">
+        UPDATE extstopcondconfig
+        SET
+          IsDelete = 1 ,
+          EditUserName = #{name},
+          EditUserId = #{uid}
+        WHERE
+          Id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTemporaryTaskMapper">
+
+    <!-- 炒店任务总数 -->
+    <select id="queryShopTempTaskTotal" resultType="int" parameterType="java.util.Map">
+        select count(*) from
+        (
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        t.marketUser as marketUser,
+        t.task_type as taskType,
+        '' as baseId,
+        '' as baseName,
+        t.status as status
+        from shop_task t
+        JOIN conf_baseinfo a ON a.base_id = t.base_ids
+        where 1=1 and t.status != -1
+        and t.marketUser in (1,2,3,4)
+        and t.task_classify in (2,3,4)
+        <if test="shopTaskId != '' and shopTaskId != null">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != '' and shopTaskName != null">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskType != '' and taskType != null">
+            and t.task_classify = #{taskType}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and date_format(t.create_time,'%Y-%m-%d') = #{beginTime}
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and date_format(t.create_time,'%Y-%m-%d') = #{endTime}
+        </if>
+        <if test="areaCode != '99999'">
+            and t.base_area_id in(#{areaCode},99999)
+        </if>
+        ) tab
+    </select>
+
+    <!-- 分页查询炒店任务 -->
+    <select id="queryShopTempTaskByPage" resultType="com.axon.market.common.domain.ishop.ShopTemporaryTaskDomain"
+            parameterType="java.util.Map">
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        t.marketUser as marketUser,
+        t.task_type as taskType,
+        t.status as status,
+        t.base_area_id as base_area_id,
+        a.city_name as baseAreaName,
+        a.address as addressDetail,
+        t.monitor_area as monitorArea,
+        t.task_classify as taskClassifyId,
+        a.radius as radius,
+        t.access_number as accessNumber,
+        t.market_content as marketContentText,
+        a.lng as longitude,
+        a.lat as latitude,
+        t.base_ids as baseIds,
+        t.send_interval as sendInterval,
+        t.market_limit as marketLimit,
+        date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        t.manru_range as manruRange
+        from shop_task t
+        JOIN conf_baseinfo a ON a.base_id = t.base_ids
+
+        where 1=1 and t.status != -1
+        and t.marketUser in (1,2,3,4)
+        and t.task_classify in (2,3,4)
+        <if test="shopTaskId != '' and shopTaskId != null">
+            and t.id = #{shopTaskId}
+        </if>
+        <if test="shopTaskName != '' and shopTaskName != null">
+            and t.task_name like concat('%',#{shopTaskName},'%')
+        </if>
+        <if test="taskType != '' and taskType != null">
+            and t.task_classify = #{taskType}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and date_format(t.create_time,'%Y-%m-%d') = #{beginTime}
+        </if>
+        <if test="baseArea != '99999'">
+            and t.base_area_id in(#{baseArea},99999)
+        </if>
+        order by t.create_time desc
+        limit #{limit} offset #{offset}
+    </select>
+    <!-- 插入炒店临时任务 -->
+    <insert id="insertShopTempTask" parameterType="com.axon.market.common.domain.ishop.ShopTemporaryTaskDomain"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into shop_task (
+            task_name,
+            task_desc,
+            task_type,
+            business_type,
+            start_time,
+            stop_time,
+            begin_time,
+            end_time,
+            marketUser,
+            market_user_num,
+            appoint_users,
+            appoint_users_desc,
+            black_users,
+            black_users_desc,
+            access_number,
+            market_content,
+            market_url,
+            send_interval,
+            scence_type,
+            scene_type_name,
+            monitor_area,
+            monitor_interval,
+            channel_id,
+            monitor_type,
+            trigger_channel_id,
+            base_area_id,
+            base_area_type,
+            base_ids,
+            task_weight,
+            is_send_report,
+            report_phone,
+            market_limit,
+            status,
+            create_user,
+            create_time,
+            update_time,
+            aim_sub_id,
+            depart_typecode,
+            sale_id,
+            sale_boid_id,
+            aim_sub_name,
+            task_file_name,
+            task_classify,
+            manru_range
+        )
+        values
+        (
+            #{taskName},
+            #{taskDesc},
+            #{taskType},
+            #{businessId},
+            #{startTime},
+            #{stopTime},
+            #{beginTime},
+            #{endTime},
+            #{marketUser},
+            #{marketUserMum},
+            #{appointUsers},
+            #{appointUserDesc},
+            #{blackUsers},
+            #{blackUserDesc},
+            #{accessNumber},
+            #{marketContentText},
+            #{marketUrl},
+            #{sendInterval},
+            #{sceneType},
+            #{sceneTypeName},
+            #{monitorArea},
+            #{monitorInterval},
+            #{channelId},
+            #{monitorType},
+            #{triggerChannelId},
+            #{baseAreaId},
+            #{baseAreaTypes},
+            #{baseIds},
+            #{taskWeight},
+            #{isSendReport},
+            #{reportPhone},
+            #{marketLimit},
+            #{status},
+            #{createUser},
+            sysdate(),
+            sysdate(),
+            #{aimSubId},
+            #{departTypeCode},
+            #{saleId},
+            #{saleBoidId},
+            #{aimSubName},
+            #{taskFileName},
+            #{taskClassifyId},
+            #{manruRange}
+        )
+    </insert>
+    <!--根据任务名称判断是否重复-->
+    <select id="queryShopTempTaskNumByName" resultType="int" parameterType="java.util.Map">
+        select count(*)
+        from shop_task t where t.task_name = #{taskName}
+        <if test="shopTaskId != '' and shopTaskId != null">
+            and t.id != #{shopTaskId} and t.status != -1
+        </if>
+    </select>
+    <!--更新炒店临时任务-->
+    <update id="updateShopTempTask" parameterType="com.axon.market.common.domain.ishop.ShopTemporaryTaskDomain">
+        update shop_task set
+        start_time = #{startTime},
+        stop_time = #{stopTime},
+        begin_time = #{beginTime},
+        end_time = #{endTime},
+        marketUser = #{marketUser},
+        access_number = #{accessNumber},
+        market_content = #{marketContentText},
+        send_interval = #{sendInterval},
+        monitor_area = #{monitorArea},
+        base_area_id = #{baseAreaId},
+        task_weight = #{taskWeight},
+        is_send_report = #{isSendReport},
+        report_phone = #{reportPhone},
+        market_limit = #{marketLimit},
+        manru_range = #{manruRange},
+        status = #{status},
+        update_time = sysdate()
+        where id = #{id}
+    </update>
+    <!--删除-->
+    <update id="deleteShopTempTaskById">
+        update shop_task set status = -1 ,update_time=NOW() where id = #{shopTaskId}
+    </update>
+    <!-- 查询单个 -->
+    <select id="queryShopTempTaskById" resultType="com.axon.market.common.domain.ishop.ShopTemporaryTaskDomain">
+        select DISTINCT
+        t.id as id,
+        t.task_name as taskName,
+        t.start_time as startTime ,
+        t.stop_time as stopTime,
+        t.market_user_num as marketUserMum,
+        t.create_user as createUser,
+        t.marketUser as marketUser,
+        t.task_type as taskType,
+        t.status as status,
+        t.base_area_id as base_area_id,
+        a.city_name as baseAreaName,
+        a.address as addressDetail,
+        t.monitor_area as monitorArea,
+        t.task_classify as taskClassifyId,
+        a.radius as radius,
+        t.access_number as accessNumber,
+        t.market_content as marketContentText,
+        a.lng as longitude,
+        a.lat as latitude,
+        t.send_interval as sendInterval,
+        t.market_limit as marketLimit,
+        t.manru_range as manruRange,
+        date_format(t.create_time,'%Y-%c-%d %H:%i:%s') as createTimeStr,
+        a.business_hall_coding as baseCodes
+        from shop_task t
+        JOIN conf_baseinfo a ON a.base_id = t.base_ids
+
+        where t.id = #{taskId}
+    </select>
+</mapper>

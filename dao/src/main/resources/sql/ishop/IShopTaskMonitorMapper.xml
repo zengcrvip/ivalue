@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.ishop.IShopTaskMonitorMapper">
+    <select id="queryShopTaskMonitorCount" resultType="int">
+        SELECT
+	      count(1)
+        FROM
+	      shop_task_monitor a
+        WHERE
+	    a.createTime BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+
+    <select id="queryShopTaskMonitor" resultType="java.util.Map">
+       SELECT
+	      count(b.id) as taskFileNum,
+	      a.personalized_task_number as personalTaskNum,
+	      a.shop_online_number as shopOnlineNum,
+	      a.provincial_task_number as provincialTaskNum,
+	      a.city_task_number as cityTaskNum,
+	      a.shop_number as shopNum,
+	      a.task_number as taskNum,
+	      a.should_task_number as shouldTaskNum,
+	      a.actual_shop_task as actualTaskNum,
+	      a.createTime as createTime,
+	      a.timeUnit as timeUnit
+       FROM
+	      shop_task_monitor a
+       LEFT JOIN  shop_task_file_monitor b
+       ON a.timeUnit = b.timeUnit
+       WHERE
+	     a.timeUnit BETWEEN #{startTime} AND #{endTime}
+       GROUP  BY a.timeUnit
+       ORDER BY a.createTime
+       <if test="limit != null">
+           limit #{limit} offset #{offset}
+       </if>
+    </select>
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.ITestPhoneNumberMapper">
+
+    <select id="queryTestPhoneNumberCounts" resultType="java.lang.Integer">
+        select
+            count(1)
+        from market_test_phone_number as n
+        where n.status = 0
+    </select>
+
+    <select id="queryTestPhoneNumberDomainByNumber" resultType="com.axon.market.common.domain.isystem.TestPhoneNumberDomain">
+        select
+            n.id as id,
+            n.test_phone_number as testPhoneNumber,
+            n.user_name as userName
+        from market_test_phone_number as n
+        where n.status = 0 and n.test_phone_number = #{phoneNumber}
+    </select>
+
+    <select id="queryTestPhoneNumbersByPage" resultType="com.axon.market.common.domain.isystem.TestPhoneNumberDomain">
+        select
+            n.id as id,
+            n.test_phone_number as testPhoneNumber,
+            n.user_name as userName,
+            n.create_user as createUser,
+            u.name as createUserName,
+            n.create_time as createTime
+        from market_test_phone_number as n
+        left join market_user as u on u.id = n.create_user
+        where n.status = 0
+        order by n.id desc
+        limit ${limit} offset ${offset}
+    </select>
+
+    <insert id="createTestPhoneNumber" parameterType="com.axon.market.common.domain.isystem.TestPhoneNumberDomain">
+        insert into market_test_phone_number
+        (
+            test_phone_number,
+            user_name,
+            create_user,
+            create_time
+        )
+        values
+        (
+            #{info.testPhoneNumber},
+            #{info.userName},
+            #{info.createUser},
+            #{info.createTime}
+        )
+    </insert>
+
+    <update id="updateTestPhoneNumber" parameterType="com.axon.market.common.domain.isystem.TestPhoneNumberDomain">
+        update market_test_phone_number set
+        <if test="info.testPhoneNumber != null and info.testPhoneNumber != ''">
+            test_phone_number = #{info.testPhoneNumber},
+        </if>
+        <if test="info.userName != null and info.userName != ''">
+            user_name = #{info.userName},
+        </if>
+        <if test="info.updateUser != null and info.updateUser != ''">
+            update_user = #{info.updateUser},
+        </if>
+        <if test="info.testPhoneNumber != null and info.testPhoneNumber != ''">
+            update_time = #{info.updateTime},
+        </if>
+            id = #{info.id}
+        where id = #{info.id}
+    </update>
+
+    <update id="deleteTestPhoneNumber">
+        update market_test_phone_number set
+            update_user = #{userId},
+            update_time = #{time},
+            status = -1
+        where id = #{id}
+    </update>
+
+</mapper>

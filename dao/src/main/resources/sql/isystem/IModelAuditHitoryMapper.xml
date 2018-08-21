@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.isystem.IModelAuditHistoryMapper">
+
+    <insert id="insertModelAuditHistory">
+        insert into market_model_audit_history values
+        (
+            #{info.modelId},
+            #{info.auditUser},
+            #{info.auditResult},
+            sysdate(),
+            #{info.remarks}
+        )
+    </insert>
+
+    <select id="queryModelAuditHistoryDomain" resultType="com.axon.market.common.domain.isystem.ModelAuditHistoryDomain">
+        select
+            h.audit_user                                          as auditUser,
+            h.audit_result                                        as auditResult,
+            h.remarks                                             as remarks,
+            h.audit_time                                          as auditTime,
+            u.segment_audit_users                                 as auditUsers,
+            u1.name                                               as auditUserName
+        from
+            market_model_audit_history h
+        left join market_model m
+        on h.model_id = m.id
+        left join market_user u on m.create_user = u.id
+        left join market_user u1 on h.audit_user = u1.id
+        where h.model_id = #{modelId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryModelAuditProgress" resultType="com.axon.market.common.domain.isystem.ModelAuditHistoryDomain">
+        select
+            h.audit_result                                                    as auditResult,
+            h.audit_time                                                      as auditTime,
+            h.remarks                                                         as remarks,
+            h.audit_user                                                      as auditUser,
+            u.name                                                            as auditUserName
+        from
+            market_model_audit_history h
+        left join market_user u on h.audit_user = u.id
+        where
+            h.model_id = #{modelId}
+        order by h.audit_time
+    </select>
+
+    <select id="queryAllModelAuditUser" resultType="java.util.Map">
+        select
+            u1.segment_audit_users                            as segmentAuditUsers,
+            u2.id                                             as id,
+            u2.name                                           as name
+        from
+            ( select segment_audit_users from market_user where id = #{userId} ) u1, market_user u2
+        where
+            u1.segment_audit_users like replace ( '%,"auditUser":"@",%', '@', u2.id )
+    </select>
+
+    <delete id="deleteModelAuditHistoryDomain">
+        delete from market_model_audit_history
+        where model_id =  #{modelId}
+    </delete>
+
+</mapper>

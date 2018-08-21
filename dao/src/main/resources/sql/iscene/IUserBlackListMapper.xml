@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IUserBlackListMapper">
+    <select id="queryUserBlackList" resultType="com.axon.market.common.domain.iscene.UserBlackListDomain">
+        SELECT
+          id as id,
+          mob as mobile,
+          task_id as taskId,
+          block_stm as blockStart,
+          block_etm as blockEnd,
+          is_delete as isDelete,
+          block_type as blockType
+        FROM market_pilot_userblacklist
+        where is_delete = 0
+        <if test="mob != null">
+            and mob = #{mob}
+        </if>
+        ORDER BY id DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+    <select id="queryUserBlackCount" resultType="int">
+        SELECT
+          count(1)
+        FROM market_pilot_userblacklist
+        WHERE is_delete = 0
+        <if test="mob != null">
+            and mob = #{mob}
+        </if>
+    </select>
+
+    <insert id="addUserBlackList">
+        INSERT INTO
+        market_pilot_userblacklist(mob,task_id,block_stm,block_etm,is_delete,block_type)
+        VALUES
+        (#{domain.mobile},#{domain.taskId},#{domain.blockStart},#{domain.blockEnd},#{domain.isDelete},#{domain.blockType})
+    </insert>
+
+    <!--private int id;//ID序号-->
+    <!--private String taskName;//任务名-->
+    <!--private String imgUrl;//触发形态-->
+    <!--private int sceneSort;//优先级-->
+    <!--private Date startTime;//开始时间-->
+    <!--private Date endTime;//结束时间-->
+    <!--private String urlGroupName;//网址分类-->
+    <!--private String userGroupName;//用户群  ???????????-->
+    <!--private String locationGroupName;//地理位置-->
+    <!--private int state;//状态-->
+    <!--任务列表查询-->
+    <select id="queryTaskForUserBlackList" resultType="com.axon.market.common.domain.iscene.TaskForUserBlackListDomain">
+        SELECT
+          mj.id as id,
+          mj.name as taskName,
+          ms.ImgUrl as imgUrl,
+          mj.scene_pilot_sort as sceneSort,
+          mj.start_time as startTime,
+          mj.end_time as endTime,
+          mp.onLineTm as onLineTm,
+          mp.offLineTm as offLineTm,
+          mu.Name as urlGroupName,
+          mj.market_segment_names as userGroupName,
+          ml.Name as locationGroupName,
+          mj.status as state
+        FROM
+          market_jobs mj
+        LEFT JOIN
+          market_scene_pilot mp
+        ON mj.market_type_value = mp.id
+        LEFT JOIN
+          scenes ms
+        ON mp.scene_ids = ms.id
+        LEFT JOIN
+          urlgroup mu
+        ON mp.urlgroup_ids = mu.Id
+        LEFT JOIN
+          locationgroup ml
+        ON mp.locationgroup_ids = ml.Id
+        where mj.status != -1
+        AND mp.isDelete = 0
+        AND ms.IsDelete = 0
+        AND mu.IsDelete = 0
+        AND ml.isdelete = 0
+        AND mj.market_type = 'scenePilot'
+        <if test="taskName != null">
+          AND mj.name LIKE concat('%',#{taskName},'%')
+        </if>
+        ORDER BY id DESC
+        limit ${limit} offset ${offset}
+    </select>
+
+    <!--分页查询查询任务列表-->
+    <select id="queryTaskCount" resultType="int">
+        SELECT
+        count(1)
+        FROM
+        market_jobs mj
+        LEFT JOIN
+        market_scene_pilot mp
+        ON mj.market_type_value = mp.id
+        LEFT JOIN
+        scenes ms
+        ON mp.scene_ids = ms.id
+        LEFT JOIN
+        urlgroup mu
+        ON mp.urlgroup_ids = mu.Id
+        LEFT JOIN
+        locationgroup ml
+        ON mp.locationgroup_ids = ml.Id
+        where mj.status != -1
+        AND mp.isDelete = 0
+        AND ms.IsDelete = 0
+        AND mu.IsDelete = 0
+        AND ml.isdelete = 0
+        AND mj.market_type = 'scenePilot'
+        <if test="taskName != null">
+            AND mj.name LIKE concat('%',#{taskName},'%')
+        </if>
+    </select>
+
+    <select id="queryTaskName" resultType="com.axon.market.common.domain.ischeduling.MarketJobDomain">
+        SELECT
+          id as id,
+          name as name
+        FROM
+          market_jobs
+        where market_type = 'scenePilot'
+        AND status != -1
+    </select>
+
+    <delete id="delUserBlackList">
+      DELETE FROM
+        market_pilot_userblacklist
+      WHERE
+        id = #{id}
+    </delete>
+
+    <select id="queryMobById" resultType="String">
+        SELECT
+          mob
+        FROM
+          market_pilot_userblacklist
+        where
+        id = #{id}
+    </select>
+
+</mapper>

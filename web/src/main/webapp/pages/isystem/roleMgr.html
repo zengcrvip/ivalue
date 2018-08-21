@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="styles/isystem/role.css">
+    <script src="js/isystem/roleMgr.js"></script>
+</head>
+<body>
+<div class="iMarket_Body">
+    <div class="">
+        <div class="row query-row">
+            <div class="col-md-12 form-inline conditionSearch">
+                <input type="text" class="form-control searchName" placeholder="名称">
+                <button class="searchBtn btn btn-primary"><i class="fa fa-search"></i>搜索</button>
+                <button class="addBtn btn btn-primary"><i class="fa fa-plus"></i>新增</button>
+                <div class="roleRefreshBtn" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="row list-row">
+            <div class="col-md-12">
+                <table class="roleTab iDataTable table table-hover table-condensed table-bordered dataTable no-footer"
+                       width="100%"></table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="iMarket_Content" style="display:none;">
+    <div class="roleInfo">
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <span style="color:red">*</span>
+                <label class="">角色名称：</label>
+            </div>
+            <div class="col-sm-7">
+                <input type="text" class="form-control input-sm roleName" name="name"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <span style="color:red">*</span>
+                <label class="">角色类型：</label>
+            </div>
+            <div class="col-sm-7">
+                <select class="form-control roleType">
+                    <option value="1">普通角色</option>
+                    <option value="2">炒店角色</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <label class="">菜单权限：</label>
+            </div>
+            <div class="col-sm-7">
+                <div class="menuPermissionShow"></div>
+                <input type="hidden" class="menuPermissionIds" name="permissionMenuIds"/>
+            </div>
+            <div class="col-sm-1">
+                <button type="button" class="menuPermissionBtn btn btn-info btn-sm" style="margin-top: 62px;">选择
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <label class="">数据权限：</label>
+            </div>
+            <div class="col-sm-7">
+                <div class="dataPermissionShow"></div>
+                <input type="hidden" class="dataPermissionIds" name="permissionDataIds"/>
+            </div>
+            <div class="col-sm-1">
+                <button type="button" class="dataPermissionBtn btn btn-info btn-sm" style="margin-top: 62px;">选择
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <label class="">首页指定：</label>
+            </div>
+            <div class="col-sm-7">
+                <select class="form-control homePageSelect"></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 text-right">
+                <label class="">备注：</label>
+            </div>
+            <div class="col-sm-7">
+                <textarea class="form-control remarks" rows="4" name="remarks"></textarea>
+            </div>
+        </div>
+        <div class="handleBtn" style="display: none;"></div>
+    </div>
+</div>
+</body>
+</html>

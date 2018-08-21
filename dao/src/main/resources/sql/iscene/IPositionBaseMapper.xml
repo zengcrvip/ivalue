@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.iscene.IPositionBaseMapper">
+
+    <select id="queryPositionBaseTotal" resultType="int">
+        select count(1) as count from
+        (
+            select c.base_id as baseId,
+            c.base_name as baseName,
+            c.location_type as locationType,
+            c.city_name as cityName,
+            c.lng as lng,
+            c.lat as lat,
+            c.radius as radius,
+            c.address as address,
+            c.city_code as cityCode,
+            c.location_type_id as locationTypeId,
+            c.business_hall_coding as businessHallCode,
+            c.status as status
+            from conf_baseinfo c
+            where c.status in (0,1)
+            <if test="baseName != ''"  >
+                and  c.base_name like  concat('%',#{baseName},'%')
+            </if>
+            <if test="baseId != ''"  >
+                and  c.base_id = #{baseId}
+            </if>
+            <if test="baseArea != '' and baseArea != 0"   >
+                and  c.city_code = #{baseArea}
+            </if>
+        ) tab
+    </select>
+
+    <select id="queryPositionBaseByPage" resultType="com.axon.market.common.domain.iscene.PositionBaseDomain">
+        select c.base_id as baseId,
+        c.base_name as baseName,
+        c.location_type as locationType,
+        ca.name as cityName,
+        c.lng as lng,
+        c.lat as lat,
+        c.radius as radius,
+        c.address as address,
+        c.city_code as cityCode,
+        c.location_type_id as locationTypeId,
+        c.business_hall_coding as businessHallCode,
+        c.status as status,
+        date_format(c.add_date,'%Y-%c-%d %h:%i:%s') as addDate
+        from conf_baseinfo c left join conf_area ca on c.city_code=ca.id
+        where c.status!=-1
+        <if test="baseName != ''"  >
+            and  c.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''"  >
+            and  c.base_id = #{baseId}
+        </if>
+        <if test="baseArea != '' and baseArea != 0">
+            and  c.city_code = #{baseArea}
+        </if>
+        order by c.update_date desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryPositionBase" resultType="java.util.Map">
+        select
+        c.base_id as baseId,
+        c.base_name as baseName,
+        cbt.location_type as locationType,
+        ca.name as cityName,
+        c.business_hall_coding as businessHallCode,
+        c.lng,
+        c.lat,
+        c.radius,
+        c.address,
+        date_format(c.add_date,'%Y-%c-%d %h:%i:%s') as addDate,
+        CASE c.status when -1 then '删除' when 0 then '未注册' when 1 then '在线' when 2 then '待审核' when 3 then '未通过' end as status
+        from conf_baseinfo c left join conf_area ca on c.cityAreaCode=ca.id
+        left join conf_baseinfo_type cbt on c.location_type_id=cbt.location_type_id
+        where  (c.create_userid=#{createUserId}
+        <if test="baseIdArray != ''">
+            or FIND_IN_SET(c.base_id,(select business_hall_Ids from market_user where id=#{createUserId})))
+        </if>
+        <if test="cityCode != ''">
+            or (c.city_code in (select code from market_area where parent_id in (select id from market_area where code=#{cityCode})) or c.city_code=#{cityCode}))
+        </if>
+        and c.status!=-1
+        <if test="baseName != ''"  >
+            and  c.base_name like  concat('%',#{baseName},'%')
+        </if>
+        <if test="baseId != ''"  >
+            and  c.base_id = #{baseId}
+        </if>
+        <if test="baseArea != '' and baseArea != 0">
+            and  (c.city_code in (select code from market_area where parent_id in (select id from market_area where
+            code=#{baseArea})) or c.city_code=#{baseArea})
+        </if>
+        <if test="buscoding!=''">
+            and c.business_hall_coding like concat('%',#{buscoding},'%')
+        </if>
+        order by c.update_date desc
+    </select>
+
+    <insert id="createPositionBase" parameterType="com.axon.market.common.domain.iscene.PositionBaseDomain" useGeneratedKeys="true" keyProperty="baseId">
+            insert into conf_baseinfo(
+                                    base_name
+                                    ,location_type
+                                    ,city_name
+                                    ,lng
+                                    ,lat
+                                    ,radius
+                                    ,address
+                                    ,city_code
+                                    ,location_type_id
+                                    ,status
+                                    ,add_date
+                                    ,business_hall_coding
+                                    ,company_code
+                                    )
+                           VALUES
+                                    (
+                                     #{baseName},
+                                    #{locationType},
+                                    #{cityName},
+                                    #{lng},
+                                    #{lat},
+                                    #{radius},
+                                    #{address},
+                                    #{cityCode},
+                                    #{locationTypeId},
+                                    #{status},
+                                    now(),
+                                    #{businessHallCode},
+                                    #{companyCode}
+                                    )
+    </insert>
+
+    <update id="updatePositionBase" parameterType="com.axon.market.common.domain.iscene.PositionBaseDomain">
+        update conf_baseinfo set
+				base_name =  #{baseName}
+				,location_type = #{locationType}
+				,city_name = #{cityName}
+				,lng = #{lng}
+				,lat = #{lat}
+				,radius = #{radius}
+				,address = #{address}
+				,city_code = #{cityCode}
+				,location_type_id = #{locationTypeId}
+				,status = #{status}
+				,add_date = now()
+				,business_hall_coding = #{businessHallCode}
+        where base_id = #{baseId}
+    </update>
+
+    <select id="delTaskPositionBase" resultType="java.util.Map">
+        select b.task_id as taskId,
+        t.task_name as taskName
+        from
+        shop_task_2_base b
+        join
+        shop_task t
+        where t.id=b.task_id and b.base_id=#{baseId}
+    </select>
+
+    <select id="delUserPositionBase" resultType="java.util.Map">
+        SELECT name AS userName FROM market_user  WHERE FIND_IN_SET(#{baseId},business_hall_Ids)
+
+    </select>
+
+    <update id="updPositionBase">
+        UPDATE conf_baseinfo SET invalidate_user_id=#{userId},invalidate_time=NOW(),invalidate_desc=#{input} WHERE base_id=#{baseId};
+
+    </update>
+
+    <update id="deletePositionBaseById">
+        update conf_baseinfo set status = -1 ,update_date=NOW() where base_id = #{baseId}
+
+    </update>
+
+    <insert id="insertRow" parameterType="java.util.Map">
+         insert into market_import_data(
+                file_id
+                ,row_no
+                ,row_data
+                ,operate_status
+                ,operate_result
+                )
+                values (#{fileId},#{rowNo},#{rowData},#{status},#{result})
+    </insert>
+
+    <insert id="insertFile" parameterType="java.util.Map">
+         insert into market_import_file(
+                        file_id
+                        ,file_name
+                        ,file_size
+                        ,task_type
+                        ,create_user
+                        ,create_date
+                        ,target_table
+                        ,status
+                        ,result
+                        )
+         values(#{fileId},#{fileName},#{fileSize},#{taskType},#{createUser},now(),'conf_baseinfo',#{status},#{result})
+    </insert>
+
+    <select id="queryPositionBaseImportTotal" resultType="int">
+        select count(1) as count from
+        (
+          select row_data as data ,operate_status as status,operate_result as result from market_import_data where  file_id = #{fileId}
+            ORDER BY row_no
+        ) tab
+    </select>
+
+    <select id="queryPositionBaseImport" resultType="java.util.Map">
+        select row_data as data ,operate_status as status,operate_result as result from market_import_data where  file_id = #{fileId}
+        ORDER BY row_no
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="queryPositionBaseImportAll" resultType="java.util.Map">
+        select row_data as data from market_import_data
+        where  file_id = #{fileId} and operate_status = 'success'
+        ORDER BY row_no
+    </select>
+
+    <insert id="createPositionBaseImport">
+        insert into conf_baseinfo(
+        base_name
+        ,location_type
+        ,city_name
+        ,lng
+        ,lat
+        ,radius
+        ,address
+        ,city_code
+        ,location_type_id
+        ,status
+        ,add_date
+        ,business_hall_coding
+        )
+        VALUES
+        <foreach collection="dataList" item="item" index="" open="" close="" separator=",">
+            (
+            '${item.COL0}','${item.baseType}','${item.COL2}','${item.COL4}','${item.COL5}','${item.COL6}','${item.COL7}','${item.areaCode}','${item.COL1}','${item.COL8}',NOW(),'${item.COL3}'
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryPositionBaseById" resultType="com.axon.market.common.domain.iscene.PositionBaseDomain">
+        select c.base_id as baseId,
+        c.base_name as baseName,
+        c.location_type as locationType,
+        c.city_name as cityName,
+        c.lng as lng,
+        c.lat as lat,
+        c.radius as radius,
+        c.address as address,
+        c.city_code as cityCode,
+        c.location_type_id as locationTypeId,
+        c.business_hall_coding as businessHallCode,
+        c.status as status,
+        date_format(c.add_date,'%Y-%c-%d %h:%i:%s') as addDate
+        from conf_baseinfo c
+        where c.base_id = #{baseId}
+    </select>
+
+</mapper>
+
+
+
+

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.axon.market.dao.mapper.icommon.IConsoleMapper">
+
+    <select id="queryMyShopTaskCount" resultType="int">
+        select
+            count(0)
+        from shop_task_pool t
+        left join shop_task_2_base b2 on  b2.task_id = t.id
+        left join shop_task_execute_history h on t.id = h.task_id and b2.base_id = h.base_id and t.date = h.date
+        where t.date = date_format(now(),'%Y%m%d')
+        and (
+            (#{type} = 1 and t.status = 2 and h.status is null)
+            or (#{type} = 2 and (h.status in (20,30) or (t.marketUser = 3 and h.status in (21,23))))
+            or (#{type} = 3 and (h.status = 24 or (t.marketUser = 1 and h.status = 21) or ((t.marketUser = 2 and h.status = 23))))
+        )
+        <if test="businessCodes != '' and businessCodes != null">
+            and b2.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != 99999">
+            and t.base_area_id = #{areaCode}
+        </if>
+    </select>
+
+    <select id="queryMyShopTaskByPage"  resultType="java.util.Map" parameterType="java.util.Map">
+        select
+            t.id                                  as id,
+            t.task_type                           as taskType,
+            t.business_type                       as businessType,
+            b.name                                as businessTypeName,
+            t.task_name                           as taskName,
+            b2.base_id                            as baseId,
+            b3.base_name                          as baseName,
+            t.market_content                      as marketContent,
+            t.marketUser                          as marketUser,
+            t.status                              as status,
+            t.date                           	  as date,
+            t.create_time                         as createTime,
+            ifnull(st.market_content_extend,'-')  as marketContentExtend
+        from shop_task_pool t
+        left join shop_task st on t.id = st.id
+        left join shop_task_2_business b on t.business_type = b.type
+        left join shop_task_2_base b2 on  b2.task_id = t.id
+        left join conf_baseinfo b3 on b2.base_id = b3.base_id
+        left join shop_task_execute_history h on t.id = h.task_id and b2.base_id = h.base_id and t.date = h.date
+        where t.date = date_format(now(),'%Y%m%d')
+        and (
+            (#{type} = 1 and t.status = 2 and h.status is null)
+            or (#{type} = 2 and (h.status in (20,30) or (t.marketUser = 3 and h.status in (21,23))))
+            or (#{type} = 3 and (h.status = 24 or (t.marketUser = 1 and h.status = 21) or ((t.marketUser = 2 and h.status = 23))))
+        )
+        <if test="businessCodes != '' and businessCodes != null">
+            and b2.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != 99999">
+            and t.base_area_id = #{areaCode}
+        </if>
+        order by t.create_time desc
+        limit ${maxRecord} offset ${offset}
+    </select>
+
+    <select id="queryShopTaskTypeCount" resultType="java.util.Map">
+        select
+            sum(case when t.status = 2 and h.status is null then 1 else 0 end )                                                                  as executeWaiting,
+            sum(case when (h.status in (20,30) or (t.marketUser = 3 and h.status in (21,23))) then 1 else 0 end )                                      as executing,
+            sum(case when (h.status = 24 or (t.marketUser = 1 and h.status = 21) or (t.marketUser = 2 and h.status = 23)) then 1 else 0 end )    as executeFinish
+        from shop_task_pool t
+        left join shop_task_2_base b2 on  b2.task_id = t.id
+        left join shop_task_execute_history h on t.id = h.task_id and b2.base_id = h.base_id and t.date = h.date
+        where t.date = date_format(now(),'%Y%m%d') and t.task_classify = 1
+        <if test="businessCodes != '' and businessCodes != null">
+            and b2.base_id in (${businessCodes})
+        </if>
+        <if test="businessCodes == '' and areaCode != 99999">
+            and t.base_area_id = #{areaCode}
+        </if>
+    </select>
+
+</mapper>
